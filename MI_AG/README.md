@@ -1,0 +1,3 @@
+# MI_AG
+
+Use mutual information and accelerated gradient method to filter out and optimize nonconvex sparse learning problems on large genetic data based on bed/bim/fam. The corresponding paper is coming soon...

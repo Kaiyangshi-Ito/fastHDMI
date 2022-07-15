@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0", "numpy>=1.14.2", "numba>=0.54.1", "cupy>=10.6.0", "KDEpy>=1.1.0", "bed-reader>=0.2.23"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "MI_AG_kyang"
+version = "0.0.1"
+authors = [
+  { name="Kai Yang", email="kai.yang2@mail.mcgill.ca" },
+]
+description = "Use mutual information and accelerated gradient method to filter out and optimize nonconvex sparse learning problems on large genetic data based on bed/bim/fam."
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/Kaiyangshi-Ito/MI_AG"
+"Bug Tracker" = "https://github.com/Kaiyangshi-Ito/MI_AG/issues"
