@@ -1,5 +1,5 @@
 import numpy as np
-import cupy as cp
+# import cupy as cp
 from scipy.linalg import toeplitz, block_diag
 
 
@@ -31,27 +31,27 @@ assert LM_beta.dtype() == "float"
 
 
 # test for LM cupy
-cp.random.seed(0)
-N = 1000
-p_zeros = 2000
-SNR = 5.
-true_beta = cp.array([2,-2,8,-8]+[0]*p_zeros)
-X_cov = toeplitz(.6**np.arange(true_beta.shape[0]))
-X_cov = cp.asarray(X_cov)
-mean = cp.zeros(len(true_beta))
-X = cp.random.multivariate_normal(mean, X_cov, N)
-X -= cp.mean(X,0).reshape(1,-1)
-X /= cp.std(X,0)
-intercept_design_column = cp.ones(N).reshape(N, 1)
-X_sim = cp.concatenate((intercept_design_column, X), 1)
-true_sigma_sim = cp.sqrt(true_beta.T@X_cov@true_beta/SNR)
-true_beta_intercept = cp.concatenate((cp.array([1.23]), true_beta)) # here just define the intercept to be 1.23 for simulated data 
-epsilon = cp.random.normal(0, true_sigma_sim, N)
-y_sim = X_sim@true_beta_intercept + epsilon
+# cp.random.seed(0)
+# N = 1000
+# p_zeros = 2000
+# SNR = 5.
+# true_beta = cp.array([2,-2,8,-8]+[0]*p_zeros)
+# X_cov = toeplitz(.6**np.arange(true_beta.shape[0]))
+# X_cov = cp.asarray(X_cov)
+# mean = cp.zeros(len(true_beta))
+# X = cp.random.multivariate_normal(mean, X_cov, N)
+# X -= cp.mean(X,0).reshape(1,-1)
+# X /= cp.std(X,0)
+# intercept_design_column = cp.ones(N).reshape(N, 1)
+# X_sim = cp.concatenate((intercept_design_column, X), 1)
+# true_sigma_sim = cp.sqrt(true_beta.T@X_cov@true_beta/SNR)
+# true_beta_intercept = cp.concatenate((cp.array([1.23]), true_beta)) # here just define the intercept to be 1.23 for simulated data 
+# epsilon = cp.random.normal(0, true_sigma_sim, N)
+# y_sim = X_sim@true_beta_intercept + epsilon
 
-fit2 = solution_path_LM(design_matrix=X_sim, outcome=y_sim, tol=1e-2, maxit=500, lambda_=cp.linspace(.1,1,100), penalty="SCAD", a=3.7, gamma=2.)
+# fit2 = solution_path_LM(design_matrix=X_sim, outcome=y_sim, tol=1e-2, maxit=500, lambda_=cp.linspace(.1,1,100), penalty="SCAD", a=3.7, gamma=2.)
 
-assert fit2.dtype() == "float"
+# assert fit2.dtype() == "float"
 
 
 # test for logistic numpy
@@ -77,24 +77,24 @@ assert fit2.dtype() == "float"
 
 
 # test for logistic cupy
-cp.random.seed(0)
-N = 1000
-SNR = 5.
-true_beta = cp.array([.5,-.5,.8,-.8]+[0]*2000)
-X_cov = toeplitz(.6**np.arange(true_beta.shape[0]))
-X_cov = cp.asarray(X_cov)
-mean = cp.zeros(true_beta.shape[0])
-X = cp.random.multivariate_normal(mean, X_cov, N)
-X -= cp.mean(X,0).reshape(1,-1)
-X /= cp.std(X,0)
-intercept_design_column = cp.ones(N).reshape(N, 1)
-X_sim = cp.concatenate((intercept_design_column, X), 1)
-true_sigma_sim = cp.sqrt(true_beta.T@X_cov@true_beta/SNR)
-true_beta_intercept = cp.concatenate((cp.array([0.5]), true_beta))
-signal = X_sim@true_beta_intercept + cp.random.normal(0, true_sigma_sim, N)
-y_sim = cp.random.binomial(1, cp.tanh(signal/2)/2+.5)
+# cp.random.seed(0)
+# N = 1000
+# SNR = 5.
+# true_beta = cp.array([.5,-.5,.8,-.8]+[0]*2000)
+# X_cov = toeplitz(.6**np.arange(true_beta.shape[0]))
+# X_cov = cp.asarray(X_cov)
+# mean = cp.zeros(true_beta.shape[0])
+# X = cp.random.multivariate_normal(mean, X_cov, N)
+# X -= cp.mean(X,0).reshape(1,-1)
+# X /= cp.std(X,0)
+# intercept_design_column = cp.ones(N).reshape(N, 1)
+# X_sim = cp.concatenate((intercept_design_column, X), 1)
+# true_sigma_sim = cp.sqrt(true_beta.T@X_cov@true_beta/SNR)
+# true_beta_intercept = cp.concatenate((cp.array([0.5]), true_beta))
+# signal = X_sim@true_beta_intercept + cp.random.normal(0, true_sigma_sim, N)
+# y_sim = cp.random.binomial(1, cp.tanh(signal/2)/2+.5)
 
-fit2 = solution_path_logistic(design_matrix=X_sim, outcome=y_sim, tol=1e-2, maxit=500, lambda_=cp.linspace(.005,.08,60)[::-1], penalty="SCAD", a=3.7, gamma=2.)
+# fit2 = solution_path_logistic(design_matrix=X_sim, outcome=y_sim, tol=1e-2, maxit=500, lambda_=cp.linspace(.005,.08,60)[::-1], penalty="SCAD", a=3.7, gamma=2.)
 
-assert fit2.dtype() == "float"
+# assert fit2.dtype() == "float"
 
