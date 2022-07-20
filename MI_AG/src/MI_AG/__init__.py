@@ -12,7 +12,7 @@ from numba import jit, njit
 ################# filtering using mutual information ########################
 #############################################################################
 
-def MI_continuous(a, b, a_min, a_max, N=500):
+def _MI_continuous(a, b, a_min, a_max, N=500):
     """
     calculate mutual information between continuous outcome and an SNP variable of 0,1,2
     assume no missing data
@@ -62,7 +62,7 @@ def MI_continuous(a, b, a_min, a_max, N=500):
     mi_temp = np.sum(temp_mat)*forward_euler_step
     return mi_temp
 
-def MI_binary(a, b, a_min, a_max, N=500):
+def _MI_binary(a, b, a_min, a_max, N=500):
     """
     calculate mutual information between binary outcome and an SNP variable of 0,1,2
     assume no missing data
@@ -115,7 +115,7 @@ def MI_binary(a, b, a_min, a_max, N=500):
     mi_temp = np.sum(temp_mat)*forward_euler_step
     return mi_temp
 
-# outcome_iid should be a  list of strings for identifiers 
+# outcome_iid should be a  list of strings for identifiers
 def continuous_filter(bed_file, bim_file, fam_file, outcome, outcome_iid, a_min=100., a_max=250., N=500):
     """
     (Single Core version) take plink files to calculate the mutual information between the continuous outcome and many SNP variables.
@@ -132,7 +132,7 @@ def continuous_filter(bed_file, bim_file, fam_file, outcome, outcome_iid, a_min=
         _SNP = _SNP[gene_ind] # get gene iid also in outcome iid
         _outcome = outcome[_SNP != -127] # remove missing SNP in outcome
         _SNP = _SNP[_SNP != -127] # remove missing SNP
-        MI_UKBB[j] = MI_continuous(a=_outcome, b=_SNP, a_min = a_min, a_max = a_max, N=N)
+        MI_UKBB[j] = _MI_continuous(a=_outcome, b=_SNP, a_min = a_min, a_max = a_max, N=N)
     return MI_UKBB
 
 def binary_filter(bed_file, bim_file, fam_file, outcome, outcome_iid, a_min=100., a_max=250., N=500):
@@ -151,7 +151,7 @@ def binary_filter(bed_file, bim_file, fam_file, outcome, outcome_iid, a_min=100.
         _SNP = _SNP[gene_ind] # get gene iid also in outcome iid
         _outcome = outcome[_SNP != -127] # remove missing SNP in outcome
         _SNP = _SNP[_SNP != -127] # remove missing SNP
-        MI_UKBB[j] = MI_binary(a=_outcome, b=_SNP, a_min = a_min, a_max = a_max, N=N)
+        MI_UKBB[j] = _MI_binary(a=_outcome, b=_SNP, a_min = a_min, a_max = a_max, N=N)
     return MI_UKBB
 
 
@@ -173,7 +173,7 @@ def continuous_filter_parallel(bed_file, bim_file, fam_file, outcome, outcome_ii
             _SNP = _SNP[gene_ind] # get gene iid also in outcome iid
             _outcome = outcome[_SNP != -127] # remove missing SNP in outcome
             _SNP = _SNP[_SNP != -127] # remove missing SNP
-            _MI_slice[k] = MI_continuous(a=_outcome, b=_SNP, a_min = a_min, a_max = a_max, N=N)
+            _MI_slice[k] = _MI_continuous(a=_outcome, b=_SNP, a_min = a_min, a_max = a_max, N=N)
             k += 1
         return _MI_slice
     # multiprocessing starts here
@@ -203,7 +203,7 @@ def binary_filter_parallel(bed_file, bim_file, fam_file, outcome, outcome_iid, a
             _SNP = _SNP[gene_ind] # get gene iid also in outcome iid
             _outcome = outcome[_SNP != -127] # remove missing SNP in outcome
             _SNP = _SNP[_SNP != -127] # remove missing SNP
-            _MI_slice[k] = MI_binary(a=_outcome, b=_SNP, a_min = a_min, a_max = a_max, N=N)
+            _MI_slice[k] = _MI_binary(a=_outcome, b=_SNP, a_min = a_min, a_max = a_max, N=N)
             k += 1
         return _MI_slice
     # multiprocessing starts here
@@ -214,6 +214,8 @@ def binary_filter_parallel(bed_file, bim_file, fam_file, outcome, outcome_iid, a
     MI_UKBB = np.hstack(MI_UKBB)
     return MI_UKBB
 
+
+
 ##################################################################
 ################ some fudamentals things #########################
 ##################################################################
@@ -222,8 +224,8 @@ def binary_filter_parallel(bed_file, bim_file, fam_file, outcome, outcome_iid, a
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def soft_thresholding(x, lambda_):
     '''
-    To calculate soft-thresholding mapping of a given ONE-DIMENSIONAL tensor, BESIDES THE FIRST TERM (so beta_0 will not be penalized). 
-    This function is to be used for calculation involving L1 penalty term later. 
+    To calculate soft-thresholding mapping of a given ONE-DIMENSIONAL tensor, BESIDES THE FIRST TERM (so beta_0 will not be penalized).
+    This function is to be used for calculation involving L1 penalty term later.
     '''
     return np.hstack((np.array([x[0]]), np.where(np.abs(x[1:])>lambda_, x[1:] - np.sign(x[1:])*lambda_, 0)))
 
@@ -235,93 +237,93 @@ def SCAD(x, lambda_, a=3.7):
     To calculate SCAD penalty value;
     #x can be a multi-dimensional tensor;
     lambda_, a are scalars;
-    Fan and Li suggests to take a as 3.7 
+    Fan and Li suggests to take a as 3.7
     '''
-    # here I notice the function is de facto a function of absolute value of x, therefore take absolute value first to simplify calculation 
+    # here I notice the function is de facto a function of absolute value of x, therefore take absolute value first to simplify calculation
     x = np.abs(x)
     temp = np.where(x<=lambda_, lambda_*x, np.where(x<a*lambda_, (2*a*lambda_*x - x**2 - lambda_**2)/(2*(a - 1)), lambda_**2 * (a+1)/2))
-    temp[0] = 0. # this is to NOT penalize intercept beta later 
-    return temp 
+    temp[0] = 0. # this is to NOT penalize intercept beta later
+    return temp
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def SCAD_grad(x, lambda_, a=3.7):
     '''
-    To calculate the gradient of SCAD wrt. input x; 
-    #x can be a multi-dimensional tensor. 
+    To calculate the gradient of SCAD wrt. input x;
+    #x can be a multi-dimensional tensor.
     '''
     # here decompose x to sign and its absolute value for easier calculation
     sgn = np.sign(x)
     x = np.abs(x)
     temp = np.where(x<=lambda_, lambda_*sgn, np.where(x<a*lambda_, (a*lambda_*sgn-sgn*x)/(a-1), 0))
-    temp[0] = 0. # this is to NOT penalize intercept beta later 
-    return temp 
+    temp[0] = 0. # this is to NOT penalize intercept beta later
+    return temp
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def MCP(x, lambda_, gamma):
     '''
-    To calculate MCP penalty value; 
-    #x can be a multi-dimensional tensor. 
+    To calculate MCP penalty value;
+    #x can be a multi-dimensional tensor.
     '''
-    # the function is a function of absolute value of x 
+    # the function is a function of absolute value of x
     x = np.abs(x)
     temp = np.where(x<=gamma*lambda_, lambda_*x - x**2/(2*gamma), .5*gamma*lambda_**2)
-    temp[0] = 0. # this is to NOT penalize intercept beta later 
-    return temp 
+    temp[0] = 0. # this is to NOT penalize intercept beta later
+    return temp
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def MCP_grad(x, lambda_, gamma):
     '''
-    To calculate MCP gradient wrt. input x; 
-    #x can be a multi-dimensional tensor. 
+    To calculate MCP gradient wrt. input x;
+    #x can be a multi-dimensional tensor.
     '''
     temp = np.where(np.abs(x)<gamma*lambda_, lambda_*np.sign(x)-x/gamma, np.zeros_like(x))
-    temp[0] = 0. # this is to NOT penalize intercept beta later 
-    return temp 
+    temp[0] = 0. # this is to NOT penalize intercept beta later
+    return temp
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def SCAD_concave(x, lambda_, a=3.7):
     '''
-    The value of concave part of SCAD penalty; 
-    #x can be a multi-dimensional tensor. 
+    The value of concave part of SCAD penalty;
+    #x can be a multi-dimensional tensor.
     '''
     x = np.abs(x)
     temp = np.where(x<=lambda_, 0., np.where(x<a*lambda_, (lambda_*x - (x**2 + lambda_**2)/2)/(a-1), (a+1)/2*lambda_**2 - lambda_*x))
-    temp[0] = 0. # this is to NOT penalize intercept beta later 
-    return temp 
+    temp[0] = 0. # this is to NOT penalize intercept beta later
+    return temp
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def SCAD_concave_grad(x, lambda_, a=3.7):
     '''
-    The gradient of concave part of SCAD penalty wrt. input x; 
-    #x can be a multi-dimensional tensor. 
+    The gradient of concave part of SCAD penalty wrt. input x;
+    #x can be a multi-dimensional tensor.
     '''
     sgn = np.sign(x)
     x = np.abs(x)
     temp = np.where(x<=lambda_, 0., np.where(x<a*lambda_, (lambda_*sgn-sgn*x)/(a-1), -lambda_*sgn))
-    temp[0] = 0. # this is to NOT penalize intercept beta later 
-    return temp 
+    temp[0] = 0. # this is to NOT penalize intercept beta later
+    return temp
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def MCP_concave(x, lambda_, gamma):
     '''
-    The value of concave part of MCP penalty; 
-    #x can be a multi-dimensional tensor. 
+    The value of concave part of MCP penalty;
+    #x can be a multi-dimensional tensor.
     '''
     # similiar as in MCP
     x = np.abs(x)
     temp = np.where(x<=gamma*lambda_, -(x**2)/(2*gamma), (gamma*lambda_**2)/2 - lambda_*x)
-    temp[0] = 0. # this is to NOT penalize intercept beta later 
-    return temp 
+    temp[0] = 0. # this is to NOT penalize intercept beta later
+    return temp
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def MCP_concave_grad(x, lambda_, gamma):
     '''
-    The gradient of concave part of MCP penalty wrt. input x; 
-    #x can be a multi-dimensional tensor. 
+    The gradient of concave part of MCP penalty wrt. input x;
+    #x can be a multi-dimensional tensor.
     '''
     temp = np.where(np.abs(x) < gamma*lambda_, -x/gamma, -lambda_*np.sign(x))
-    temp[0] = 0. # this is to NOT penalize intercept beta later 
-    return temp 
+    temp[0] = 0. # this is to NOT penalize intercept beta later
+    return temp
 
 
 ##################################################################
@@ -329,28 +331,28 @@ def MCP_concave_grad(x, lambda_, gamma):
 ##################################################################
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def update_smooth_grad_convex_LM(N, X, beta_md, y):
+def _update_smooth_grad_convex_LM(N, X, beta_md, y):
     '''
     Update the gradient of the smooth convex objective component.
     '''
     return 1/N*X.T@(X@beta_md - y)
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def update_smooth_grad_SCAD_LM(N, X, beta_md, y, _lambda, a):
+def _update_smooth_grad_SCAD_LM(N, X, beta_md, y, _lambda, a):
     '''
     Update the gradient of the smooth objective component for SCAD penalty.
     '''
-    return update_smooth_grad_convex_LM(N=N, X=X, beta_md=beta_md, y=y) + SCAD_concave_grad(x=beta_md, lambda_=_lambda, a=a)
+    return _update_smooth_grad_convex_LM(N=N, X=X, beta_md=beta_md, y=y) + SCAD_concave_grad(x=beta_md, lambda_=_lambda, a=a)
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def update_smooth_grad_MCP_LM(N, X, beta_md, y, _lambda, gamma):
+def _update_smooth_grad_MCP_LM(N, X, beta_md, y, _lambda, gamma):
     '''
     Update the gradient of the smooth objective component for MCP penalty.
     '''
-    return update_smooth_grad_convex_LM(N=N, X=X, beta_md=beta_md, y=y) + MCP_concave_grad(x=beta_md, lambda_=_lambda, gamma=gamma)
+    return _update_smooth_grad_convex_LM(N=N, X=X, beta_md=beta_md, y=y) + MCP_concave_grad(x=beta_md, lambda_=_lambda, gamma=gamma)
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def eval_obj_SCAD_LM(N, X, beta_md, y, _lambda, a, x_temp):
+def _eval_obj_SCAD_LM(N, X, beta_md, y, _lambda, a, x_temp):
     '''
     evaluate value of the objective function.
     '''
@@ -358,7 +360,7 @@ def eval_obj_SCAD_LM(N, X, beta_md, y, _lambda, a, x_temp):
     return (error.T@error)/(2.*N) + np.sum(SCAD(x_temp, lambda_=_lambda, a=a))
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def eval_obj_MCP_LM(N, X, beta_md, y, _lambda, gamma, x_temp):
+def _eval_obj_MCP_LM(N, X, beta_md, y, _lambda, gamma, x_temp):
     '''
     evaluate value of the objective function.
     '''
@@ -383,7 +385,7 @@ def lambda_max_LM(X, y):
     return lambda_max
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def strong_rule_seq_LM(X, y, beta_old, lambda_new, lambda_old):
+def _strong_rule_seq_LM(X, y, beta_old, lambda_new, lambda_old):
     """
     Use sequential strong to determine which betas to be nullified next.
     """
@@ -418,7 +420,7 @@ def UAG_LM_SCAD_MCP(design_matrix, outcome, beta_0 = np.ones(1), tol=1e-2, maxit
             X = np.hstack((intercept_design, X))
             beta = np.hstack((np.array([0.]), beta))
     # passing other parameters
-    p = X.shape[1] # so here p includes the intercept design matrix column 
+    p = X.shape[1] # so here p includes the intercept design matrix column
     smooth_grad = np.ones(p)
     beta_ag = beta.copy()
     beta_md = beta.copy()
@@ -433,7 +435,7 @@ def UAG_LM_SCAD_MCP(design_matrix, outcome, beta_0 = np.ones(1), tol=1e-2, maxit
     old_speed_norm = 1.
     speed_norm = 1.
     restart_k = 0
-    
+
     if penalty == "SCAD":
 #         L = np.max(np.array([L_convex, 1./(a-1)]))
         L = np.linalg.norm(np.array([L_convex, 1./(a-1)]), ord=np.infty)
@@ -444,14 +446,14 @@ def UAG_LM_SCAD_MCP(design_matrix, outcome, beta_0 = np.ones(1), tol=1e-2, maxit
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1-opt_alpha)*beta_ag + opt_alpha*beta
             old_speed_norm = speed_norm # restarting
             speed_norm = np.linalg.norm(beta_md - beta_md_old, ord=2) # restarting
             converged = (np.linalg.norm(beta_md - beta_md_old, ord=np.infty) < tol)
-            smooth_grad = update_smooth_grad_SCAD_LM(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, a=a)
+            smooth_grad = _update_smooth_grad_SCAD_LM(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, a=a)
             beta = soft_thresholding(x=beta - opt_lambda*smooth_grad, lambda_=opt_lambda*_lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta*smooth_grad, lambda_=opt_beta*_lambda)
 #             converged = np.all(np.max(np.abs(beta_md - beta_ag)/opt_beta) < tol).item()
@@ -466,14 +468,14 @@ def UAG_LM_SCAD_MCP(design_matrix, outcome, beta_0 = np.ones(1), tol=1e-2, maxit
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1-opt_alpha)*beta_ag + opt_alpha*beta
             old_speed_norm = speed_norm # restarting
             speed_norm = np.linalg.norm(beta_md - beta_md_old, ord=2) # restarting
             converged = (np.linalg.norm(beta_md - beta_md_old, ord=np.infty) < tol)
-            smooth_grad = update_smooth_grad_MCP_LM(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, gamma=gamma)
+            smooth_grad = _update_smooth_grad_MCP_LM(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, gamma=gamma)
             beta = soft_thresholding(x=beta - opt_lambda*smooth_grad, lambda_=opt_lambda*_lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta*smooth_grad, lambda_=opt_beta*_lambda)
 #             converged = np.all(np.max(np.abs(beta_md - beta_ag)/opt_beta) < tol).item()
@@ -487,39 +489,39 @@ def UAG_LM_SCAD_MCP(design_matrix, outcome, beta_0 = np.ones(1), tol=1e-2, maxit
 #     if self.penalty == "SCAD":
 #         L = max([self.L_convex, 1/(self.a-1)])
 #         self.vanilla_stepsize = 1/L
-#         self.eval_obj_SCAD_LM(self.beta_md, self.obj_value)
-#         self.eval_obj_SCAD_LM(self.beta, self.obj_value_ORIGINAL)
-#         self.eval_obj_SCAD_LM(self.beta_ag, self.obj_value_AG)
+#         self._eval_obj_SCAD_LM(self.beta_md, self.obj_value)
+#         self._eval_obj_SCAD_LM(self.beta, self.obj_value_ORIGINAL)
+#         self._eval_obj_SCAD_LM(self.beta_ag, self.obj_value_AG)
 #         self.old_beta = self.beta_md - 10.
 #         while not self.converged:
 #             self.k += 1
 #             if self.k <= self.maxit:
-#                 self.update_smooth_grad_SCAD_LM()
+#                 self._update_smooth_grad_SCAD_LM()
 #                 self.beta_md = self.soft_thresholding(self.beta_md - self.vanilla_stepsize*self.smooth_grad, self.vanilla_stepsize*self._lambda)
 #                 self.converged = np.all(np.max(np.abs(self.beta_md - self.old_beta)) < self.tol).item()
 #                 self.old_beta = self.beta_md.copy()
-#                 self.eval_obj_SCAD_LM(self.beta_md, self.obj_value)
-#                 self.eval_obj_SCAD_LM(self.beta, self.obj_value_ORIGINAL)
-#                 self.eval_obj_SCAD_LM(self.beta_ag, self.obj_value_AG)
+#                 self._eval_obj_SCAD_LM(self.beta_md, self.obj_value)
+#                 self._eval_obj_SCAD_LM(self.beta, self.obj_value_ORIGINAL)
+#                 self._eval_obj_SCAD_LM(self.beta_ag, self.obj_value_AG)
 #             else:
 #                 break
 #     else:
 #         L = max([self.L_convex, 1/self.gamma])
 #         self.vanilla_stepsize = 1/L
-#         self.eval_obj_MCP_LM(self.beta_md, self.obj_value)
-#         self.eval_obj_MCP_LM(self.beta, self.obj_value_ORIGINAL)
-#         self.eval_obj_MCP_LM(self.beta_ag, self.obj_value_AG)
+#         self._eval_obj_MCP_LM(self.beta_md, self.obj_value)
+#         self._eval_obj_MCP_LM(self.beta, self.obj_value_ORIGINAL)
+#         self._eval_obj_MCP_LM(self.beta_ag, self.obj_value_AG)
 #         self.old_beta = self.beta_md - 10.
 #         while not self.converged:
 #             self.k += 1
 #             if self.k <= self.maxit:
-#                 self.update_smooth_grad_MCP_LM()
+#                 self._update_smooth_grad_MCP_LM()
 #                 self.beta_md = self.soft_thresholding(self.beta_md - self.vanilla_stepsize*self.smooth_grad, self.vanilla_stepsize*self._lambda)
 #                 self.converged = np.all(np.max(np.abs(self.beta_md - self.old_beta)) < self.tol).item()
 #                 self.old_beta = self.beta_md.copy()
-#                 self.eval_obj_MCP_LM(self.beta_md, self.obj_value)
-#                 self.eval_obj_MCP_LM(self.beta, self.obj_value_ORIGINAL)
-#                 self.eval_obj_MCP_LM(self.beta_ag, self.obj_value_AG)
+#                 self._eval_obj_MCP_LM(self.beta_md, self.obj_value)
+#                 self._eval_obj_MCP_LM(self.beta, self.obj_value_ORIGINAL)
+#                 self._eval_obj_MCP_LM(self.beta_ag, self.obj_value_AG)
 #             else:
 #                 break
 #     return self.report_results()
@@ -543,7 +545,7 @@ def solution_path_LM(design_matrix, outcome, lambda_, beta_0 = np.ones(1), tol=1
 
 
 
-# with strong rule 
+# with strong rule
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _UAG_LM_SCAD_MCP_strongrule(design_matrix, outcome, beta_0 = np.ones(1), tol=1e-2, maxit=500, _lambda=.5, penalty="SCAD", a=3.7, gamma=2., L_convex=1.1, add_intercept_column = True, strongrule=True):
@@ -567,12 +569,12 @@ def _UAG_LM_SCAD_MCP_strongrule(design_matrix, outcome, beta_0 = np.ones(1), tol
     if strongrule == True:
         _lambda_max = lambda_max_LM(X, y)
         p_original = X.shape[1]
-        elim = strong_rule_seq_LM(X, y, beta_old=np.zeros(p_original), lambda_new=_lambda, lambda_old=_lambda_max)
+        elim = _strong_rule_seq_LM(X, y, beta_old=np.zeros(p_original), lambda_new=_lambda, lambda_old=_lambda_max)
         X = X[:, np.logical_not(elim)]
         beta = beta[np.logical_not(elim)]
-        
+
     # passing other parameters
-    p = X.shape[1] # so here p includes the intercept design matrix column 
+    p = X.shape[1] # so here p includes the intercept design matrix column
     smooth_grad = np.ones(p)
     beta_ag = beta.copy()
     beta_md = beta.copy()
@@ -587,7 +589,7 @@ def _UAG_LM_SCAD_MCP_strongrule(design_matrix, outcome, beta_0 = np.ones(1), tol
     old_speed_norm = 1.
     speed_norm = 1.
     restart_k = 0
-    
+
     if penalty == "SCAD":
 #         L = np.max(np.array([L_convex, 1./(a-1)]))
         L = np.linalg.norm(np.array([L_convex, 1./(a-1)]), ord=np.infty)
@@ -598,14 +600,14 @@ def _UAG_LM_SCAD_MCP_strongrule(design_matrix, outcome, beta_0 = np.ones(1), tol
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2./(1.+(1.+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2./(1.+(1.+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1.-opt_alpha)*beta_ag + opt_alpha*beta
             old_speed_norm = speed_norm # restarting
             speed_norm = np.linalg.norm(beta_md - beta_md_old, ord=2) # restarting
             converged = (np.linalg.norm(beta_md - beta_md_old, ord=np.infty) < tol)
-            smooth_grad = update_smooth_grad_SCAD_LM(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, a=a)
+            smooth_grad = _update_smooth_grad_SCAD_LM(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, a=a)
             beta = soft_thresholding(x=beta - opt_lambda*smooth_grad, lambda_=opt_lambda*_lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta*smooth_grad, lambda_=opt_beta*_lambda)
 #             converged = np.all(np.max(np.abs(beta_md - beta_ag)/opt_beta) < tol).item()
@@ -620,14 +622,14 @@ def _UAG_LM_SCAD_MCP_strongrule(design_matrix, outcome, beta_0 = np.ones(1), tol
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2/(1.+(1.+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2/(1.+(1.+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1.-opt_alpha)*beta_ag + opt_alpha*beta
             old_speed_norm = speed_norm # restarting
             speed_norm = np.linalg.norm(beta_md - beta_md_old, ord=2) # restarting
             converged = (np.linalg.norm(beta_md - beta_md_old, ord=np.infty) < tol)
-            smooth_grad = update_smooth_grad_MCP_LM(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, gamma=gamma)
+            smooth_grad = _update_smooth_grad_MCP_LM(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, gamma=gamma)
             beta = soft_thresholding(x=beta - opt_lambda*smooth_grad, lambda_=opt_lambda*_lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta*smooth_grad, lambda_=opt_beta*_lambda)
 #             converged = np.all(np.max(np.abs(beta_md - beta_ag)/opt_beta) < tol).item()
@@ -676,13 +678,14 @@ def solution_path_LM_strongrule(design_matrix, outcome, lambda_, beta_0 = np.one
     lambda_ = np.hstack((np.array([_lambda_max]), lambda_))
     elim = np.array([False]*_design_matrix.shape[1])
     for j in range(len(lambda_)-1):
-        _elim = strong_rule_seq_LM(X=_design_matrix, y=outcome, beta_old=beta_mat[j,:], lambda_new=lambda_[j+1], lambda_old=lambda_[j])
+        _elim = _strong_rule_seq_LM(X=_design_matrix, y=outcome, beta_old=beta_mat[j,:], lambda_new=lambda_[j+1], lambda_old=lambda_[j])
         elim = np.logical_and(elim, _elim)
         _beta_0 = beta_mat[j,:]
         _new_beta = np.zeros(_design_matrix.shape[1])
         _new_beta[np.logical_not(elim)] = UAG_LM_SCAD_MCP(design_matrix=_design_matrix[:, np.logical_not(elim)], outcome=outcome, beta_0 = _beta_0[np.logical_not(elim)], tol=tol, maxit=maxit, _lambda=lambda_[j], penalty=penalty, a=a, gamma=gamma, add_intercept_column=False)[1]
         beta_mat[j+1,:] = _new_beta
     return beta_mat[1:,:]
+
 
 
 ##################################################################
@@ -777,7 +780,7 @@ def SNP_UAG_LM_SCAD_MCP(bed_file, bim_file, fam_file, outcome, outcome_iid, SNP_
     old_speed_norm = 1.
     speed_norm = 1.
     restart_k = 0
-    
+
     if penalty == "SCAD":
 #         L = np.max(np.array([L_convex, 1./(a-1)]))
         L = np.linalg.norm(np.array([L_convex, 1./(a-1)]), ord=np.infty)
@@ -788,7 +791,7 @@ def SNP_UAG_LM_SCAD_MCP(bed_file, bim_file, fam_file, outcome, outcome_iid, SNP_
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1-opt_alpha)*beta_ag + opt_alpha*beta
@@ -810,7 +813,7 @@ def SNP_UAG_LM_SCAD_MCP(bed_file, bim_file, fam_file, outcome, outcome_iid, SNP_
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1-opt_alpha)*beta_ag + opt_alpha*beta
@@ -833,9 +836,11 @@ def SNP_solution_path_LM(bed_file, bim_file, fam_file, outcome, outcome_iid, lam
     bed = open_bed(filepath=bed_file, fam_filepath=fam_file, bim_filepath=bim_file)
     p = len(list(bed.sid))
     beta_mat = np.zeros((len(lambda_)+1, p))
-    for j in range(len(lambda_)): 
+    for j in range(len(lambda_)):
         beta_mat[j+1,:] = SNP_UAG_LM_SCAD_MCP(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, SNP_ind=SNP_ind, L_convex=L_convex, beta_0 = beta_mat[j,:], tol=tol, maxit=maxit, _lambda=lambda_[j], penalty=penalty, outcome_iid=outcome_iid, a=a, gamma=gamma)[1]
     return beta_mat[1:,:]
+
+
 
 
 
@@ -885,7 +890,7 @@ def _SNP_update_smooth_grad_convex_LM_parallel(N, SNP_ind, bed, beta_md, y, outc
     __XTXbeta = np.hstack(_XTXbeta)
     _XTXbeta = np.zeros(p)
     _XTXbeta[SNP_ind] = __XTXbeta
-    
+
     del _
     del __XTXbeta
 
@@ -933,7 +938,7 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file, bim_file, fam_file, outcome, outcome_
     p = len(list(bed.sid))
     gene_iid = np.array(list(bed.iid))
     N = len(np.intersect1d(outcome_iid, gene_iid, assume_unique=True, return_indices=True)[1])
-    if np.all(beta_0==np.ones(1)):        
+    if np.all(beta_0==np.ones(1)):
         def __parallel_assign(_ind):
             import numpy as np
             k=0
@@ -964,7 +969,7 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file, bim_file, fam_file, outcome, outcome_
     old_speed_norm = 1.
     speed_norm = 1.
     restart_k = 0
-    
+
     if penalty == "SCAD":
 #         L = np.max(np.array([L_convex, 1./(a-1)]))
         L = np.linalg.norm(np.array([L_convex, 1./(a-1)]), ord=np.infty)
@@ -975,7 +980,7 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file, bim_file, fam_file, outcome, outcome_
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1-opt_alpha)*beta_ag + opt_alpha*beta
@@ -997,7 +1002,7 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file, bim_file, fam_file, outcome, outcome_
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1-opt_alpha)*beta_ag + opt_alpha*beta
@@ -1020,9 +1025,11 @@ def SNP_solution_path_LM_parallel(bed_file, bim_file, fam_file, outcome, outcome
     bed = open_bed(filepath=bed_file, fam_filepath=fam_file, bim_filepath=bim_file)
     p = len(list(bed.sid))
     beta_mat = np.zeros((len(lambda_)+1, p))
-    for j in range(len(lambda_)): 
+    for j in range(len(lambda_)):
         beta_mat[j+1,:] = SNP_UAG_LM_SCAD_MCP_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, SNP_ind=SNP_ind, L_convex=L_convex, beta_0 = beta_mat[j,:], tol=tol, maxit=maxit, _lambda=lambda_[j], penalty=penalty, outcome_iid=outcome_iid, a=a, gamma=gamma, chunck_size=chunck_size)[1]
     return beta_mat[1:,:]
+
+
 
 
 
@@ -1031,28 +1038,28 @@ def SNP_solution_path_LM_parallel(bed_file, bim_file, fam_file, outcome, outcome
 ############################################################################################
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def update_smooth_grad_convex_logistic(N, X, beta_md, y):
+def _update_smooth_grad_convex_logistic(N, X, beta_md, y):
     '''
     Update the gradient of the smooth convex objective component.
     '''
     return (X.T@(np.tanh(X@beta_md/2.)/2.-y+.5))/(2.*N)
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def update_smooth_grad_SCAD_logistic(N, X, beta_md, y, _lambda, a):
+def _update_smooth_grad_SCAD_logistic(N, X, beta_md, y, _lambda, a):
     '''
     Update the gradient of the smooth objective component for SCAD penalty.
     '''
-    return update_smooth_grad_convex_logistic(N=N, X=X, beta_md=beta_md, y=y) + SCAD_concave_grad(x=beta_md, lambda_=_lambda, a=a)
+    return _update_smooth_grad_convex_logistic(N=N, X=X, beta_md=beta_md, y=y) + SCAD_concave_grad(x=beta_md, lambda_=_lambda, a=a)
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def update_smooth_grad_MCP_logistic(N, X, beta_md, y, _lambda, gamma):
+def _update_smooth_grad_MCP_logistic(N, X, beta_md, y, _lambda, gamma):
     '''
     Update the gradient of the smooth objective component for MCP penalty.
     '''
-    return update_smooth_grad_convex_logistic(N=N, X=X, beta_md=beta_md, y=y) + MCP_concave_grad(x=beta_md, lambda_=_lambda, gamma=gamma)
+    return _update_smooth_grad_convex_logistic(N=N, X=X, beta_md=beta_md, y=y) + MCP_concave_grad(x=beta_md, lambda_=_lambda, gamma=gamma)
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def eval_obj_SCAD_logistic(N, X, beta_md, y, _lambda, a, x_temp):
+def _eval_obj_SCAD_logistic(N, X, beta_md, y, _lambda, a, x_temp):
     '''
     evaluate value of the objective function.
     '''
@@ -1060,7 +1067,7 @@ def eval_obj_SCAD_logistic(N, X, beta_md, y, _lambda, a, x_temp):
     return (error.T@error)/(2.*N) + np.sum(SCAD(x_temp, lambda_=_lambda, a=a))
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def eval_obj_MCP_logistic(N, X, beta_md, y, _lambda, gamma, x_temp):
+def _eval_obj_MCP_logistic(N, X, beta_md, y, _lambda, gamma, x_temp):
     '''
     evaluate value of the objective function.
     '''
@@ -1077,7 +1084,7 @@ def lambda_max_logistic(X, y):
     return lambda_max
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def strong_rule_seq_logistic(X, y, beta_old, lambda_new, lambda_old):
+def _strong_rule_seq_logistic(X, y, beta_old, lambda_new, lambda_old):
     """
     Use sequential strong to determine which betas to be nullified next.
     """
@@ -1106,7 +1113,7 @@ def UAG_logistic_SCAD_MCP(design_matrix, outcome, beta_0 = np.ones(1), tol=1e-2,
             X = np.hstack((intercept_design, X))
             beta = np.hstack((np.array([0.]), beta))
     # passing other parameters
-    p = X.shape[1] # so here p includes the intercept design matrix column 
+    p = X.shape[1] # so here p includes the intercept design matrix column
     smooth_grad = np.ones(p)
     beta_ag = beta.copy()
     beta_md = beta.copy()
@@ -1121,7 +1128,7 @@ def UAG_logistic_SCAD_MCP(design_matrix, outcome, beta_0 = np.ones(1), tol=1e-2,
     old_speed_norm = 1.
     speed_norm = 1.
     restart_k = 0
-    
+
     if penalty == "SCAD":
 #         L = np.max(np.array([L_convex, 1./(a-1)]))
         L = np.linalg.norm(np.array([L_convex, 1./(a-1)]), ord=np.infty)
@@ -1132,14 +1139,14 @@ def UAG_logistic_SCAD_MCP(design_matrix, outcome, beta_0 = np.ones(1), tol=1e-2,
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1-opt_alpha)*beta_ag + opt_alpha*beta
             old_speed_norm = speed_norm # restarting
             speed_norm = np.linalg.norm(beta_md - beta_md_old, ord=2) # restarting
             converged = (np.linalg.norm(beta_md - beta_md_old, ord=np.infty) < tol)
-            smooth_grad = update_smooth_grad_SCAD_logistic(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, a=a)
+            smooth_grad = _update_smooth_grad_SCAD_logistic(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, a=a)
             beta = soft_thresholding(x=beta - opt_lambda*smooth_grad, lambda_=opt_lambda*_lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta*smooth_grad, lambda_=opt_beta*_lambda)
 #             converged = np.all(np.max(np.abs(beta_md - beta_ag)/opt_beta) < tol).item()
@@ -1154,14 +1161,14 @@ def UAG_logistic_SCAD_MCP(design_matrix, outcome, beta_0 = np.ones(1), tol=1e-2,
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1-opt_alpha)*beta_ag + opt_alpha*beta
             old_speed_norm = speed_norm # restarting
             speed_norm = np.linalg.norm(beta_md - beta_md_old, ord=2) # restarting
             converged = (np.linalg.norm(beta_md - beta_md_old, ord=np.infty) < tol)
-            smooth_grad = update_smooth_grad_MCP_logistic(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, gamma=gamma)
+            smooth_grad = _update_smooth_grad_MCP_logistic(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, gamma=gamma)
             beta = soft_thresholding(x=beta - opt_lambda*smooth_grad, lambda_=opt_lambda*_lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta*smooth_grad, lambda_=opt_beta*_lambda)
 #             converged = np.all(np.max(np.abs(beta_md - beta_ag)/opt_beta) < tol).item()
@@ -1175,39 +1182,39 @@ def UAG_logistic_SCAD_MCP(design_matrix, outcome, beta_0 = np.ones(1), tol=1e-2,
 #     if self.penalty == "SCAD":
 #         L = max([self.L_convex, 1/(self.a-1)])
 #         self.vanilla_stepsize = 1/L
-#         self.eval_obj_SCAD_logistic(self.beta_md, self.obj_value)
-#         self.eval_obj_SCAD_logistic(self.beta, self.obj_value_ORIGINAL)
-#         self.eval_obj_SCAD_logistic(self.beta_ag, self.obj_value_AG)
+#         self._eval_obj_SCAD_logistic(self.beta_md, self.obj_value)
+#         self._eval_obj_SCAD_logistic(self.beta, self.obj_value_ORIGINAL)
+#         self._eval_obj_SCAD_logistic(self.beta_ag, self.obj_value_AG)
 #         self.old_beta = self.beta_md - 10.
 #         while not self.converged:
 #             self.k += 1
 #             if self.k <= self.maxit:
-#                 self.update_smooth_grad_SCAD_logistic()
+#                 self._update_smooth_grad_SCAD_logistic()
 #                 self.beta_md = self.soft_thresholding(self.beta_md - self.vanilla_stepsize*self.smooth_grad, self.vanilla_stepsize*self._lambda)
 #                 self.converged = np.all(np.max(np.abs(self.beta_md - self.old_beta)) < self.tol).item()
 #                 self.old_beta = self.beta_md.copy()
-#                 self.eval_obj_SCAD_logistic(self.beta_md, self.obj_value)
-#                 self.eval_obj_SCAD_logistic(self.beta, self.obj_value_ORIGINAL)
-#                 self.eval_obj_SCAD_logistic(self.beta_ag, self.obj_value_AG)
+#                 self._eval_obj_SCAD_logistic(self.beta_md, self.obj_value)
+#                 self._eval_obj_SCAD_logistic(self.beta, self.obj_value_ORIGINAL)
+#                 self._eval_obj_SCAD_logistic(self.beta_ag, self.obj_value_AG)
 #             else:
 #                 break
 #     else:
 #         L = max([self.L_convex, 1/self.gamma])
 #         self.vanilla_stepsize = 1/L
-#         self.eval_obj_MCP_logistic(self.beta_md, self.obj_value)
-#         self.eval_obj_MCP_logistic(self.beta, self.obj_value_ORIGINAL)
-#         self.eval_obj_MCP_logistic(self.beta_ag, self.obj_value_AG)
+#         self._eval_obj_MCP_logistic(self.beta_md, self.obj_value)
+#         self._eval_obj_MCP_logistic(self.beta, self.obj_value_ORIGINAL)
+#         self._eval_obj_MCP_logistic(self.beta_ag, self.obj_value_AG)
 #         self.old_beta = self.beta_md - 10.
 #         while not self.converged:
 #             self.k += 1
 #             if self.k <= self.maxit:
-#                 self.update_smooth_grad_MCP_logistic()
+#                 self._update_smooth_grad_MCP_logistic()
 #                 self.beta_md = self.soft_thresholding(self.beta_md - self.vanilla_stepsize*self.smooth_grad, self.vanilla_stepsize*self._lambda)
 #                 self.converged = np.all(np.max(np.abs(self.beta_md - self.old_beta)) < self.tol).item()
 #                 self.old_beta = self.beta_md.copy()
-#                 self.eval_obj_MCP_logistic(self.beta_md, self.obj_value)
-#                 self.eval_obj_MCP_logistic(self.beta, self.obj_value_ORIGINAL)
-#                 self.eval_obj_MCP_logistic(self.beta_ag, self.obj_value_AG)
+#                 self._eval_obj_MCP_logistic(self.beta_md, self.obj_value)
+#                 self._eval_obj_MCP_logistic(self.beta, self.obj_value_ORIGINAL)
+#                 self._eval_obj_MCP_logistic(self.beta_ag, self.obj_value_AG)
 #             else:
 #                 break
 #     return self.report_results()
@@ -1231,7 +1238,7 @@ def solution_path_logistic(design_matrix, outcome, lambda_, beta_0 = np.ones(1),
 
 
 
-# with strong rule 
+# with strong rule
 
 @jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _UAG_logistic_SCAD_MCP_strongrule(design_matrix, outcome, beta_0 = np.ones(1), tol=1e-2, maxit=500, _lambda=.5, penalty="SCAD", a=3.7, gamma=2., L_convex=1.1, add_intercept_column = True, strongrule=True):
@@ -1255,12 +1262,12 @@ def _UAG_logistic_SCAD_MCP_strongrule(design_matrix, outcome, beta_0 = np.ones(1
     if strongrule == True:
         _lambda_max = lambda_max_logistic(X, y)
         p_original = X.shape[1]
-        elim = strong_rule_seq_logistic(X, y, beta_old=np.zeros(p_original), lambda_new=_lambda, lambda_old=_lambda_max)
+        elim = _strong_rule_seq_logistic(X, y, beta_old=np.zeros(p_original), lambda_new=_lambda, lambda_old=_lambda_max)
         X = X[:, np.logical_not(elim)]
         beta = beta[np.logical_not(elim)]
-        
+
     # passing other parameters
-    p = X.shape[1] # so here p includes the intercept design matrix column 
+    p = X.shape[1] # so here p includes the intercept design matrix column
     smooth_grad = np.ones(p)
     beta_ag = beta.copy()
     beta_md = beta.copy()
@@ -1275,7 +1282,7 @@ def _UAG_logistic_SCAD_MCP_strongrule(design_matrix, outcome, beta_0 = np.ones(1
     old_speed_norm = 1.
     speed_norm = 1.
     restart_k = 0
-    
+
     if penalty == "SCAD":
 #         L = np.max(np.array([L_convex, 1./(a-1)]))
         L = np.linalg.norm(np.array([L_convex, 1./(a-1)]), ord=np.infty)
@@ -1286,14 +1293,14 @@ def _UAG_logistic_SCAD_MCP_strongrule(design_matrix, outcome, beta_0 = np.ones(1
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2./(1.+(1.+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2./(1.+(1.+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1.-opt_alpha)*beta_ag + opt_alpha*beta
             old_speed_norm = speed_norm # restarting
             speed_norm = np.linalg.norm(beta_md - beta_md_old, ord=2) # restarting
             converged = (np.linalg.norm(beta_md - beta_md_old, ord=np.infty) < tol)
-            smooth_grad = update_smooth_grad_SCAD_logistic(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, a=a)
+            smooth_grad = _update_smooth_grad_SCAD_logistic(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, a=a)
             beta = soft_thresholding(x=beta - opt_lambda*smooth_grad, lambda_=opt_lambda*_lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta*smooth_grad, lambda_=opt_beta*_lambda)
 #             converged = np.all(np.max(np.abs(beta_md - beta_ag)/opt_beta) < tol).item()
@@ -1308,14 +1315,14 @@ def _UAG_logistic_SCAD_MCP_strongrule(design_matrix, outcome, beta_0 = np.ones(1
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2/(1.+(1.+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2/(1.+(1.+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1.-opt_alpha)*beta_ag + opt_alpha*beta
             old_speed_norm = speed_norm # restarting
             speed_norm = np.linalg.norm(beta_md - beta_md_old, ord=2) # restarting
             converged = (np.linalg.norm(beta_md - beta_md_old, ord=np.infty) < tol)
-            smooth_grad = update_smooth_grad_MCP_logistic(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, gamma=gamma)
+            smooth_grad = _update_smooth_grad_MCP_logistic(N=N, X=X, beta_md=beta_md, y=y, _lambda=_lambda, gamma=gamma)
             beta = soft_thresholding(x=beta - opt_lambda*smooth_grad, lambda_=opt_lambda*_lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta*smooth_grad, lambda_=opt_beta*_lambda)
 #             converged = np.all(np.max(np.abs(beta_md - beta_ag)/opt_beta) < tol).item()
@@ -1364,13 +1371,15 @@ def solution_path_logistic_strongrule(design_matrix, outcome, lambda_, beta_0 = 
     lambda_ = np.hstack((np.array([_lambda_max]), lambda_))
     elim = np.array([False]*_design_matrix.shape[1])
     for j in range(len(lambda_)-1):
-        _elim = strong_rule_seq_logistic(X=_design_matrix, y=outcome, beta_old=beta_mat[j,:], lambda_new=lambda_[j+1], lambda_old=lambda_[j])
+        _elim = _strong_rule_seq_logistic(X=_design_matrix, y=outcome, beta_old=beta_mat[j,:], lambda_new=lambda_[j+1], lambda_old=lambda_[j])
         elim = np.logical_and(elim, _elim)
         _beta_0 = beta_mat[j,:]
         _new_beta = np.zeros(_design_matrix.shape[1])
         _new_beta[np.logical_not(elim)] = UAG_logistic_SCAD_MCP(design_matrix=_design_matrix[:, np.logical_not(elim)], outcome=outcome, beta_0 = _beta_0[np.logical_not(elim)], tol=tol, maxit=maxit, _lambda=lambda_[j], penalty=penalty, a=a, gamma=gamma, add_intercept_column=False)[1]
         beta_mat[j+1,:] = _new_beta
     return beta_mat[1:,:]
+
+
 
 ############################################################################
 ############# logistic SNP version with bed-reader #########################
@@ -1464,7 +1473,7 @@ def SNP_UAG_logistic_SCAD_MCP(bed_file, bim_file, fam_file, outcome, outcome_iid
     old_speed_norm = 1.
     speed_norm = 1.
     restart_k = 0
-    
+
     if penalty == "SCAD":
 #         L = np.max(np.array([L_convex, 1./(a-1)]))
         L = np.linalg.norm(np.array([L_convex, 1./(a-1)]), ord=np.infty)
@@ -1475,7 +1484,7 @@ def SNP_UAG_logistic_SCAD_MCP(bed_file, bim_file, fam_file, outcome, outcome_iid
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1-opt_alpha)*beta_ag + opt_alpha*beta
@@ -1497,7 +1506,7 @@ def SNP_UAG_logistic_SCAD_MCP(bed_file, bim_file, fam_file, outcome, outcome_iid
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1-opt_alpha)*beta_ag + opt_alpha*beta
@@ -1520,9 +1529,11 @@ def SNP_solution_path_logistic(bed_file, bim_file, fam_file, outcome, outcome_ii
     bed = open_bed(filepath=bed_file, fam_filepath=fam_file, bim_filepath=bim_file)
     p = len(list(bed.sid))
     beta_mat = np.zeros((len(lambda_)+1, p))
-    for j in range(len(lambda_)): 
+    for j in range(len(lambda_)):
         beta_mat[j+1,:] = SNP_UAG_logistic_SCAD_MCP(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, SNP_ind=SNP_ind, L_convex=L_convex, beta_0 = beta_mat[j,:], tol=tol, maxit=maxit, _lambda=lambda_[j], penalty=penalty, outcome_iid=outcome_iid, a=a, gamma=gamma)[1]
     return beta_mat[1:,:]
+
+
 
 
 ##############################################################################################
@@ -1571,7 +1582,7 @@ def _SNP_update_smooth_grad_convex_logistic_parallel(N, SNP_ind, bed, beta_md, y
     __XTXbeta = np.hstack(_XTXbeta)
     _XTXbeta = np.zeros(p)
     _XTXbeta[SNP_ind] = __XTXbeta
-    
+
     del _
     del __XTXbeta
 
@@ -1619,7 +1630,7 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file, bim_file, fam_file, outcome, ou
     p = len(list(bed.sid))
     gene_iid = np.array(list(bed.iid))
     N = len(np.intersect1d(outcome_iid, gene_iid, assume_unique=True, return_indices=True)[1])
-    if np.all(beta_0==np.ones(1)):        
+    if np.all(beta_0==np.ones(1)):
         def __parallel_assign(_ind):
             import numpy as np
             k=0
@@ -1650,7 +1661,7 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file, bim_file, fam_file, outcome, ou
     old_speed_norm = 1.
     speed_norm = 1.
     restart_k = 0
-    
+
     if penalty == "SCAD":
 #         L = np.max(np.array([L_convex, 1./(a-1)]))
         L = np.linalg.norm(np.array([L_convex, 1./(a-1)]), ord=np.infty)
@@ -1661,7 +1672,7 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file, bim_file, fam_file, outcome, ou
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1-opt_alpha)*beta_ag + opt_alpha*beta
@@ -1683,7 +1694,7 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file, bim_file, fam_file, outcome, ou
                 opt_alpha = 1. # restarting
                 restart_k = k # restarting
             else: # restarting
-                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound 
+                opt_alpha = 2/(1+(1+4./opt_alpha**2)**.5) #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             opt_lambda = opt_beta/opt_alpha #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
             beta_md_old = beta_md.copy() # restarting
             beta_md = (1-opt_alpha)*beta_ag + opt_alpha*beta
@@ -1706,11 +1717,6 @@ def SNP_solution_path_logistic_parallel(bed_file, bim_file, fam_file, outcome, o
     bed = open_bed(filepath=bed_file, fam_filepath=fam_file, bim_filepath=bim_file)
     p = len(list(bed.sid))
     beta_mat = np.zeros((len(lambda_)+1, p))
-    for j in range(len(lambda_)): 
+    for j in range(len(lambda_)):
         beta_mat[j+1,:] = SNP_UAG_logistic_SCAD_MCP_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, SNP_ind=SNP_ind, L_convex=L_convex, beta_0 = beta_mat[j,:], tol=tol, maxit=maxit, _lambda=lambda_[j], penalty=penalty, outcome_iid=outcome_iid, a=a, gamma=gamma, chunck_size=chunck_size)[1]
     return beta_mat[1:,:]
-
-
-
-
-
