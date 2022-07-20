@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "MI_AG"
-version = "0.6.9"
+version = "0.6.12"
 authors = [
   { name="Kai Yang", email="kai.yang2@mail.mcgill.ca" },
 ]
