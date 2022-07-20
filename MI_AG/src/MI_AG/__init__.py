@@ -195,7 +195,7 @@ def continuous_filter_parallel(bed_file, bim_file, fam_file, outcome, outcome_ii
         return _MI_slice
     # multiprocessing starts here
     ind = np.arange(len(bed1_sid))
-    n_slices = np.floor(len(ind)/chunck_size)
+    n_slices = np.ceil(len(ind)/chunck_size)
     with mp.Pool(mp.cpu_count()) as p:
         MI_UKBB = p.map(_continuous_filter_slice, np.array_split(ind, n_slices))
     MI_UKBB = np.hstack(MI_UKBB)
@@ -225,7 +225,7 @@ def binary_filter_parallel(bed_file, bim_file, fam_file, outcome, outcome_iid, a
         return _MI_slice
     # multiprocessing starts here
     ind = np.arange(len(bed1_sid))
-    n_slices = np.floor(len(ind)/chunck_size)
+    n_slices = np.ceil(len(ind)/chunck_size)
     with mp.Pool(mp.cpu_count()) as p:
         MI_UKBB = p.map(_binary_filter_slice, np.array_split(ind, n_slices))
     MI_UKBB = np.hstack(MI_UKBB)
