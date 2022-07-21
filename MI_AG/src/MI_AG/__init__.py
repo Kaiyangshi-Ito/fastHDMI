@@ -716,7 +716,8 @@ def _SNP_update_smooth_grad_convex_LM(N, SNP_ind, bed, beta_md, y, outcome_iid):
     for j in SNP_ind:
         _X = bed.read(_np.s_[:,j], dtype=_np.int8).flatten()
         _X = _X[gene_ind] # get gene iid also in outcome iid
-        _ += _X*beta_md[j]
+        _ += _X*beta_md[j+1] # +1 because intercept
+    _ += beta_md[0] # add the intercept
     _ -= _y
     # then calculate _XTXbeta = X.T@X@beta_md = X.T@_
     _XTXbeta = _np.zeros(p)
@@ -724,6 +725,7 @@ def _SNP_update_smooth_grad_convex_LM(N, SNP_ind, bed, beta_md, y, outcome_iid):
         _X = bed.read(_np.s_[:,j], dtype=_np.int8).flatten()
         _X = _X[gene_ind] # get gene iid also in outcome iid
         _XTXbeta[j] = _X@_
+    _XTXbeta = _np.hstack((_np.array([np.sum(_)]),_XTXbeta))
     del _
     return 1/N*_XTXbeta
 
@@ -778,10 +780,11 @@ def SNP_UAG_LM_SCAD_MCP(bed_file, bim_file, fam_file, outcome, outcome_iid, SNP_
             _X = _X[gene_ind] # get gene iid also in outcome iid
             _[j] = _X@_y
         beta = _np.sign(_)
+        beta = _np.hstack((np.array([0]), beta))
     else:
         beta = beta_0
     # passing other parameters
-    smooth_grad = _np.ones(p)
+    smooth_grad = _np.ones(p+1)
     beta_ag = beta.copy()
     beta_md = beta.copy()
     k = 0
@@ -845,11 +848,10 @@ def SNP_solution_path_LM(bed_file, bim_file, fam_file, outcome, outcome_iid, lam
     '''
     bed = _open_bed(filepath=bed_file, fam_filepath=fam_file, bim_filepath=bim_file)
     p = len(list(bed.sid))
-    beta_mat = _np.zeros((len(lambda_)+1, p))
+    beta_mat = _np.zeros((len(lambda_)+1, p+1))
     for j in range(len(lambda_)):
         beta_mat[j+1,:] = SNP_UAG_LM_SCAD_MCP(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, SNP_ind=SNP_ind, L_convex=L_convex, beta_0 = beta_mat[j,:], tol=tol, maxit=maxit, _lambda=lambda_[j], penalty=penalty, outcome_iid=outcome_iid, a=a, gamma=gamma)[1]
     return beta_mat[1:,:]
-
 
 
 
@@ -875,13 +877,14 @@ def _SNP_update_smooth_grad_convex_LM_parallel(N, SNP_ind, bed, beta_md, y, outc
         for j in _ind:
             _X = bed.read(_np.s_[:,j], dtype=_np.int8).flatten()
             _X = _X[gene_ind] # get gene iid also in outcome iid
-            __ += _X*beta_md[j]
+            __ += _X*beta_md[j+1]
         return __
     # multiprocessing starts here
     n_slices = _np.ceil(len(SNP_ind)/chunck_size)
     with _mp.Pool(_mp.cpu_count()) as pl:
         _ = pl.map(__parallel_plus, _np.array_split(SNP_ind, n_slices))
     _ = _np.array(_).sum(0)
+    _ += beta_md[0] # add the intercept
     _ -= _y
     # then calculate _XTXbeta = X.T@X@beta_md = X.T@_
     def __parallel_assign(_ind):
@@ -899,9 +902,9 @@ def _SNP_update_smooth_grad_convex_LM_parallel(N, SNP_ind, bed, beta_md, y, outc
     with _mp.Pool(_mp.cpu_count()) as pl:
         _XTXbeta = pl.map(__parallel_assign, _np.array_split(SNP_ind, n_slices))
     __XTXbeta = _np.hstack(_XTXbeta)
-    _XTXbeta = _np.zeros(p)
-    _XTXbeta[SNP_ind] = __XTXbeta
-
+    _XTXbeta = _np.zeros(p+1)
+    _XTXbeta[SNP_ind+1] = __XTXbeta
+    _XTXbeta[0] = [_np.sum(_)]
     del _
     del __XTXbeta
 
@@ -966,12 +969,12 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file, bim_file, fam_file, outcome, outcome_
         with _mp.Pool(_mp.cpu_count()) as pl:
             _XTy = pl.map(__parallel_assign, _np.array_split(SNP_ind, n_slices))
         _XTy = _np.hstack(_XTy)
-        beta = _np.zeros(p)
-        beta[SNP_ind] = _np.sign(_XTy)
+        beta = _np.zeros(p+1)
+        beta[SNP_ind+1] = _np.sign(_XTy)
     else:
         beta = beta_0
     # passing other parameters
-    smooth_grad = _np.ones(p)
+    smooth_grad = _np.ones(p+1)
     beta_ag = beta.copy()
     beta_md = beta.copy()
     k = 0
@@ -1035,11 +1038,10 @@ def SNP_solution_path_LM_parallel(bed_file, bim_file, fam_file, outcome, outcome
     '''
     bed = _open_bed(filepath=bed_file, fam_filepath=fam_file, bim_filepath=bim_file)
     p = len(list(bed.sid))
-    beta_mat = _np.zeros((len(lambda_)+1, p))
+    beta_mat = _np.zeros((len(lambda_)+1, p+1))
     for j in range(len(lambda_)):
         beta_mat[j+1,:] = SNP_UAG_LM_SCAD_MCP_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, SNP_ind=SNP_ind, L_convex=L_convex, beta_0 = beta_mat[j,:], tol=tol, maxit=maxit, _lambda=lambda_[j], penalty=penalty, outcome_iid=outcome_iid, a=a, gamma=gamma, chunck_size=chunck_size)[1]
     return beta_mat[1:,:]
-
 
 
 
@@ -1415,7 +1417,8 @@ def _SNP_update_smooth_grad_convex_logistic(N, SNP_ind, bed, beta_md, y, outcome
     for j in SNP_ind:
         _X = bed.read(_np.s_[:,j], dtype=_np.int8).flatten()
         _X = _X[gene_ind] # get gene iid also in outcome iid
-        _ += _X*beta_md[j]
+        _ += _X*beta_md[j+1] # +1 because intercept
+    _ += beta_md[0] # add the intercept
     _ = _np.tanh(_/2.)/2.-_y+.5
     # then calculate output
     _XTXbeta = _np.zeros(p)
@@ -1423,6 +1426,7 @@ def _SNP_update_smooth_grad_convex_logistic(N, SNP_ind, bed, beta_md, y, outcome
         _X = bed.read(_np.s_[:,j], dtype=_np.int8).flatten()
         _X = _X[gene_ind] # get gene iid also in outcome iid
         _XTXbeta[j] = _X@_
+    _XTXbeta = _np.hstack((_np.array([np.sum(_)]),_XTXbeta))
     del _
     return _XTXbeta/(2.*N)
 
@@ -1477,10 +1481,11 @@ def SNP_UAG_logistic_SCAD_MCP(bed_file, bim_file, fam_file, outcome, outcome_iid
             _X = _X[gene_ind] # get gene iid also in outcome iid
             _[j] = _X@_y
         beta = _np.sign(_)
+        beta = _np.hstack((np.array([0]), beta))
     else:
         beta = beta_0
     # passing other parameters
-    smooth_grad = _np.ones(p)
+    smooth_grad = _np.ones(p+1)
     beta_ag = beta.copy()
     beta_md = beta.copy()
     k = 0
@@ -1544,10 +1549,11 @@ def SNP_solution_path_logistic(bed_file, bim_file, fam_file, outcome, outcome_ii
     '''
     bed = _open_bed(filepath=bed_file, fam_filepath=fam_file, bim_filepath=bim_file)
     p = len(list(bed.sid))
-    beta_mat = _np.zeros((len(lambda_)+1, p))
+    beta_mat = _np.zeros((len(lambda_)+1, p+1))
     for j in range(len(lambda_)):
         beta_mat[j+1,:] = SNP_UAG_logistic_SCAD_MCP(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, SNP_ind=SNP_ind, L_convex=L_convex, beta_0 = beta_mat[j,:], tol=tol, maxit=maxit, _lambda=lambda_[j], penalty=penalty, outcome_iid=outcome_iid, a=a, gamma=gamma)[1]
     return beta_mat[1:,:]
+
 
 
 
@@ -1574,13 +1580,14 @@ def _SNP_update_smooth_grad_convex_logistic_parallel(N, SNP_ind, bed, beta_md, y
         for j in _ind:
             _X = bed.read(_np.s_[:,j], dtype=_np.int8).flatten()
             _X = _X[gene_ind] # get gene iid also in outcome iid
-            __ += _X*beta_md[j]
+            __ += _X*beta_md[j+1]
         return __
     # multiprocessing starts here
     n_slices = _np.ceil(len(SNP_ind)/chunck_size)
     with _mp.Pool(_mp.cpu_count()) as pl:
         _ = pl.map(__parallel_plus, _np.array_split(SNP_ind, n_slices))
     _ = _np.array(_).sum(0)
+    _ += beta_md[0] # add the intercept
     _ = _np.tanh(_/2.)/2.-_y+.5
     # then calculate _XTXbeta = X.T@X@beta_md = X.T@_
     def __parallel_assign(_ind):
@@ -1598,13 +1605,12 @@ def _SNP_update_smooth_grad_convex_logistic_parallel(N, SNP_ind, bed, beta_md, y
     with _mp.Pool(_mp.cpu_count()) as pl:
         _XTXbeta = pl.map(__parallel_assign, _np.array_split(SNP_ind, n_slices))
     __XTXbeta = _np.hstack(_XTXbeta)
-    _XTXbeta = _np.zeros(p)
-    _XTXbeta[SNP_ind] = __XTXbeta
-
+    _XTXbeta = _np.zeros(p+1)
+    _XTXbeta[SNP_ind+1] = __XTXbeta
+    _XTXbeta[0] = [_np.sum(_)]
     del _
     del __XTXbeta
-
-    return 1/N*_XTXbeta
+    return _XTXbeta/(2.*N)
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_SCAD_logistic_parallel(N, SNP_ind, bed, beta_md, y, outcome_iid, _lambda, a, chunck_size):
@@ -1665,12 +1671,12 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file, bim_file, fam_file, outcome, ou
         with _mp.Pool(_mp.cpu_count()) as pl:
             _XTy = pl.map(__parallel_assign, _np.array_split(SNP_ind, n_slices))
         _XTy = _np.hstack(_XTy)
-        beta = _np.zeros(p)
-        beta[SNP_ind] = _np.sign(_XTy)
+        beta = _np.zeros(p+1)
+        beta[SNP_ind+1] = _np.sign(_XTy)
     else:
         beta = beta_0
     # passing other parameters
-    smooth_grad = _np.ones(p)
+    smooth_grad = _np.ones(p+1)
     beta_ag = beta.copy()
     beta_md = beta.copy()
     k = 0
@@ -1734,7 +1740,7 @@ def SNP_solution_path_logistic_parallel(bed_file, bim_file, fam_file, outcome, o
     '''
     bed = _open_bed(filepath=bed_file, fam_filepath=fam_file, bim_filepath=bim_file)
     p = len(list(bed.sid))
-    beta_mat = _np.zeros((len(lambda_)+1, p))
+    beta_mat = _np.zeros((len(lambda_)+1, p+1))
     for j in range(len(lambda_)):
         beta_mat[j+1,:] = SNP_UAG_logistic_SCAD_MCP_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, SNP_ind=SNP_ind, L_convex=L_convex, beta_0 = beta_mat[j,:], tol=tol, maxit=maxit, _lambda=lambda_[j], penalty=penalty, outcome_iid=outcome_iid, a=a, gamma=gamma, chunck_size=chunck_size)[1]
     return beta_mat[1:,:]
