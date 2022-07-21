@@ -775,9 +775,11 @@ def SNP_UAG_LM_SCAD_MCP(bed_file, bim_file, fam_file, outcome, outcome_iid, SNP_
     if _np.all(beta_0==_np.ones(1)):
         _ = _np.zeros(p)
         _y = y[_np.intersect1d(outcome_iid, gene_iid, assume_unique=True, return_indices=True)[1]]
+        _y -= _np.mean(_y)
         for j in SNP_ind:
             _X = bed.read(_np.s_[:,j], dtype=_np.int8).flatten()
             _X = _X[gene_ind] # get gene iid also in outcome iid
+            _X -= _np.mean(_X)
             _[j] = _X@_y
         beta = _np.sign(_)
         beta = _np.hstack((np.array([0]), beta))
@@ -858,6 +860,8 @@ def SNP_solution_path_LM(bed_file, bim_file, fam_file, outcome, outcome_iid, lam
 
 
 
+
+
 ###################################################################################
 ########### LM AG SNP version using bed-reader, multiprocess ######################
 ###################################################################################
@@ -904,7 +908,7 @@ def _SNP_update_smooth_grad_convex_LM_parallel(N, SNP_ind, bed, beta_md, y, outc
     __XTXbeta = _np.hstack(_XTXbeta)
     _XTXbeta = _np.zeros(p+1)
     _XTXbeta[SNP_ind+1] = __XTXbeta
-    _XTXbeta[0] = [_np.sum(_)]
+    _XTXbeta[0] = _np.sum(_)
     del _
     del __XTXbeta
 
@@ -953,6 +957,8 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file, bim_file, fam_file, outcome, outcome_
     gene_iid = _np.array(list(bed.iid))
     N = len(_np.intersect1d(outcome_iid, gene_iid, assume_unique=True, return_indices=True)[1])
     if _np.all(beta_0==_np.ones(1)):
+        _y = y[_np.intersect1d(outcome_iid, gene_iid, assume_unique=True, return_indices=True)[1]]
+        _y -= _np.mean(_y)
         def __parallel_assign(_ind):
             import numpy as _np
             k=0
@@ -960,11 +966,11 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file, bim_file, fam_file, outcome, outcome_
             for j in _ind:
                 _X = bed.read(_np.s_[:,j], dtype=_np.int8).flatten()
                 _X = _X[gene_ind] # get gene iid also in outcome iid
-                __[k] = _X@y
+                _X -= _np.mean(_X)
+                __[k] = _X@_y
                 k += 1
             return __
         # multiprocessing starts here
-        _y = y[_np.intersect1d(outcome_iid, gene_iid, assume_unique=True, return_indices=True)[1]]
         n_slices = _np.ceil(len(SNP_ind)/chunck_size)
         with _mp.Pool(_mp.cpu_count()) as pl:
             _XTy = pl.map(__parallel_assign, _np.array_split(SNP_ind, n_slices))
@@ -1042,6 +1048,7 @@ def SNP_solution_path_LM_parallel(bed_file, bim_file, fam_file, outcome, outcome
     for j in range(len(lambda_)):
         beta_mat[j+1,:] = SNP_UAG_LM_SCAD_MCP_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, SNP_ind=SNP_ind, L_convex=L_convex, beta_0 = beta_mat[j,:], tol=tol, maxit=maxit, _lambda=lambda_[j], penalty=penalty, outcome_iid=outcome_iid, a=a, gamma=gamma, chunck_size=chunck_size)[1]
     return beta_mat[1:,:]
+
 
 
 
@@ -1476,9 +1483,11 @@ def SNP_UAG_logistic_SCAD_MCP(bed_file, bim_file, fam_file, outcome, outcome_iid
     if _np.all(beta_0==_np.ones(1)):
         _ = _np.zeros(p)
         _y = y[_np.intersect1d(outcome_iid, gene_iid, assume_unique=True, return_indices=True)[1]]
+        _y -= _np.mean(_y)
         for j in SNP_ind:
             _X = bed.read(_np.s_[:,j], dtype=_np.int8).flatten()
             _X = _X[gene_ind] # get gene iid also in outcome iid
+            _X -= _np.mean(_X)
             _[j] = _X@_y
         beta = _np.sign(_)
         beta = _np.hstack((np.array([0]), beta))
@@ -1561,6 +1570,8 @@ def SNP_solution_path_logistic(bed_file, bim_file, fam_file, outcome, outcome_ii
 
 
 
+
+
 ##############################################################################################
 ################ logsitic AG SNP bed-reader version with multiprocess ########################
 ##############################################################################################
@@ -1607,7 +1618,7 @@ def _SNP_update_smooth_grad_convex_logistic_parallel(N, SNP_ind, bed, beta_md, y
     __XTXbeta = _np.hstack(_XTXbeta)
     _XTXbeta = _np.zeros(p+1)
     _XTXbeta[SNP_ind+1] = __XTXbeta
-    _XTXbeta[0] = [_np.sum(_)]
+    _XTXbeta[0] = _np.sum(_)
     del _
     del __XTXbeta
     return _XTXbeta/(2.*N)
@@ -1655,6 +1666,8 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file, bim_file, fam_file, outcome, ou
     gene_iid = _np.array(list(bed.iid))
     N = len(_np.intersect1d(outcome_iid, gene_iid, assume_unique=True, return_indices=True)[1])
     if _np.all(beta_0==_np.ones(1)):
+        _y = y[_np.intersect1d(outcome_iid, gene_iid, assume_unique=True, return_indices=True)[1]]
+        _y -= _np.mean(_y)
         def __parallel_assign(_ind):
             import numpy as _np
             k=0
@@ -1662,11 +1675,11 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file, bim_file, fam_file, outcome, ou
             for j in _ind:
                 _X = bed.read(_np.s_[:,j], dtype=_np.int8).flatten()
                 _X = _X[gene_ind] # get gene iid also in outcome iid
-                __[k] = _X@y
+                _X -= _np.mean(_X)
+                __[k] = _X@_y
                 k += 1
             return __
         # multiprocessing starts here
-        _y = y[_np.intersect1d(outcome_iid, gene_iid, assume_unique=True, return_indices=True)[1]]
         n_slices = _np.ceil(len(SNP_ind)/chunck_size)
         with _mp.Pool(_mp.cpu_count()) as pl:
             _XTy = pl.map(__parallel_assign, _np.array_split(SNP_ind, n_slices))
