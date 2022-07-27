@@ -67,7 +67,7 @@ def _MI_continuous(a, b, a_min, a_max, N=500):
     return mi_temp
 
 
-def _MI_binary(a, b, a_min, a_max, N=500):
+def _MI_binary(a, b):
     """
     calculate mutual information between binary outcome and an SNP variable of 0,1,2
     assume no missing data
@@ -76,53 +76,30 @@ def _MI_binary(a, b, a_min, a_max, N=500):
     p0 = _np.sum(b == 0) / len(b)
     p1 = _np.sum(b == 1) / len(b)
     p2 = 1. - p0 - p1
+    b_marginal = np.array([p0, p1, p2])
     # estimate pmf of the binary outcome
     a_p0 = _np.sum(a == 0) / len(a)
     a_p1 = _np.sum(a == 1) / len(a)
-    # estimate cond density
+    a_marginal = np.array([a_p0, a_p1]).reshape(-1, 1)
+    # estimate the cond density
+    joint = np.zeros((2, 3))
     _b0 = (b == 0)
-    if _np.sum(
-            _b0
-    ) > 2:  # here proceed to kde only if there are more than 5 data points
-        y_cond_p0 = lambda x: x * _np.sum(a[_b0] == 1) / len(a[_b0]) + (
-            1 - x) * _np.sum(a[_b0] == 0) / len(a[_b0])
-#         y_cond_p0 = gaussian_kde(a[_b0])
-    else:
-        y_cond_p0 = _np.zeros_like
+    joint[0,0] = _np.sum(a[_b0] == 0) / len(a[_b0])
+    joint[1,0] = _np.sum(a[_b0] == 1) / len(a[_b0])
     _b1 = (b == 1)
-    if _np.sum(_b1) > 2:
-        y_cond_p1 = lambda x: x * _np.sum(a[_b1] == 1) / len(a[_b1]) + (
-            1 - x) * _np.sum(a[_b1] == 0) / len(a[_b1])
-#         y_cond_p1 = gaussian_kde(a[_b1]) # this thing uses Scott's rule instead of Silverman defaulted by FFTKDE and R density
-    else:
-        y_cond_p1 = _np.zeros_like
+    joint[0,1] = _np.sum(a[_b1] == 0) / len(a[_b1])
+    joint[1,1] = _np.sum(a[_b1] == 1) / len(a[_b1])
     _b2 = (b == 2)
-    if _np.sum(_b2) > 2:
-        y_cond_p2 = lambda x: x * _np.sum(a[_b2] == 1) / len(a[_b2]) + (
-            1 - x) * _np.sum(a[_b2] == 0) / len(a[_b2])
-#         y_cond_p2 = gaussian_kde(a[_b2])
-    else:
-        y_cond_p2 = _np.zeros_like
-    joint = _np.empty((N, 3))
-    a_temp = _np.linspace(a_min, a_max, num=N)
-    joint[:, 0] = y_cond_p0(a_temp) * p0
-    joint[:, 1] = y_cond_p1(a_temp) * p1
-    joint[:, 2] = y_cond_p2(a_temp) * p2
-    joint[joint < 1e-20] = 1e-20  # set a threshold to avoid numerical errors
-    forward_euler_step = a_temp[1] - a_temp[0]
-    #     print("total measure:", _np.sum(joint)*forward_euler_step)
-    temp_log = _np.log(joint)
-    #     temp_log = _np.nan_to_num(temp_log, nan = 0)
-    temp1 = _np.log(_np.sum(joint, 1))
-    #     temp1 = _np.nan_to_num(temp1, nan = 0)
-    temp_log = temp_log - temp1.reshape(-1, 1)
-    temp2 = _np.log(_np.sum(joint, 0) * forward_euler_step)
-    #     temp2 = _np.nan_to_num(temp2, nan = 0)
-    temp_log = temp_log - temp2.reshape(1, -1)
-    # print(fhat_mat * temp_log)
-    temp_mat = joint * temp_log
-    #     temp_mat = _np.nan_to_num(temp_mat, nan=0.) # numerical fix
-    mi_temp = _np.sum(temp_mat) * forward_euler_step
+    joint[0,2] = _np.sum(a[_b2] == 0) / len(a[_b2])
+    joint[1,2] = _np.sum(a[_b2] == 1) / len(a[_b2])
+
+    _ = a_marginal*b_marginal
+    _ = joint/_
+    __ = joint*_np.log(_)
+    __ = _np.nan_to_num(__, nan=0.0) # for possible nuemrical issues
+
+    mi_temp = np.sum(__)
+
     return mi_temp
 
 
@@ -170,10 +147,7 @@ def binary_filter(bed_file,
                   bim_file,
                   fam_file,
                   outcome,
-                  outcome_iid,
-                  a_min=100.,
-                  a_max=250.,
-                  N=500):
+                  outcome_iid):
     """
     (Single Core version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
@@ -198,10 +172,7 @@ def binary_filter(bed_file,
         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
         MI_UKBB[j] = _MI_binary(a=_outcome,
-                                b=_SNP,
-                                a_min=a_min,
-                                a_max=a_max,
-                                N=N)
+                                b=_SNP)
     return MI_UKBB
 
 
@@ -263,9 +234,6 @@ def binary_filter_parallel(bed_file,
                            fam_file,
                            outcome,
                            outcome_iid,
-                           a_min=100.,
-                           a_max=250.,
-                           N=500,
                            chunck_size=60000):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
@@ -294,10 +262,7 @@ def binary_filter_parallel(bed_file,
             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
             _SNP = _SNP[_SNP != -127]  # remove missing SNP
             _MI_slice[k] = _MI_binary(a=_outcome,
-                                      b=_SNP,
-                                      a_min=a_min,
-                                      a_max=a_max,
-                                      N=N)
+                                      b=_SNP)
             k += 1
         return _MI_slice
 
