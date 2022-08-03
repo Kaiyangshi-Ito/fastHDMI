@@ -417,7 +417,141 @@ def MCP_concave_grad(x, lambda_, gamma):
     return temp
 
 
+######################################  some SCAD and MCP things  #######################################
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def soft_thresholding_PCA(x, lambda_, pca_p):
+    '''
+    To calculate soft-thresholding mapping of a given ONE-DIMENSIONAL tensor, BESIDES THE FIRST TERM (so beta_0 will not be penalized).
+    This function is to be used for calculation involving L1 penalty term later.
+    '''
+    return _np.hstack(
+        (x[0:pca_p + 1],
+         _np.where(
+             _np.abs(x[pca_p + 1:]) > lambda_,
+             x[pca_p + 1:] - _np.sign(x[pca_p + 1:]) * lambda_, 0)))
 
+
+soft_thresholding_PCA(_np.arange(-1000, 1000) / 1000, .5, 10)
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def SCAD_PCA(x, lambda_, a, pca_p):
+    '''
+    To calculate SCAD penalty value;
+    #x can be a multi-dimensional tensor;
+    lambda_, a are scalars;
+    Fan and Li suggests to take a as 3.7
+    '''
+    # here I notice the function is de facto a function of absolute value of x, therefore take absolute value first to simplify calculation
+    x = _np.abs(x)
+    temp = _np.where(
+        x <= lambda_, lambda_ * x,
+        _np.where(x < a * lambda_,
+                  (2 * a * lambda_ * x - x**2 - lambda_**2) / (2 * (a - 1)),
+                  lambda_**2 * (a + 1) / 2))
+    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def SCAD_grad_PCA(x, lambda_, a, pca_p):
+    '''
+    To calculate the gradient of SCAD wrt. input x;
+    #x can be a multi-dimensional tensor.
+    '''
+    # here decompose x to sign and its absolute value for easier calculation
+    sgn = _np.sign(x)
+    x = _np.abs(x)
+    temp = _np.where(
+        x <= lambda_, lambda_ * sgn,
+        _np.where(x < a * lambda_, (a * lambda_ * sgn - sgn * x) / (a - 1), 0))
+    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def MCP_PCA(x, lambda_, gamma, pca_p):
+    '''
+    To calculate MCP penalty value;
+    #x can be a multi-dimensional tensor.
+    '''
+    # the function is a function of absolute value of x
+    x = _np.abs(x)
+    temp = _np.where(x <= gamma * lambda_, lambda_ * x - x**2 / (2 * gamma),
+                     .5 * gamma * lambda_**2)
+    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def MCP_grad_PCA(x, lambda_, gamma, pca_p):
+    '''
+    To calculate MCP gradient wrt. input x;
+    #x can be a multi-dimensional tensor.
+    '''
+    temp = _np.where(
+        _np.abs(x) < gamma * lambda_,
+        lambda_ * _np.sign(x) - x / gamma, _np.zeros_like(x))
+    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def SCAD_concave_PCA(x, lambda_, a, pca_p):
+    '''
+    The value of concave part of SCAD penalty;
+    #x can be a multi-dimensional tensor.
+    '''
+    x = _np.abs(x)
+    temp = _np.where(
+        x <= lambda_, 0.,
+        _np.where(x < a * lambda_,
+                  (lambda_ * x - (x**2 + lambda_**2) / 2) / (a - 1),
+                  (a + 1) / 2 * lambda_**2 - lambda_ * x))
+    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def SCAD_concave_grad_PCA(x, lambda_, a, pca_p):
+    '''
+    The gradient of concave part of SCAD penalty wrt. input x;
+    #x can be a multi-dimensional tensor.
+    '''
+    sgn = _np.sign(x)
+    x = _np.abs(x)
+    temp = _np.where(
+        x <= lambda_, 0.,
+        _np.where(x < a * lambda_, (lambda_ * sgn - sgn * x) / (a - 1),
+                  -lambda_ * sgn))
+    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def MCP_concave_PCA(x, lambda_, gamma, pca_p):
+    '''
+    The value of concave part of MCP penalty;
+    #x can be a multi-dimensional tensor.
+    '''
+    # similiar as in MCP
+    x = _np.abs(x)
+    temp = _np.where(x <= gamma * lambda_, -(x**2) / (2 * gamma),
+                     (gamma * lambda_**2) / 2 - lambda_ * x)
+    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def MCP_concave_grad_PCA(x, lambda_, gamma, pca_p):
+    '''
+    The gradient of concave part of MCP penalty wrt. input x;
+    #x can be a multi-dimensional tensor.
+    '''
+    temp = _np.where(
+        _np.abs(x) < gamma * lambda_, -x / gamma, -lambda_ * _np.sign(x))
+    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
+    return temp
 
 ##################################################################
 ######### LM AG normal memory version with numba #################
@@ -947,8 +1081,8 @@ def solution_path_LM_strongrule(design_matrix,
 ########### LM AG SNP version using bed-reader ###################
 ##################################################################
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def _SNP_update_smooth_grad_convex_LM(N, SNP_ind, bed, beta_md, y,
-                                      outcome_iid):
+def _SNP_update_smooth_grad_convex_LM(N, SNP_ind, bed, beta_md, y, outcome_iid,
+                                      pca_p, pca):
     '''
     Update the gradient of the smooth convex objective component.
     '''
@@ -969,6 +1103,7 @@ def _SNP_update_smooth_grad_convex_LM(N, SNP_ind, bed, beta_md, y,
         _X = _X[gene_ind]  # get gene iid also in outcome iid
         _ += _X * beta_md[j + 1]  # +1 because intercept
     _ += beta_md[0]  # add the intercept
+    _ += pca[gene_ind, :] @ beta_md[1:pca_p + 1]
     _ -= _y
     # then calculate _XTXbeta = X.T@X@beta_md = X.T@_
     _XTXbeta = _np.zeros(p)
@@ -976,14 +1111,15 @@ def _SNP_update_smooth_grad_convex_LM(N, SNP_ind, bed, beta_md, y,
         _X = bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
         _X = _X[gene_ind]  # get gene iid also in outcome iid
         _XTXbeta[j] = _X @ _
-    _XTXbeta = _np.hstack((_np.array([np.sum(_)]), _XTXbeta))
+    _XTXbeta = _np.hstack(
+        (_np.array([np.sum(_)]), _ @ pca[gene_ind, :], _XTXbeta))
     del _
     return 1 / N * _XTXbeta
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_SCAD_LM(N, SNP_ind, bed, beta_md, y, outcome_iid,
-                                    _lambda, a):
+                                    _lambda, a, pca_p, pca):
     '''
     Update the gradient of the smooth objective component for SCAD penalty.
     '''
@@ -993,13 +1129,15 @@ def _SNP_update_smooth_grad_SCAD_LM(N, SNP_ind, bed, beta_md, y, outcome_iid,
         bed=bed,
         beta_md=beta_md,
         y=y,
-        outcome_iid=outcome_iid) + SCAD_concave_grad(
-            x=beta_md, lambda_=_lambda, a=a)
+        outcome_iid=outcome_iid,
+        pca_p=pca_p,
+        pca=pca) + SCAD_concave_grad_PCA(
+            x=beta_md, lambda_=_lambda, a=a, pca_p=pca_p)
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_MCP_LM(N, SNP_ind, bed, beta_md, y, outcome_iid,
-                                   _lambda, gamma):
+                                   _lambda, gamma, pca_p, pca):
     '''
     Update the gradient of the smooth objective component for MCP penalty.
     '''
@@ -1009,8 +1147,10 @@ def _SNP_update_smooth_grad_MCP_LM(N, SNP_ind, bed, beta_md, y, outcome_iid,
         bed=bed,
         beta_md=beta_md,
         y=y,
-        outcome_iid=outcome_iid) + MCP_concave_grad(
-            x=beta_md, lambda_=_lambda, gamma=gamma)
+        outcome_iid=outcome_iid,
+        pca_p=pca_p,
+        pca=pca) + MCP_concave_grad_PCA(
+            x=beta_md, lambda_=_lambda, gamma=gamma, pca_p=pca_p)
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
@@ -1036,26 +1176,28 @@ def _SNP_lambda_max_LM(bed, y, outcome_iid, N, SNP_ind):
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def SNP_UAG_LM_SCAD_MCP(bed_file,
-                        bim_file,
-                        fam_file,
-                        outcome,
-                        outcome_iid,
-                        SNP_ind,
-                        L_convex,
-                        beta_0=_np.ones(1),
-                        tol=1e-5,
-                        maxit=500,
-                        _lambda=.5,
-                        penalty="SCAD",
-                        a=3.7,
-                        gamma=2.):
+def SNP_UAG_LM_SCAD_MCP_PCA(bed_file,
+                            bim_file,
+                            fam_file,
+                            outcome,
+                            outcome_iid,
+                            SNP_ind,
+                            L_convex,
+                            pca,
+                            beta_0=_np.ones(1),
+                            tol=1e-5,
+                            maxit=500,
+                            _lambda=.5,
+                            penalty="SCAD",
+                            a=3.7,
+                            gamma=2.):
     '''
     Carry out the optimization for penalized LM for a fixed lambda.
     '''
     bed = _open_bed(filepath=bed_file,
                     fam_filepath=fam_file,
                     bim_filepath=bim_file)
+    pca_p = pca.shape[1]
     y = outcome
     p = bed.sid_count
     gene_iid = _np.array(list(bed.iid))
@@ -1077,11 +1219,12 @@ def SNP_UAG_LM_SCAD_MCP(bed_file,
             _X -= _np.mean(_X)
             _[j] = _X @ _y / N
         beta = _  #_np.sign(_)
-        beta = _np.hstack((np.array([0]), beta))
+        _pca = _y @ pca[gene_ind, :] / N
+        beta = _np.hstack((_np.array([_np.mean(_y)]), _pca, beta))
     else:
         beta = beta_0
     # passing other parameters
-    smooth_grad = _np.ones(p + 1)
+    smooth_grad = _np.ones(p + 1 + pca_p)
     beta_ag = beta.copy()
     beta_md = beta.copy()
     k = 0
@@ -1120,11 +1263,15 @@ def SNP_UAG_LM_SCAD_MCP(bed_file,
                 y=y,
                 outcome_iid=outcome_iid,
                 _lambda=_lambda,
-                a=a)
-            beta = soft_thresholding(x=beta - opt_lambda * smooth_grad,
-                                     lambda_=opt_lambda * _lambda)
-            beta_ag = soft_thresholding(x=beta_md - opt_beta * smooth_grad,
-                                        lambda_=opt_beta * _lambda)
+                a=a,
+                pca_p=pca_p,
+                pca=pca)
+            beta = soft_thresholding_PCA(x=beta - opt_lambda * smooth_grad,
+                                         lambda_=opt_lambda * _lambda,
+                                         pca_p=pca_p)
+            beta_ag = soft_thresholding_PCA(x=beta_md - opt_beta * smooth_grad,
+                                            lambda_=opt_beta * _lambda,
+                                            pca_p=pca_p)
 #             converged = _np.all(_np.max(_np.abs(beta_md - beta_ag)/opt_beta) < tol).item()
 #             converged = (_np.linalg.norm(beta_md - beta_ag, ord=_np.infty) < (tol*opt_beta))
     else:
@@ -1156,11 +1303,15 @@ def SNP_UAG_LM_SCAD_MCP(bed_file,
                 y=y,
                 outcome_iid=outcome_iid,
                 _lambda=_lambda,
-                gamma=gamma)
-            beta = soft_thresholding(x=beta - opt_lambda * smooth_grad,
-                                     lambda_=opt_lambda * _lambda)
-            beta_ag = soft_thresholding(x=beta_md - opt_beta * smooth_grad,
-                                        lambda_=opt_beta * _lambda)
+                gamma=gamma,
+                pca_p=pca_p,
+                pca=pca)
+            beta = soft_thresholding_PCA(x=beta - opt_lambda * smooth_grad,
+                                         lambda_=opt_lambda * _lambda,
+                                         pca_p=pca_p)
+            beta_ag = soft_thresholding_PCA(x=beta_md - opt_beta * smooth_grad,
+                                            lambda_=opt_beta * _lambda,
+                                            pca_p=pca_p)
 #             converged = _np.all(_np.max(_np.abs(beta_md - beta_ag)/opt_beta) < tol).item()
 #             converged = (_np.linalg.norm(beta_md - beta_ag, ord=_np.infty) < (tol*opt_beta))
     return k, beta_md
@@ -1175,6 +1326,7 @@ def SNP_solution_path_LM(bed_file,
                          lambda_,
                          L_convex,
                          SNP_ind,
+                         pca,
                          beta_0=_np.ones(1),
                          tol=1e-5,
                          maxit=500,
@@ -1184,6 +1336,7 @@ def SNP_solution_path_LM(bed_file,
     '''
     Carry out the optimization for the solution path without the strong rule.
     '''
+    pca_p = pca.shape[1]
     bed = _open_bed(filepath=bed_file,
                     fam_filepath=fam_file,
                     bim_filepath=bim_file)
@@ -1212,27 +1365,26 @@ def SNP_solution_path_LM(bed_file,
         _X -= _np.mean(_X)
         _[j] = _X @ _y / N
     beta = _  #_np.sign(_)
-    beta = _np.hstack((np.array([0]), beta)).reshape(1, -1)
-
-    beta_mat = _np.zeros((len(lambda_) + 1, p + 1))
+    _pca = _y @ pca[gene_ind, :] / N
+    beta = _np.hstack((_np.array([_np.mean(_y)]), _pca, beta)).reshape(1, -1)
     beta_mat = _np.repeat(beta, len(lambda_) + 1, axis=0)
     for j in range(len(lambda_)):
-        beta_mat[j + 1, :] = SNP_UAG_LM_SCAD_MCP(bed_file=bed_file,
-                                                 bim_file=bim_file,
-                                                 fam_file=fam_file,
-                                                 outcome=outcome,
-                                                 SNP_ind=SNP_ind,
-                                                 L_convex=L_convex,
-                                                 beta_0=beta_mat[j, :],
-                                                 tol=tol,
-                                                 maxit=maxit,
-                                                 _lambda=lambda_[j],
-                                                 penalty=penalty,
-                                                 outcome_iid=outcome_iid,
-                                                 a=a,
-                                                 gamma=gamma)[1]
+        beta_mat[j + 1, :] = SNP_UAG_LM_SCAD_MCP_PCA(bed_file=bed_file,
+                                                     bim_file=bim_file,
+                                                     fam_file=fam_file,
+                                                     outcome=outcome,
+                                                     SNP_ind=SNP_ind,
+                                                     L_convex=L_convex,
+                                                     pca=pca,
+                                                     beta_0=beta_mat[j, :],
+                                                     tol=tol,
+                                                     maxit=maxit,
+                                                     _lambda=lambda_[j],
+                                                     penalty=penalty,
+                                                     outcome_iid=outcome_iid,
+                                                     a=a,
+                                                     gamma=gamma)[1]
     return beta_mat[1:, :]
-
 
 
 
@@ -1975,8 +2127,8 @@ def solution_path_logistic_strongrule(design_matrix,
 ############# logistic SNP version with bed-reader #########################
 ############################################################################
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def _SNP_update_smooth_grad_convex_logistic(N, SNP_ind, bed, beta_md, y,
-                                            outcome_iid):
+def _SNP_update_smooth_grad_convex_logistic(N, SNP_ind, bed, beta_md, y, outcome_iid,
+                                      pca_p, pca):
     '''
     Update the gradient of the smooth convex objective component.
     '''
@@ -1990,28 +2142,30 @@ def _SNP_update_smooth_grad_convex_logistic(N, SNP_ind, bed, beta_md, y,
                                outcome_iid,
                                assume_unique=True,
                                return_indices=True)[1]
-    # first calcualte _=X@beta_md-_y
+    # first calcualte _=X@beta_md-y
     _ = _np.zeros(N)
     for j in SNP_ind:
         _X = bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
         _X = _X[gene_ind]  # get gene iid also in outcome iid
         _ += _X * beta_md[j + 1]  # +1 because intercept
     _ += beta_md[0]  # add the intercept
+    _ += pca[gene_ind, :] @ beta_md[1:pca_p + 1]
     _ = _np.tanh(_ / 2.) / 2. - _y + .5
-    # then calculate output
+    # then calculate _XTXbeta = X.T@X@beta_md = X.T@_
     _XTXbeta = _np.zeros(p)
     for j in SNP_ind:
         _X = bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
         _X = _X[gene_ind]  # get gene iid also in outcome iid
         _XTXbeta[j] = _X @ _
-    _XTXbeta = _np.hstack((_np.array([np.sum(_)]), _XTXbeta))
+    _XTXbeta = _np.hstack(
+        (_np.array([np.sum(_)]), _ @ pca[gene_ind, :], _XTXbeta))
     del _
-    return _XTXbeta / (2. * N)
+    return 1 / N * _XTXbeta
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def _SNP_update_smooth_grad_SCAD_logistic(N, SNP_ind, bed, beta_md, y,
-                                          outcome_iid, _lambda, a):
+def _SNP_update_smooth_grad_SCAD_logistic(N, SNP_ind, bed, beta_md, y, outcome_iid,
+                                    _lambda, a, pca_p, pca):
     '''
     Update the gradient of the smooth objective component for SCAD penalty.
     '''
@@ -2021,13 +2175,15 @@ def _SNP_update_smooth_grad_SCAD_logistic(N, SNP_ind, bed, beta_md, y,
         bed=bed,
         beta_md=beta_md,
         y=y,
-        outcome_iid=outcome_iid) + SCAD_concave_grad(
-            x=beta_md, lambda_=_lambda, a=a)
+        outcome_iid=outcome_iid,
+        pca_p=pca_p,
+        pca=pca) + SCAD_concave_grad_PCA(
+            x=beta_md, lambda_=_lambda, a=a, pca_p=pca_p)
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def _SNP_update_smooth_grad_MCP_logistic(N, SNP_ind, bed, beta_md, y,
-                                         outcome_iid, _lambda, gamma):
+def _SNP_update_smooth_grad_MCP_logistic(N, SNP_ind, bed, beta_md, y, outcome_iid,
+                                   _lambda, gamma, pca_p, pca):
     '''
     Update the gradient of the smooth objective component for MCP penalty.
     '''
@@ -2037,8 +2193,10 @@ def _SNP_update_smooth_grad_MCP_logistic(N, SNP_ind, bed, beta_md, y,
         bed=bed,
         beta_md=beta_md,
         y=y,
-        outcome_iid=outcome_iid) + MCP_concave_grad(
-            x=beta_md, lambda_=_lambda, gamma=gamma)
+        outcome_iid=outcome_iid,
+        pca_p=pca_p,
+        pca=pca) + MCP_concave_grad_PCA(
+            x=beta_md, lambda_=_lambda, gamma=gamma, pca_p=pca_p)
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
@@ -2054,37 +2212,38 @@ def _SNP_lambda_max_logistic(bed, y, outcome_iid, N, SNP_ind):
     #     y_temp -= _np.mean(y)
     #     y_temp /= _np.std(y)
     p = len(list(bed.sid))
-    grad_at_0 = _SNP_update_smooth_grad_convex_logistic(
-        N=N,
-        SNP_ind=SNP_ind,
-        bed=bed,
-        beta_md=_np.zeros(p),
-        y=y,
-        outcome_iid=outcome_iid)
+    grad_at_0 = _SNP_update_smooth_grad_convex_logistic(N=N,
+                                                  SNP_ind=SNP_ind,
+                                                  bed=bed,
+                                                  beta_md=_np.zeros(p),
+                                                  y=y,
+                                                  outcome_iid=outcome_iid)
     return _np.linalg.norm(grad_at_0[1:], ord=_np.infty)
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def SNP_UAG_logistic_SCAD_MCP(bed_file,
-                              bim_file,
-                              fam_file,
-                              outcome,
-                              outcome_iid,
-                              SNP_ind,
-                              L_convex,
-                              beta_0=_np.ones(1),
-                              tol=1e-5,
-                              maxit=500,
-                              _lambda=.5,
-                              penalty="SCAD",
-                              a=3.7,
-                              gamma=2.):
+def SNP_UAG_logistic_SCAD_MCP_PCA(bed_file,
+                            bim_file,
+                            fam_file,
+                            outcome,
+                            outcome_iid,
+                            SNP_ind,
+                            L_convex,
+                            pca,
+                            beta_0=_np.ones(1),
+                            tol=1e-5,
+                            maxit=500,
+                            _lambda=.5,
+                            penalty="SCAD",
+                            a=3.7,
+                            gamma=2.):
     '''
     Carry out the optimization for penalized logistic for a fixed lambda.
     '''
     bed = _open_bed(filepath=bed_file,
                     fam_filepath=fam_file,
                     bim_filepath=bim_file)
+    pca_p = pca.shape[1]
     y = outcome
     p = bed.sid_count
     gene_iid = _np.array(list(bed.iid))
@@ -2106,12 +2265,14 @@ def SNP_UAG_logistic_SCAD_MCP(bed_file,
             _X = _X[gene_ind]  # get gene iid also in outcome iid
             _X -= _np.mean(_X)
             _[j] = _X @ _y / N
-        beta = _np.sign(_)
-        beta = _np.hstack((np.array([0]), beta))
+        beta = _  #_np.sign(_)
+        _pca = _y @ pca[gene_ind, :] / N
+        beta = _np.hstack((_np.array([0.]), _pca, beta))
+        beta = _np.sign(beta)
     else:
         beta = beta_0
     # passing other parameters
-    smooth_grad = _np.ones(p + 1)
+    smooth_grad = _np.ones(p + 1 + pca_p)
     beta_ag = beta.copy()
     beta_md = beta.copy()
     k = 0
@@ -2150,11 +2311,15 @@ def SNP_UAG_logistic_SCAD_MCP(bed_file,
                 y=y,
                 outcome_iid=outcome_iid,
                 _lambda=_lambda,
-                a=a)
-            beta = soft_thresholding(x=beta - opt_lambda * smooth_grad,
-                                     lambda_=opt_lambda * _lambda)
-            beta_ag = soft_thresholding(x=beta_md - opt_beta * smooth_grad,
-                                        lambda_=opt_beta * _lambda)
+                a=a,
+                pca_p=pca_p,
+                pca=pca)
+            beta = soft_thresholding_PCA(x=beta - opt_lambda * smooth_grad,
+                                         lambda_=opt_lambda * _lambda,
+                                         pca_p=pca_p)
+            beta_ag = soft_thresholding_PCA(x=beta_md - opt_beta * smooth_grad,
+                                            lambda_=opt_beta * _lambda,
+                                            pca_p=pca_p)
 #             converged = _np.all(_np.max(_np.abs(beta_md - beta_ag)/opt_beta) < tol).item()
 #             converged = (_np.linalg.norm(beta_md - beta_ag, ord=_np.infty) < (tol*opt_beta))
     else:
@@ -2186,11 +2351,15 @@ def SNP_UAG_logistic_SCAD_MCP(bed_file,
                 y=y,
                 outcome_iid=outcome_iid,
                 _lambda=_lambda,
-                gamma=gamma)
-            beta = soft_thresholding(x=beta - opt_lambda * smooth_grad,
-                                     lambda_=opt_lambda * _lambda)
-            beta_ag = soft_thresholding(x=beta_md - opt_beta * smooth_grad,
-                                        lambda_=opt_beta * _lambda)
+                gamma=gamma,
+                pca_p=pca_p,
+                pca=pca)
+            beta = soft_thresholding_PCA(x=beta - opt_lambda * smooth_grad,
+                                         lambda_=opt_lambda * _lambda,
+                                         pca_p=pca_p)
+            beta_ag = soft_thresholding_PCA(x=beta_md - opt_beta * smooth_grad,
+                                            lambda_=opt_beta * _lambda,
+                                            pca_p=pca_p)
 #             converged = _np.all(_np.max(_np.abs(beta_md - beta_ag)/opt_beta) < tol).item()
 #             converged = (_np.linalg.norm(beta_md - beta_ag, ord=_np.infty) < (tol*opt_beta))
     return k, beta_md
@@ -2198,22 +2367,24 @@ def SNP_UAG_logistic_SCAD_MCP(bed_file,
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def SNP_solution_path_logistic(bed_file,
-                               bim_file,
-                               fam_file,
-                               outcome,
-                               outcome_iid,
-                               lambda_,
-                               L_convex,
-                               SNP_ind,
-                               beta_0=_np.ones(1),
-                               tol=1e-5,
-                               maxit=500,
-                               penalty="SCAD",
-                               a=3.7,
-                               gamma=2.):
+                         bim_file,
+                         fam_file,
+                         outcome,
+                         outcome_iid,
+                         lambda_,
+                         L_convex,
+                         SNP_ind,
+                         pca,
+                         beta_0=_np.ones(1),
+                         tol=1e-5,
+                         maxit=500,
+                         penalty="SCAD",
+                         a=3.7,
+                         gamma=2.):
     '''
     Carry out the optimization for the solution path without the strong rule.
     '''
+    pca_p = pca.shape[1]
     bed = _open_bed(filepath=bed_file,
                     fam_filepath=fam_file,
                     bim_filepath=bim_file)
@@ -2243,32 +2414,27 @@ def SNP_solution_path_logistic(bed_file,
         _X -= _np.mean(_X)
         _[j] = _X @ _y / N
     beta = _  #_np.sign(_)
-    beta = _np.hstack((np.array([0]), beta)).reshape(1, -1)
-
-    beta_mat = _np.zeros((len(lambda_) + 1, p + 1))
+    _pca = _y @ pca[gene_ind, :] / N
+    beta = _np.hstack((_np.array([0.]), _pca, beta)).reshape(1, -1)
+    beta = _np.sign(beta)
     beta_mat = _np.repeat(beta, len(lambda_) + 1, axis=0)
     for j in range(len(lambda_)):
-        beta_mat[j + 1, :] = SNP_UAG_logistic_SCAD_MCP(bed_file=bed_file,
-                                                       bim_file=bim_file,
-                                                       fam_file=fam_file,
-                                                       outcome=outcome,
-                                                       SNP_ind=SNP_ind,
-                                                       L_convex=L_convex,
-                                                       beta_0=beta_mat[j, :],
-                                                       tol=tol,
-                                                       maxit=maxit,
-                                                       _lambda=lambda_[j],
-                                                       penalty=penalty,
-                                                       outcome_iid=outcome_iid,
-                                                       a=a,
-                                                       gamma=gamma)[1]
+        beta_mat[j + 1, :] = SNP_UAG_logistic_SCAD_MCP_PCA(bed_file=bed_file,
+                                                     bim_file=bim_file,
+                                                     fam_file=fam_file,
+                                                     outcome=outcome,
+                                                     SNP_ind=SNP_ind,
+                                                     L_convex=L_convex,
+                                                     pca=pca,
+                                                     beta_0=beta_mat[j, :],
+                                                     tol=tol,
+                                                     maxit=maxit,
+                                                     _lambda=lambda_[j],
+                                                     penalty=penalty,
+                                                     outcome_iid=outcome_iid,
+                                                     a=a,
+                                                     gamma=gamma)[1]
     return beta_mat[1:, :]
-
-
-
-
-
-
 
 
 
