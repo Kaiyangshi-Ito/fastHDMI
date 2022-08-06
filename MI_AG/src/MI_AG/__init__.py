@@ -1105,7 +1105,7 @@ def _SNP_update_smooth_grad_convex_LM(N, SNP_ind, bed, beta_md, y, outcome_iid,
         _X = _X[gene_ind]  # get gene iid also in outcome iid
         _XTXbeta[j] = _X @ _
     _XTXbeta = _np.hstack(
-        (_np.array([np.sum(_)]), _ @ pca[gene_ind, :], _XTXbeta))
+        (_np.array([_np.sum(_)]), _ @ pca[gene_ind, :], _XTXbeta))
     del _
     return 1 / N * _XTXbeta
 
@@ -1378,9 +1378,6 @@ def SNP_solution_path_LM(bed_file,
                                                      a=a,
                                                      gamma=gamma)[1]
     return beta_mat[1:, :]
-
-
-
 
 
 
@@ -2115,13 +2112,12 @@ def solution_path_logistic_strongrule(design_matrix,
 
 
 
-
 ############################################################################
 ############# logistic SNP version with bed-reader #########################
 ############################################################################
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def _SNP_update_smooth_grad_convex_logistic(N, SNP_ind, bed, beta_md, y, outcome_iid,
-                                      pca_p, pca):
+def _SNP_update_smooth_grad_convex_logistic(N, SNP_ind, bed, beta_md, y,
+                                            outcome_iid, pca_p, pca):
     '''
     Update the gradient of the smooth convex objective component.
     '''
@@ -2151,14 +2147,14 @@ def _SNP_update_smooth_grad_convex_logistic(N, SNP_ind, bed, beta_md, y, outcome
         _X = _X[gene_ind]  # get gene iid also in outcome iid
         _XTXbeta[j] = _X @ _
     _XTXbeta = _np.hstack(
-        (_np.array([np.sum(_)]), _ @ pca[gene_ind, :], _XTXbeta))
+        (_np.array([_np.sum(_)]), _ @ pca[gene_ind, :], _XTXbeta))
     del _
     return 1 / N * _XTXbeta
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def _SNP_update_smooth_grad_SCAD_logistic(N, SNP_ind, bed, beta_md, y, outcome_iid,
-                                    _lambda, a, pca_p, pca):
+def _SNP_update_smooth_grad_SCAD_logistic(N, SNP_ind, bed, beta_md, y,
+                                          outcome_iid, _lambda, a, pca_p, pca):
     '''
     Update the gradient of the smooth objective component for SCAD penalty.
     '''
@@ -2175,8 +2171,9 @@ def _SNP_update_smooth_grad_SCAD_logistic(N, SNP_ind, bed, beta_md, y, outcome_i
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def _SNP_update_smooth_grad_MCP_logistic(N, SNP_ind, bed, beta_md, y, outcome_iid,
-                                   _lambda, gamma, pca_p, pca):
+def _SNP_update_smooth_grad_MCP_logistic(N, SNP_ind, bed, beta_md, y,
+                                         outcome_iid, _lambda, gamma, pca_p,
+                                         pca):
     '''
     Update the gradient of the smooth objective component for MCP penalty.
     '''
@@ -2205,31 +2202,32 @@ def _SNP_lambda_max_logistic(bed, y, outcome_iid, N, SNP_ind):
     #     y_temp -= _np.mean(y)
     #     y_temp /= _np.std(y)
     p = len(list(bed.sid))
-    grad_at_0 = _SNP_update_smooth_grad_convex_logistic(N=N,
-                                                  SNP_ind=SNP_ind,
-                                                  bed=bed,
-                                                  beta_md=_np.zeros(p),
-                                                  y=y,
-                                                  outcome_iid=outcome_iid)
+    grad_at_0 = _SNP_update_smooth_grad_convex_logistic(
+        N=N,
+        SNP_ind=SNP_ind,
+        bed=bed,
+        beta_md=_np.zeros(p),
+        y=y,
+        outcome_iid=outcome_iid)
     return _np.linalg.norm(grad_at_0[1:], ord=_np.infty)
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def SNP_UAG_logistic_SCAD_MCP_PCA(bed_file,
-                            bim_file,
-                            fam_file,
-                            outcome,
-                            outcome_iid,
-                            SNP_ind,
-                            L_convex,
-                            pca,
-                            beta_0=_np.ones(1),
-                            tol=1e-5,
-                            maxit=500,
-                            _lambda=.5,
-                            penalty="SCAD",
-                            a=3.7,
-                            gamma=2.):
+                                  bim_file,
+                                  fam_file,
+                                  outcome,
+                                  outcome_iid,
+                                  SNP_ind,
+                                  L_convex,
+                                  pca,
+                                  beta_0=_np.ones(1),
+                                  tol=1e-5,
+                                  maxit=500,
+                                  _lambda=.5,
+                                  penalty="SCAD",
+                                  a=3.7,
+                                  gamma=2.):
     '''
     Carry out the optimization for penalized logistic for a fixed lambda.
     '''
@@ -2360,20 +2358,20 @@ def SNP_UAG_logistic_SCAD_MCP_PCA(bed_file,
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def SNP_solution_path_logistic(bed_file,
-                         bim_file,
-                         fam_file,
-                         outcome,
-                         outcome_iid,
-                         lambda_,
-                         L_convex,
-                         SNP_ind,
-                         pca,
-                         beta_0=_np.ones(1),
-                         tol=1e-5,
-                         maxit=500,
-                         penalty="SCAD",
-                         a=3.7,
-                         gamma=2.):
+                               bim_file,
+                               fam_file,
+                               outcome,
+                               outcome_iid,
+                               lambda_,
+                               L_convex,
+                               SNP_ind,
+                               pca,
+                               beta_0=_np.ones(1),
+                               tol=1e-5,
+                               maxit=500,
+                               penalty="SCAD",
+                               a=3.7,
+                               gamma=2.):
     '''
     Carry out the optimization for the solution path without the strong rule.
     '''
@@ -2412,23 +2410,23 @@ def SNP_solution_path_logistic(bed_file,
     beta = _np.sign(beta)
     beta_mat = _np.repeat(beta, len(lambda_) + 1, axis=0)
     for j in range(len(lambda_)):
-        beta_mat[j + 1, :] = SNP_UAG_logistic_SCAD_MCP_PCA(bed_file=bed_file,
-                                                     bim_file=bim_file,
-                                                     fam_file=fam_file,
-                                                     outcome=outcome,
-                                                     SNP_ind=SNP_ind,
-                                                     L_convex=L_convex,
-                                                     pca=pca,
-                                                     beta_0=beta_mat[j, :],
-                                                     tol=tol,
-                                                     maxit=maxit,
-                                                     _lambda=lambda_[j],
-                                                     penalty=penalty,
-                                                     outcome_iid=outcome_iid,
-                                                     a=a,
-                                                     gamma=gamma)[1]
+        beta_mat[j + 1, :] = SNP_UAG_logistic_SCAD_MCP_PCA(
+            bed_file=bed_file,
+            bim_file=bim_file,
+            fam_file=fam_file,
+            outcome=outcome,
+            SNP_ind=SNP_ind,
+            L_convex=L_convex,
+            pca=pca,
+            beta_0=beta_mat[j, :],
+            tol=tol,
+            maxit=maxit,
+            _lambda=lambda_[j],
+            penalty=penalty,
+            outcome_iid=outcome_iid,
+            a=a,
+            gamma=gamma)[1]
     return beta_mat[1:, :]
-
 
 
 ##############################################################################################
