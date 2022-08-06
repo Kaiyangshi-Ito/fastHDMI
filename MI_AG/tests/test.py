@@ -1,7 +1,58 @@
 import numpy as np
+from bed_reader import open_bed
 # import cupy as cp
 from scipy.linalg import toeplitz, block_diag
 
+# test for continuous_filter_parallel
+bed_file = r"./sim/sim1.bed"
+bim_file = r"./sim/sim1.bim"
+fam_file = r"./sim/sim1.fam"
+
+_bed = open_bed(filepath=bed_file,
+                fam_filepath=fam_file,
+                bim_filepath=bim_file)
+outcome = np.random.rand(_bed.iid_count)
+outcome_iid = _bed.iid
+
+true_beta = np.array([4.2, -2.5, 2.6])
+for j in np.arange(3):
+    outcome += true_beta[j] * _bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
+    print(_bed.read(_np.s_[:, j], dtype=_np.float64).flatten())
+
+iid_ind = np.random.permutation(np.arange(_bed.iid_count))
+outcome = outcome[iid_ind]
+outcome_iid = outcome_iid[iid_ind]
+
+
+MI_continuous = continuous_filter_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, a_min=np.min(outcome)-10, a_max=np.max(outcome)+10, outcome=outcome, outcome_iid=outcome_iid, chunck_size=1000)
+
+assert np.all(MI_continuous>0)
+
+# test for binary_filter_parallel
+bed_file = r"./sim/sim1.bed"
+bim_file = r"./sim/sim1.bim"
+fam_file = r"./sim/sim1.fam"
+
+_bed = open_bed(filepath=bed_file,
+                fam_filepath=fam_file,
+                bim_filepath=bim_file)
+outcome = np.random.rand(_bed.iid_count)
+outcome_iid = _bed.iid
+
+true_beta = np.array([4.2, -2.5, 2.6])
+for j in np.arange(3):
+    outcome += true_beta[j] * _bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
+    print(_bed.read(_np.s_[:, j], dtype=_np.float64).flatten())
+
+outcome = np.random.binomial(1, np.tanh(outcome / 2) / 2 + .5)
+
+iid_ind = np.random.permutation(np.arange(_bed.iid_count))
+outcome = outcome[iid_ind]
+outcome_iid = outcome_iid[iid_ind]
+
+MI_binary = binary_filter_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, outcome_iid=outcome_iid, chunck_size=1000)
+
+assert np.all(MI_binary>0)
 
 # test for LM numpy
 np.random.seed(1)
@@ -16,7 +67,7 @@ X /= np.std(X,0)
 intercept_design_column = np.ones(N).reshape(N, 1)
 X_sim = np.concatenate((intercept_design_column, X), 1)
 true_sigma_sim = np.sqrt(true_beta.T@X_cov@true_beta/SNR)
-true_beta_intercept = np.concatenate((np.array([1.23]), true_beta)) # here just define the intercept to be 1.23 for simulated data 
+true_beta_intercept = np.concatenate((np.array([1.23]), true_beta)) # here just define the intercept to be 1.23 for simulated data
 epsilon = np.random.normal(0, true_sigma_sim, N)
 y_sim = X_sim@true_beta_intercept + epsilon
 
@@ -24,7 +75,7 @@ lambda_seq = np.arange(40)/400
 lambda_seq = lambda_seq[1:]
 lambda_seq = lambda_seq[::-1]
 
-# do NOT include the design matrix intercept column 
+# do NOT include the design matrix intercept column
 LM_beta = solution_path_LM_strongrule(design_matrix=X_sim, outcome=y_sim, lambda_=lambda_seq, beta_0 = np.ones(1), tol=1e-2, maxit=500, penalty="SCAD", a=3.7, gamma=2., add_intercept_column=True)
 
 assert LM_beta.dtype() == "float"
@@ -45,7 +96,7 @@ assert LM_beta.dtype() == "float"
 # intercept_design_column = cp.ones(N).reshape(N, 1)
 # X_sim = cp.concatenate((intercept_design_column, X), 1)
 # true_sigma_sim = cp.sqrt(true_beta.T@X_cov@true_beta/SNR)
-# true_beta_intercept = cp.concatenate((cp.array([1.23]), true_beta)) # here just define the intercept to be 1.23 for simulated data 
+# true_beta_intercept = cp.concatenate((cp.array([1.23]), true_beta)) # here just define the intercept to be 1.23 for simulated data
 # epsilon = cp.random.normal(0, true_sigma_sim, N)
 # y_sim = X_sim@true_beta_intercept + epsilon
 
@@ -97,4 +148,3 @@ assert fit2.dtype() == "float"
 # fit2 = solution_path_logistic(design_matrix=X_sim, outcome=y_sim, tol=1e-2, maxit=500, lambda_=cp.linspace(.005,.08,60)[::-1], penalty="SCAD", a=3.7, gamma=2.)
 
 # assert fit2.dtype() == "float"
-

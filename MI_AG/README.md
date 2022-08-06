@@ -14,16 +14,16 @@ The available functions are:
 
 
 - `UAG_LM_SCAD_MCP`, `UAG_logistic_SCAD_MCP`: these functions find a local minizer for the SCAD/MCP penalized linear models/logistic models. The arguments are:
-        * `design_matrix`: the design matrix input, should be a two-dimensional numpy array;
-        * `outcome`: the outcome, should be one dimensional numpy array, continuous for linear model, binary for logistic model;
-        * `beta_0`: starting value; optional, if not declared, it will be calculated based on the Gauss-Markov theory estimators of $\beta$;
-        * `tol`: tolerance parameter; the tolerance parameter is set to be the uniform norm of two iterations;
-        * `maxit`: maximum number of iteratios allowed;
-        * `_lambda`: _lambda value;
-        * `penalty`: could be `"SCAD"` or `"MCP"`;
-        * `a=3.7`, `gamma=2`: `a` for SCAD and `gamma` for MCP; it is recommended for `a` to be set as $3.7$;
-        * `L_convex`: the L-smoothness constant for the convex component, if not declared, it will be calculated by itself
-        * `add_intercept_column`: boolean, should the fucntion add an intercept column?
+  * `design_matrix`: the design matrix input, should be a two-dimensional numpy array;
+  * `outcome`: the outcome, should be one dimensional numpy array, continuous for linear model, binary for logistic model;
+  * `beta_0`: starting value; optional, if not declared, it will be calculated based on the Gauss-Markov theory estimators of $\beta$;
+  * `tol`: tolerance parameter; the tolerance parameter is set to be the uniform norm of two iterations;
+  * `maxit`: maximum number of iteratios allowed;
+  * `_lambda`: _lambda value;
+  * `penalty`: could be `"SCAD"` or `"MCP"`;
+  * `a=3.7`, `gamma=2`: `a` for SCAD and `gamma` for MCP; it is recommended for `a` to be set as $3.7$;
+  * `L_convex`: the L-smoothness constant for the convex component, if not declared, it will be calculated by itself
+  * `add_intercept_column`: boolean, should the fucntion add an intercept column?
 
 - `solution_path_LM`, `solution_path_logistic`: calculate the solution path for linear/logistic models; the only difference from above is that `lambda_` is now a one-dimensional numpy array for the values of $\lambda$ to be used.
 

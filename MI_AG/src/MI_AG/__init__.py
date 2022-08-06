@@ -129,7 +129,7 @@ def continuous_filter(bed_file,
                                outcome_iid,
                                assume_unique=True,
                                return_indices=True)[1]
-    MI_UKBB = _np.zeros_like(bed1_sid)
+    MI_UKBB = _np.zeros(len(bed1_sid))
     for j in range(len(MI_UKBB)):
         _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
@@ -165,7 +165,8 @@ def binary_filter(bed_file,
                                outcome_iid,
                                assume_unique=True,
                                return_indices=True)[1]
-    MI_UKBB = _np.zeros_like(bed1_sid)
+    MI_UKBB = _np.zeros(len(bed1_sid))
+    print(outcome)
     for j in range(len(MI_UKBB)):
         _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
@@ -204,7 +205,7 @@ def continuous_filter_parallel(bed_file,
                                return_indices=True)[1]
 
     def _continuous_filter_slice(_slice):
-        _MI_slice = _np.zeros_like(_slice)
+        _MI_slice = _np.zeros(len(_slice))
         k = 0
         for j in _slice:
             _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
@@ -254,7 +255,7 @@ def binary_filter_parallel(bed_file,
                                return_indices=True)[1]
 
     def _binary_filter_slice(_slice):
-        _MI_slice = _np.zeros_like(_slice)
+        _MI_slice = _np.zeros(len(_slice))
         k = 0
         for j in _slice:
             _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
