@@ -76,29 +76,29 @@ def _MI_binary(a, b):
     p0 = _np.sum(b == 0) / len(b)
     p1 = _np.sum(b == 1) / len(b)
     p2 = 1. - p0 - p1
-    b_marginal = np.array([p0, p1, p2])
+    b_marginal = _np.array([p0, p1, p2])
     # estimate pmf of the binary outcome
     a_p0 = _np.sum(a == 0) / len(a)
     a_p1 = _np.sum(a == 1) / len(a)
-    a_marginal = np.array([a_p0, a_p1]).reshape(-1, 1)
+    a_marginal = _np.array([a_p0, a_p1]).reshape(-1, 1)
     # estimate the cond density
-    joint = np.zeros((2, 3))
+    joint = _np.zeros((2, 3))
     _b0 = (b == 0)
-    joint[0,0] = _np.sum(a[_b0] == 0) / len(a[_b0])
-    joint[1,0] = _np.sum(a[_b0] == 1) / len(a[_b0])
+    joint[0, 0] = _np.sum(a[_b0] == 0) / len(a[_b0])
+    joint[1, 0] = _np.sum(a[_b0] == 1) / len(a[_b0])
     _b1 = (b == 1)
-    joint[0,1] = _np.sum(a[_b1] == 0) / len(a[_b1])
-    joint[1,1] = _np.sum(a[_b1] == 1) / len(a[_b1])
+    joint[0, 1] = _np.sum(a[_b1] == 0) / len(a[_b1])
+    joint[1, 1] = _np.sum(a[_b1] == 1) / len(a[_b1])
     _b2 = (b == 2)
-    joint[0,2] = _np.sum(a[_b2] == 0) / len(a[_b2])
-    joint[1,2] = _np.sum(a[_b2] == 1) / len(a[_b2])
+    joint[0, 2] = _np.sum(a[_b2] == 0) / len(a[_b2])
+    joint[1, 2] = _np.sum(a[_b2] == 1) / len(a[_b2])
 
-    _ = a_marginal*b_marginal
-    _ = joint/_
-    __ = joint*_np.log(_)
-    __ = _np.nan_to_num(__, nan=0.0) # for possible nuemrical issues
+    _ = a_marginal * b_marginal
+    _ = joint / _
+    __ = joint * _np.log(_)
+    __ = _np.nan_to_num(__, nan=0.0)  # for possible nuemrical issues
 
-    mi_temp = np.sum(__)
+    mi_temp = _np.sum(__)
 
     return mi_temp
 
@@ -143,11 +143,7 @@ def continuous_filter(bed_file,
     return MI_UKBB
 
 
-def binary_filter(bed_file,
-                  bim_file,
-                  fam_file,
-                  outcome,
-                  outcome_iid):
+def binary_filter(bed_file, bim_file, fam_file, outcome, outcome_iid):
     """
     (Single Core version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
@@ -172,8 +168,7 @@ def binary_filter(bed_file,
         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        MI_UKBB[j] = _MI_binary(a=_outcome,
-                                b=_SNP)
+        MI_UKBB[j] = _MI_binary(a=_outcome, b=_SNP)
     return MI_UKBB
 
 
@@ -262,8 +257,7 @@ def binary_filter_parallel(bed_file,
             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
             _SNP = _SNP[_SNP != -127]  # remove missing SNP
-            _MI_slice[k] = _MI_binary(a=_outcome,
-                                      b=_SNP)
+            _MI_slice[k] = _MI_binary(a=_outcome, b=_SNP)
             k += 1
         return _MI_slice
 
@@ -274,8 +268,6 @@ def binary_filter_parallel(bed_file,
         MI_UKBB = pl.map(_binary_filter_slice, _np.array_split(ind, n_slices))
     MI_UKBB = _np.hstack(MI_UKBB)
     return MI_UKBB
-
-
 
 
 
