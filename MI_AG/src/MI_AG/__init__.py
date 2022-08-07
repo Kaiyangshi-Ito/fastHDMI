@@ -84,14 +84,14 @@ def _MI_binary(a, b):
     # estimate the cond density
     joint = _np.zeros((2, 3))
     _b0 = (b == 0)
-    joint[0, 0] = _np.sum(a[_b0] == 0) / len(a[_b0])
-    joint[1, 0] = _np.sum(a[_b0] == 1) / len(a[_b0])
+    joint[0, 0] = _np.sum(a[_b0] == 0) / len(a)
+    joint[1, 0] = _np.sum(a[_b0] == 1) / len(a)
     _b1 = (b == 1)
-    joint[0, 1] = _np.sum(a[_b1] == 0) / len(a[_b1])
-    joint[1, 1] = _np.sum(a[_b1] == 1) / len(a[_b1])
+    joint[0, 1] = _np.sum(a[_b1] == 0) / len(a)
+    joint[1, 1] = _np.sum(a[_b1] == 1) / len(a)
     _b2 = (b == 2)
-    joint[0, 2] = _np.sum(a[_b2] == 0) / len(a[_b2])
-    joint[1, 2] = _np.sum(a[_b2] == 1) / len(a[_b2])
+    joint[0, 2] = _np.sum(a[_b2] == 0) / len(a)
+    joint[1, 2] = _np.sum(a[_b2] == 1) / len(a)
 
     _ = a_marginal * b_marginal
     _ = joint / _
