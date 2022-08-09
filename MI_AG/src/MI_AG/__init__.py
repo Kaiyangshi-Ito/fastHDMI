@@ -22,7 +22,7 @@ from numba import njit as _njit
 
 
 ##################################################################
-######## some fudamentals things for PCA version #################
+######## some fudamentals things for the PCA versions ############
 ##################################################################
 
 
