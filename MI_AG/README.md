@@ -1,6 +1,6 @@
 # MI_AG
 
-Use mutual information and accelerated gradient method to filter out and optimize nonconvex sparse learning problems on large genetic data based on bed/bim/fam files. The corresponding paper is coming soon...
+This packages uses mutual information and accelerated gradient method to screen for SNPs and optimize the nonconvex sparse learning problem on large genetic data based on bed/bim/fam files. The corresponding paper by Yang et al. is coming soon...
 
 The available functions are:
 - `continuous_filter` caculates the mutual information between a continuous outcome and a bialletic SNP using FFT. Missing data is acceptable and will be removed. The arguments are:
@@ -29,4 +29,4 @@ The available functions are:
 
 - `UAG_LM_SCAD_MCP_strongrule`, `UAG_logistic_SCAD_MCP_strongrule` work just like `UAG_LM_SCAD_MCP`, `UAG_logistic_SCAD_MCP` -- except they use strong rule to filter out many covariates before carrying out the optimization step. Same for `solution_path_LM_strongrule` and `solution_path_logistic_strongrule`. Strong rule increases the computational speed dramatically.
 
-- `SNP_UAG_LM_SCAD_MCP` and `SNP_UAG_logistic_SCAD_MCP` work similar to `UAG_LM_SCAD_MCP` and `UAG_logistic_SCAD_MCP`; and `SNP_solution_path_LM` and `SNP_solution_path_logistic` work similar to `solution_path_LM`, `solution_path_logistic` -- except that it takes plink1 files so it will be more memory-efficient. Since PCA adjustment is usually used to adjust for population structure, PCA can be given for `pca` as a 2-d array -- each column should be one principal component. The pca version is `SNP_UAG_LM_SCAD_MCP_PCA` and `SNP_UAG_logistic_SCAD_MCP_PCA`. 
+- `SNP_UAG_LM_SCAD_MCP` and `SNP_UAG_logistic_SCAD_MCP` work similar to `UAG_LM_SCAD_MCP` and `UAG_logistic_SCAD_MCP`; and `SNP_solution_path_LM` and `SNP_solution_path_logistic` work similar to `solution_path_LM`, `solution_path_logistic` -- except that it takes plink1 files so it will be more memory-efficient. Since PCA adjustment is usually used to adjust for population structure, PCA can be given for `pca` as a 2-d array -- each column should be one principal component. The pca version is `SNP_UAG_LM_SCAD_MCP_PCA` and `SNP_UAG_logistic_SCAD_MCP_PCA`.
