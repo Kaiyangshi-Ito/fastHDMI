@@ -184,10 +184,17 @@ def continuous_filter_parallel(bed_file,
                                a_min=1.2345654321,
                                a_max=2.34565432,
                                N=500,
-                               chunck_size=60000):
+                               core_num="NOT DECLARED"):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the continuous outcome and many SNP variables.
     """
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
     bed1 = _open_bed(filepath=bed_file,
                      fam_filepath=fam_file,
                      bim_filepath=bim_file)
@@ -225,10 +232,9 @@ def continuous_filter_parallel(bed_file,
 
     # multiprocessing starts here
     ind = _np.arange(len(bed1_sid))
-    n_slices = _np.ceil(len(ind) / chunck_size)
     with _mp.Pool(_mp.cpu_count()) as pl:
         MI_UKBB = pl.map(_continuous_filter_slice,
-                         _np.array_split(ind, n_slices))
+                         _np.array_split(ind, core_num))
     MI_UKBB = _np.hstack(MI_UKBB)
     return MI_UKBB
 
@@ -238,10 +244,17 @@ def binary_filter_parallel(bed_file,
                            fam_file,
                            outcome,
                            outcome_iid,
-                           chunck_size=60000):
+                           core_num="NOT DECLARED"):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
     bed1 = _open_bed(filepath=bed_file,
                      fam_filepath=fam_file,
                      bim_filepath=bim_file)
@@ -271,12 +284,10 @@ def binary_filter_parallel(bed_file,
 
     # multiprocessing starts here
     ind = _np.arange(len(bed1_sid))
-    n_slices = _np.ceil(len(ind) / chunck_size)
     with _mp.Pool(_mp.cpu_count()) as pl:
-        MI_UKBB = pl.map(_binary_filter_slice, _np.array_split(ind, n_slices))
+        MI_UKBB = pl.map(_binary_filter_slice, _np.array_split(ind, core_num))
     MI_UKBB = _np.hstack(MI_UKBB)
     return MI_UKBB
-
 
 
 ##################################################################
@@ -1694,7 +1705,7 @@ def SNP_solution_path_LM_PCA(bed_file,
 ###################################################################################
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_convex_LM_parallel(N, SNP_ind, bed, beta_md, y,
-                                               outcome_iid, chunck_size):
+                                               outcome_iid, core_num):
     '''
     Update the gradient of the smooth convex objective component.
     '''
@@ -1720,9 +1731,8 @@ def _SNP_update_smooth_grad_convex_LM_parallel(N, SNP_ind, bed, beta_md, y,
         return __
 
     # multiprocessing starts here
-    n_slices = _np.ceil(len(SNP_ind) / chunck_size)
     with _mp.Pool(_mp.cpu_count()) as pl:
-        _ = pl.map(__parallel_plus, _np.array_split(SNP_ind, n_slices))
+        _ = pl.map(__parallel_plus, _np.array_split(SNP_ind, core_num))
     _ = _np.array(_).sum(0)
     _ += beta_md[0]  # add the intercept
     _ -= _y
@@ -1740,10 +1750,9 @@ def _SNP_update_smooth_grad_convex_LM_parallel(N, SNP_ind, bed, beta_md, y,
         return __
 
     # multiprocessing starts here
-    n_slices = _np.ceil(len(SNP_ind) / chunck_size)
     with _mp.Pool(_mp.cpu_count()) as pl:
         _XTXbeta = pl.map(__parallel_assign,
-                          _np.array_split(SNP_ind, n_slices))
+                          _np.array_split(SNP_ind, core_num))
     __XTXbeta = _np.hstack(_XTXbeta)
     _XTXbeta = _np.zeros(p + 1)
     _XTXbeta[SNP_ind + 1] = __XTXbeta
@@ -1757,7 +1766,7 @@ def _SNP_update_smooth_grad_convex_LM_parallel(N, SNP_ind, bed, beta_md, y,
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_SCAD_LM_parallel(N, SNP_ind, bed, beta_md, y,
                                              outcome_iid, _lambda, a,
-                                             chunck_size):
+                                             core_num):
     '''
     Update the gradient of the smooth objective component for SCAD penalty.
     '''
@@ -1768,14 +1777,13 @@ def _SNP_update_smooth_grad_SCAD_LM_parallel(N, SNP_ind, bed, beta_md, y,
         beta_md=beta_md,
         y=y,
         outcome_iid=outcome_iid,
-        chunck_size=chunck_size) + SCAD_concave_grad(
-            x=beta_md, lambda_=_lambda, a=a)
+        core_num=core_num) + SCAD_concave_grad(x=beta_md, lambda_=_lambda, a=a)
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_MCP_LM_parallel(N, SNP_ind, bed, beta_md, y,
                                             outcome_iid, _lambda, gamma,
-                                            chunck_size):
+                                            core_num):
     '''
     Update the gradient of the smooth objective component for MCP penalty.
     '''
@@ -1786,12 +1794,12 @@ def _SNP_update_smooth_grad_MCP_LM_parallel(N, SNP_ind, bed, beta_md, y,
         beta_md=beta_md,
         y=y,
         outcome_iid=outcome_iid,
-        chunck_size=chunck_size) + MCP_concave_grad(
+        core_num=core_num) + MCP_concave_grad(
             x=beta_md, lambda_=_lambda, gamma=gamma)
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def _SNP_lambda_max_LM_parallel(bed, y, outcome_iid, N, SNP_ind, chunck_size):
+def _SNP_lambda_max_LM_parallel(bed, y, outcome_iid, N, SNP_ind, core_num):
     """
     Calculate the lambda_max, i.e., the minimum lambda to nullify all penalized betas.
     """
@@ -1809,7 +1817,7 @@ def _SNP_lambda_max_LM_parallel(bed, y, outcome_iid, N, SNP_ind, chunck_size):
         beta_md=_np.zeros(len(SNP_ind)),
         y=y,
         outcome_iid=outcome_iid,
-        chunck_size=chunck_size)
+        core_num=core_num)
     return _np.linalg.norm(grad_at_0[1:], ord=_np.infty)
 
 
@@ -1828,10 +1836,17 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file,
                                  penalty="SCAD",
                                  a=3.7,
                                  gamma=2.,
-                                 chunck_size=50000):
+                                 core_num="NOT DECLARED"):
     '''
     Carry out the optimization for penalized LM for a fixed lambda.
     '''
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
     bed = _open_bed(filepath=bed_file,
                     fam_filepath=fam_file,
                     bim_filepath=bim_file)
@@ -1863,10 +1878,9 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file,
             return __
 
         # multiprocessing starts here
-        n_slices = _np.ceil(len(SNP_ind) / chunck_size)
         with _mp.Pool(_mp.cpu_count()) as pl:
             _XTy = pl.map(__parallel_assign,
-                          _np.array_split(SNP_ind, n_slices))
+                          _np.array_split(SNP_ind, core_num))
         _XTy = _np.hstack(_XTy)
         beta = _np.zeros(p + 1)
         beta[SNP_ind + 1] = _  #_np.sign(_XTy)
@@ -1913,7 +1927,7 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file,
                 outcome_iid=outcome_iid,
                 _lambda=_lambda,
                 a=a,
-                chunck_size=chunck_size)
+                core_num=core_num)
             beta = soft_thresholding(x=beta - opt_lambda * smooth_grad,
                                      lambda_=opt_lambda * _lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta * smooth_grad,
@@ -1950,7 +1964,7 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file,
                 outcome_iid=outcome_iid,
                 _lambda=_lambda,
                 gamma=gamma,
-                chunck_size=chunck_size)
+                core_num=core_num)
             beta = soft_thresholding(x=beta - opt_lambda * smooth_grad,
                                      lambda_=opt_lambda * _lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta * smooth_grad,
@@ -1975,10 +1989,17 @@ def SNP_solution_path_LM_parallel(bed_file,
                                   penalty="SCAD",
                                   a=3.7,
                                   gamma=2.,
-                                  chunck_size=50000):
+                                  core_num="NOT DECLARED"):
     '''
     Carry out the optimization for the solution path without the strong rule.
     '''
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
     bed = _open_bed(filepath=bed_file,
                     fam_filepath=fam_file,
                     bim_filepath=bim_file)
@@ -2013,9 +2034,8 @@ def SNP_solution_path_LM_parallel(bed_file,
         return __
 
     # multiprocessing starts here
-    n_slices = _np.ceil(len(SNP_ind) / chunck_size)
     with _mp.Pool(_mp.cpu_count()) as pl:
-        _XTy = pl.map(__parallel_assign, _np.array_split(SNP_ind, n_slices))
+        _XTy = pl.map(__parallel_assign, _np.array_split(SNP_ind, core_num))
     _XTy = _np.hstack(_XTy)
     beta = _np.zeros(p + 1)
     beta[SNP_ind + 1] = _XTy  #_np.sign(_XTy)
@@ -2039,7 +2059,7 @@ def SNP_solution_path_LM_parallel(bed_file,
             outcome_iid=outcome_iid,
             a=a,
             gamma=gamma,
-            chunck_size=chunck_size)[1]
+            core_num=core_num)[1]
     return beta_mat[1:, :]
 
 
@@ -3179,8 +3199,7 @@ def SNP_solution_path_logistic_PCA(bed_file,
 ##############################################################################################
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_convex_logistic_parallel(N, SNP_ind, bed, beta_md,
-                                                     y, outcome_iid,
-                                                     chunck_size):
+                                                     y, outcome_iid, core_num):
     '''
     Update the gradient of the smooth convex objective component.
     '''
@@ -3206,9 +3225,8 @@ def _SNP_update_smooth_grad_convex_logistic_parallel(N, SNP_ind, bed, beta_md,
         return __
 
     # multiprocessing starts here
-    n_slices = _np.ceil(len(SNP_ind) / chunck_size)
     with _mp.Pool(_mp.cpu_count()) as pl:
-        _ = pl.map(__parallel_plus, _np.array_split(SNP_ind, n_slices))
+        _ = pl.map(__parallel_plus, _np.array_split(SNP_ind, core_num))
     _ = _np.array(_).sum(0)
     _ += beta_md[0]  # add the intercept
     _ = _np.tanh(_ / 2.) / 2. - _y + .5
@@ -3226,10 +3244,9 @@ def _SNP_update_smooth_grad_convex_logistic_parallel(N, SNP_ind, bed, beta_md,
         return __
 
     # multiprocessing starts here
-    n_slices = _np.ceil(len(SNP_ind) / chunck_size)
     with _mp.Pool(_mp.cpu_count()) as pl:
         _XTXbeta = pl.map(__parallel_assign,
-                          _np.array_split(SNP_ind, n_slices))
+                          _np.array_split(SNP_ind, core_num))
     __XTXbeta = _np.hstack(_XTXbeta)
     _XTXbeta = _np.zeros(p + 1)
     _XTXbeta[SNP_ind + 1] = __XTXbeta
@@ -3242,7 +3259,7 @@ def _SNP_update_smooth_grad_convex_logistic_parallel(N, SNP_ind, bed, beta_md,
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_SCAD_logistic_parallel(N, SNP_ind, bed, beta_md, y,
                                                    outcome_iid, _lambda, a,
-                                                   chunck_size):
+                                                   core_num):
     '''
     Update the gradient of the smooth objective component for SCAD penalty.
     '''
@@ -3253,14 +3270,13 @@ def _SNP_update_smooth_grad_SCAD_logistic_parallel(N, SNP_ind, bed, beta_md, y,
         beta_md=beta_md,
         y=y,
         outcome_iid=outcome_iid,
-        chunck_size=chunck_size) + SCAD_concave_grad(
-            x=beta_md, lambda_=_lambda, a=a)
+        core_num=core_num) + SCAD_concave_grad(x=beta_md, lambda_=_lambda, a=a)
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_MCP_logistic_parallel(N, SNP_ind, bed, beta_md, y,
                                                   outcome_iid, _lambda, gamma,
-                                                  chunck_size):
+                                                  core_num):
     '''
     Update the gradient of the smooth objective component for MCP penalty.
     '''
@@ -3271,13 +3287,13 @@ def _SNP_update_smooth_grad_MCP_logistic_parallel(N, SNP_ind, bed, beta_md, y,
         beta_md=beta_md,
         y=y,
         outcome_iid=outcome_iid,
-        chunck_size=chunck_size) + MCP_concave_grad(
+        core_num=core_num) + MCP_concave_grad(
             x=beta_md, lambda_=_lambda, gamma=gamma)
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_lambda_max_logistic_parallel(bed, y, outcome_iid, N, SNP_ind,
-                                      chunck_size):
+                                      core_num):
     """
     Calculate the lambda_max, i.e., the minimum lambda to nullify all penalized betas.
     """
@@ -3295,7 +3311,7 @@ def _SNP_lambda_max_logistic_parallel(bed, y, outcome_iid, N, SNP_ind,
         beta_md=_np.zeros(len(SNP_ind)),
         y=y,
         outcome_iid=outcome_iid,
-        chunck_size=chunck_size)
+        core_num=core_num)
     return _np.linalg.norm(grad_at_0[1:], ord=_np.infty)
 
 
@@ -3314,10 +3330,17 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file,
                                        penalty="SCAD",
                                        a=3.7,
                                        gamma=2.,
-                                       chunck_size=50000):
+                                       core_num="NOT DECLARED"):
     '''
     Carry out the optimization for penalized logistic for a fixed lambda.
     '''
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
     bed = _open_bed(filepath=bed_file,
                     fam_filepath=fam_file,
                     bim_filepath=bim_file)
@@ -3350,10 +3373,9 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file,
             return __
 
         # multiprocessing starts here
-        n_slices = _np.ceil(len(SNP_ind) / chunck_size)
         with _mp.Pool(_mp.cpu_count()) as pl:
             _XTy = pl.map(__parallel_assign,
-                          _np.array_split(SNP_ind, n_slices))
+                          _np.array_split(SNP_ind, core_num))
         _XTy = _np.hstack(_XTy)
         beta = _np.zeros(p + 1)
         beta[SNP_ind + 1] = _np.sign(_XTy)
@@ -3400,7 +3422,7 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file,
                 outcome_iid=outcome_iid,
                 _lambda=_lambda,
                 a=a,
-                chunck_size=chunck_size)
+                core_num=core_num)
             beta = soft_thresholding(x=beta - opt_lambda * smooth_grad,
                                      lambda_=opt_lambda * _lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta * smooth_grad,
@@ -3437,7 +3459,7 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file,
                 outcome_iid=outcome_iid,
                 _lambda=_lambda,
                 gamma=gamma,
-                chunck_size=chunck_size)
+                core_num=core_num)
             beta = soft_thresholding(x=beta - opt_lambda * smooth_grad,
                                      lambda_=opt_lambda * _lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta * smooth_grad,
@@ -3462,10 +3484,17 @@ def SNP_solution_path_logistic_parallel(bed_file,
                                         penalty="SCAD",
                                         a=3.7,
                                         gamma=2.,
-                                        chunck_size=50000):
+                                        core_num="NOT DECLARED"):
     '''
     Carry out the optimization for the solution path without the strong rule.
     '''
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
     bed = _open_bed(filepath=bed_file,
                     fam_filepath=fam_file,
                     bim_filepath=bim_file)
@@ -3501,9 +3530,8 @@ def SNP_solution_path_logistic_parallel(bed_file,
         return __
 
     # multiprocessing starts here
-    n_slices = _np.ceil(len(SNP_ind) / chunck_size)
     with _mp.Pool(_mp.cpu_count()) as pl:
-        _XTy = pl.map(__parallel_assign, _np.array_split(SNP_ind, n_slices))
+        _XTy = pl.map(__parallel_assign, _np.array_split(SNP_ind, core_num))
     _XTy = _np.hstack(_XTy)
     beta = _np.zeros(p + 1)
     beta[SNP_ind + 1] = _XTy  #_np.sign(_XTy)
@@ -3527,5 +3555,5 @@ def SNP_solution_path_logistic_parallel(bed_file,
             outcome_iid=outcome_iid,
             a=a,
             gamma=gamma,
-            chunck_size=chunck_size)[1]
+            core_num=core_num)[1]
     return beta_mat[1:, :]

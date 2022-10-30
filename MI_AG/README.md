@@ -10,7 +10,7 @@ The available functions are:
 
 - `binary_filter` works similarly, execpt that `a_min, a_max, N` are not available obviously.
 
-- `continuous_filter_parallel` and `binary_filter_parallel` are the multiprocessing version of the above two functions, with `chunck_size=60000` can be used to declare the chunk size.
+- `continuous_filter_parallel` and `binary_filter_parallel` are the multiprocessing version of the above two functions, with `core_num` can be used to declare the number of cores to be used for multiprocessing.
 
 
 - `UAG_LM_SCAD_MCP`, `UAG_logistic_SCAD_MCP`: these functions find a local minizer for the SCAD/MCP penalized linear models/logistic models. The arguments are:

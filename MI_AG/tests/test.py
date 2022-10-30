@@ -24,7 +24,7 @@ outcome = outcome[iid_ind]
 outcome_iid = outcome_iid[iid_ind]
 
 
-MI_continuous = continuous_filter_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, a_min=np.min(outcome)-10, a_max=np.max(outcome)+10, outcome=outcome, outcome_iid=outcome_iid, chunck_size=1000)
+MI_continuous = continuous_filter_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, a_min=np.min(outcome)-10, a_max=np.max(outcome)+10, outcome=outcome, outcome_iid=outcome_iid)
 
 assert np.all(MI_continuous>0)
 
@@ -50,7 +50,7 @@ iid_ind = np.random.permutation(np.arange(_bed.iid_count))
 outcome = outcome[iid_ind]
 outcome_iid = outcome_iid[iid_ind]
 
-MI_binary = binary_filter_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, outcome_iid=outcome_iid, chunck_size=1000)
+MI_binary = binary_filter_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, outcome_iid=outcome_iid)
 
 assert np.all(MI_binary>0)
 
