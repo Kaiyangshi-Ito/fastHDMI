@@ -184,7 +184,8 @@ def continuous_filter_parallel(bed_file,
                                a_min=1.2345654321,
                                a_max=2.34565432,
                                N=500,
-                               core_num="NOT DECLARED"):
+                               core_num="NOT DECLARED",
+                               multp=1):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the continuous outcome and many SNP variables.
     """
@@ -232,9 +233,9 @@ def continuous_filter_parallel(bed_file,
 
     # multiprocessing starts here
     ind = _np.arange(len(bed1_sid))
-    with _mp.Pool(_mp.cpu_count()) as pl:
+    with _mp.Pool(core_num) as pl:
         MI_UKBB = pl.map(_continuous_filter_slice,
-                         _np.array_split(ind, core_num))
+                         _np.array_split(ind, core_num * multp))
     MI_UKBB = _np.hstack(MI_UKBB)
     return MI_UKBB
 
@@ -244,7 +245,8 @@ def binary_filter_parallel(bed_file,
                            fam_file,
                            outcome,
                            outcome_iid,
-                           core_num="NOT DECLARED"):
+                           core_num="NOT DECLARED",
+                           multp=1):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
@@ -284,8 +286,9 @@ def binary_filter_parallel(bed_file,
 
     # multiprocessing starts here
     ind = _np.arange(len(bed1_sid))
-    with _mp.Pool(_mp.cpu_count()) as pl:
-        MI_UKBB = pl.map(_binary_filter_slice, _np.array_split(ind, core_num))
+    with _mp.Pool(core_num) as pl:
+        MI_UKBB = pl.map(_binary_filter_slice,
+                         _np.array_split(ind, core_num * multp))
     MI_UKBB = _np.hstack(MI_UKBB)
     return MI_UKBB
 
@@ -1705,7 +1708,7 @@ def SNP_solution_path_LM_PCA(bed_file,
 ###################################################################################
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_convex_LM_parallel(N, SNP_ind, bed, beta_md, y,
-                                               outcome_iid, core_num):
+                                               outcome_iid, core_num, multp):
     '''
     Update the gradient of the smooth convex objective component.
     '''
@@ -1723,16 +1726,25 @@ def _SNP_update_smooth_grad_convex_LM_parallel(N, SNP_ind, bed, beta_md, y,
     # first calcualte _=X@beta_md-y
     def __parallel_plus(_ind):
         import numpy as _np
-        __ = _np.zeros(N)
-        for j in _ind:
-            _X = bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
-            _X = _X[gene_ind]  # get gene iid also in outcome iid
-            __ += _X * beta_md[j + 1]
-        return __
+        _X = bed.read(_np.s_[:, _ind],
+                      dtype=_np.int8).flatten().reshape(-1, len(_ind))
+        _X = _X[gene_ind, :]  # get gene iid also in outcome iid
+        return _X @ beta_md[_ind + 1]
+#         __ = _np.zeros(N)
+#         for j in _ind:
+#             _X = bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
+#             _X = _X[gene_ind]  # get gene iid also in outcome iid
+#             __ += _X * beta_md[j + 1]
+#         return __
 
-    # multiprocessing starts here
-    with _mp.Pool(_mp.cpu_count()) as pl:
-        _ = pl.map(__parallel_plus, _np.array_split(SNP_ind, core_num))
+# multiprocessing starts here
+
+    _splited_array = _np.array_split(SNP_ind, core_num * multp)
+    _splited_array = [
+        __array for __array in _splited_array if __array.size != 0
+    ]
+    with _mp.Pool(core_num) as pl:
+        _ = pl.map(__parallel_plus, _splited_array)
     _ = _np.array(_).sum(0)
     _ += beta_md[0]  # add the intercept
     _ -= _y
@@ -1740,19 +1752,27 @@ def _SNP_update_smooth_grad_convex_LM_parallel(N, SNP_ind, bed, beta_md, y,
     # then calculate _XTXbeta = X.T@X@beta_md = X.T@_
     def __parallel_assign(_ind):
         import numpy as _np
-        k = 0
-        __ = _np.zeros(len(_ind))
-        for j in _ind:
-            _X = bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
-            _X = _X[gene_ind]  # get gene iid also in outcome iid
-            __[k] = _X @ _
-            k += 1
-        return __
+        _X = bed.read(_np.s_[:, _ind],
+                      dtype=_np.int8).flatten().reshape(-1, len(_ind))
+        _X = _X[gene_ind, :]  # get gene iid also in outcome iid
+        return _ @ _X
+#         k = 0
+#         __ = _np.zeros(len(_ind))
+#         for j in _ind:
+#             _X = bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
+#             _X = _X[gene_ind]  # get gene iid also in outcome iid
+#             __[k] = _X @ _
+#             k += 1
+#         return __
 
-    # multiprocessing starts here
-    with _mp.Pool(_mp.cpu_count()) as pl:
-        _XTXbeta = pl.map(__parallel_assign,
-                          _np.array_split(SNP_ind, core_num))
+# multiprocessing starts here
+
+    _splited_array = _np.array_split(SNP_ind, core_num * multp)
+    _splited_array = [
+        __array for __array in _splited_array if __array.size != 0
+    ]
+    with _mp.Pool(core_num) as pl:
+        _XTXbeta = pl.map(__parallel_assign, _splited_array)
     __XTXbeta = _np.hstack(_XTXbeta)
     _XTXbeta = _np.zeros(p + 1)
     _XTXbeta[SNP_ind + 1] = __XTXbeta
@@ -1765,8 +1785,8 @@ def _SNP_update_smooth_grad_convex_LM_parallel(N, SNP_ind, bed, beta_md, y,
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_SCAD_LM_parallel(N, SNP_ind, bed, beta_md, y,
-                                             outcome_iid, _lambda, a,
-                                             core_num):
+                                             outcome_iid, _lambda, a, core_num,
+                                             multp):
     '''
     Update the gradient of the smooth objective component for SCAD penalty.
     '''
@@ -1777,13 +1797,14 @@ def _SNP_update_smooth_grad_SCAD_LM_parallel(N, SNP_ind, bed, beta_md, y,
         beta_md=beta_md,
         y=y,
         outcome_iid=outcome_iid,
-        core_num=core_num) + SCAD_concave_grad(x=beta_md, lambda_=_lambda, a=a)
+        core_num=core_num,
+        multp=multp) + SCAD_concave_grad(x=beta_md, lambda_=_lambda, a=a)
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_MCP_LM_parallel(N, SNP_ind, bed, beta_md, y,
                                             outcome_iid, _lambda, gamma,
-                                            core_num):
+                                            core_num, multp):
     '''
     Update the gradient of the smooth objective component for MCP penalty.
     '''
@@ -1794,12 +1815,14 @@ def _SNP_update_smooth_grad_MCP_LM_parallel(N, SNP_ind, bed, beta_md, y,
         beta_md=beta_md,
         y=y,
         outcome_iid=outcome_iid,
-        core_num=core_num) + MCP_concave_grad(
+        core_num=core_num,
+        multp=multp) + MCP_concave_grad(
             x=beta_md, lambda_=_lambda, gamma=gamma)
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def _SNP_lambda_max_LM_parallel(bed, y, outcome_iid, N, SNP_ind, core_num):
+def _SNP_lambda_max_LM_parallel(bed, y, outcome_iid, N, SNP_ind, core_num,
+                                multp):
     """
     Calculate the lambda_max, i.e., the minimum lambda to nullify all penalized betas.
     """
@@ -1817,7 +1840,8 @@ def _SNP_lambda_max_LM_parallel(bed, y, outcome_iid, N, SNP_ind, core_num):
         beta_md=_np.zeros(len(SNP_ind)),
         y=y,
         outcome_iid=outcome_iid,
-        core_num=core_num)
+        core_num=core_num,
+        multp=multp)
     return _np.linalg.norm(grad_at_0[1:], ord=_np.infty)
 
 
@@ -1836,7 +1860,8 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file,
                                  penalty="SCAD",
                                  a=3.7,
                                  gamma=2.,
-                                 core_num="NOT DECLARED"):
+                                 core_num="NOT DECLARED",
+                                 multp=1):
     '''
     Carry out the optimization for penalized LM for a fixed lambda.
     '''
@@ -1867,20 +1892,29 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file,
 
         def __parallel_assign(_ind):
             import numpy as _np
-            k = 0
-            __ = _np.zeros(len(_ind))
-            for j in _ind:
-                _X = bed.read(_np.s_[:, j], dtype=_np.float64).flatten()
-                _X = _X[gene_ind]  # get gene iid also in outcome iid
-                _X -= _np.mean(_X)
-                __[k] = _X @ _y / N
-                k += 1
-            return __
+            _X = bed.read(_np.s_[:, _ind],
+                          dtype=_np.float64).flatten().reshape(-1, len(_ind))
+            _X = _X[gene_ind, :]  # get gene iid also in outcome iid
+            _X -= _np.mean(_X, 0).reshape(1, -1)
+            return _y @ _X / N
+#             k = 0
+#             __ = _np.zeros(len(_ind))
+#             for j in _ind:
+#                 _X = bed.read(_np.s_[:, j], dtype=_np.float64).flatten()
+#                 _X = _X[gene_ind]  # get gene iid also in outcome iid
+#                 _X -= _np.mean(_X)
+#                 __[k] = _X @ _y / N
+#                 k += 1
+#             return __
 
-        # multiprocessing starts here
-        with _mp.Pool(_mp.cpu_count()) as pl:
-            _XTy = pl.map(__parallel_assign,
-                          _np.array_split(SNP_ind, core_num))
+# multiprocessing starts here
+
+        _splited_array = _np.array_split(SNP_ind, core_num * multp)
+        _splited_array = [
+            __array for __array in _splited_array if __array.size != 0
+        ]
+        with _mp.Pool(core_num) as pl:
+            _XTy = pl.map(__parallel_assign, _splited_array)
         _XTy = _np.hstack(_XTy)
         beta = _np.zeros(p + 1)
         beta[SNP_ind + 1] = _  #_np.sign(_XTy)
@@ -1927,7 +1961,8 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file,
                 outcome_iid=outcome_iid,
                 _lambda=_lambda,
                 a=a,
-                core_num=core_num)
+                core_num=core_num,
+                multp=multp)
             beta = soft_thresholding(x=beta - opt_lambda * smooth_grad,
                                      lambda_=opt_lambda * _lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta * smooth_grad,
@@ -1964,7 +1999,8 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file,
                 outcome_iid=outcome_iid,
                 _lambda=_lambda,
                 gamma=gamma,
-                core_num=core_num)
+                core_num=core_num,
+                multp=multp)
             beta = soft_thresholding(x=beta - opt_lambda * smooth_grad,
                                      lambda_=opt_lambda * _lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta * smooth_grad,
@@ -1989,7 +2025,8 @@ def SNP_solution_path_LM_parallel(bed_file,
                                   penalty="SCAD",
                                   a=3.7,
                                   gamma=2.,
-                                  core_num="NOT DECLARED"):
+                                  core_num="NOT DECLARED",
+                                  multp=1):
     '''
     Carry out the optimization for the solution path without the strong rule.
     '''
@@ -2023,19 +2060,31 @@ def SNP_solution_path_LM_parallel(bed_file,
 
     def __parallel_assign(_ind):
         import numpy as _np
-        k = 0
-        __ = _np.zeros(len(_ind))
-        for j in _ind:
-            _X = bed.read(_np.s_[:, j], dtype=_np.float64).flatten()
-            _X = _X[gene_ind]  # get gene iid also in outcome iid
-            _X -= _np.mean(_X)
-            __[k] = _X @ _y / N
-            k += 1
-        return __
+        _X = bed.read(_np.s_[:, _ind],
+                      dtype=_np.float64).flatten().reshape(-1, len(_ind))
+        _X = _X[gene_ind, :]  # get gene iid also in outcome iid
+        _X -= _np.mean(_X, 0).reshape(1, -1)
+        return _y @ _X / N
 
-    # multiprocessing starts here
-    with _mp.Pool(_mp.cpu_count()) as pl:
-        _XTy = pl.map(__parallel_assign, _np.array_split(SNP_ind, core_num))
+
+#         k = 0
+#         __ = _np.zeros(len(_ind))
+#         for j in _ind:
+#             _X = bed.read(_np.s_[:, j], dtype=_np.float64).flatten()
+#             _X = _X[gene_ind]  # get gene iid also in outcome iid
+#             _X -= _np.mean(_X)
+#             __[k] = _X @ _y / N
+#             k += 1
+#         return __
+
+# multiprocessing starts here
+
+    _splited_array = _np.array_split(SNP_ind, core_num * multp)
+    _splited_array = [
+        __array for __array in _splited_array if __array.size != 0
+    ]
+    with _mp.Pool(core_num) as pl:
+        _XTy = pl.map(__parallel_assign, _splited_array)
     _XTy = _np.hstack(_XTy)
     beta = _np.zeros(p + 1)
     beta[SNP_ind + 1] = _XTy  #_np.sign(_XTy)
@@ -2059,7 +2108,8 @@ def SNP_solution_path_LM_parallel(bed_file,
             outcome_iid=outcome_iid,
             a=a,
             gamma=gamma,
-            core_num=core_num)[1]
+            core_num=core_num,
+            multp=multp)[1]
     return beta_mat[1:, :]
 
 
@@ -3199,7 +3249,8 @@ def SNP_solution_path_logistic_PCA(bed_file,
 ##############################################################################################
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_convex_logistic_parallel(N, SNP_ind, bed, beta_md,
-                                                     y, outcome_iid, core_num):
+                                                     y, outcome_iid, core_num,
+                                                     multp):
     '''
     Update the gradient of the smooth convex objective component.
     '''
@@ -3217,16 +3268,25 @@ def _SNP_update_smooth_grad_convex_logistic_parallel(N, SNP_ind, bed, beta_md,
     # first calcualte _=X@beta_md-y
     def __parallel_plus(_ind):
         import numpy as _np
-        __ = _np.zeros(N)
-        for j in _ind:
-            _X = bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
-            _X = _X[gene_ind]  # get gene iid also in outcome iid
-            __ += _X * beta_md[j + 1]
-        return __
+        _X = bed.read(_np.s_[:, _ind],
+                      dtype=_np.int8).flatten().reshape(-1, len(_ind))
+        _X = _X[gene_ind, :]  # get gene iid also in outcome iid
+        return _X @ beta_md[_ind + 1]
+#         __ = _np.zeros(N)
+#         for j in _ind:
+#             _X = bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
+#             _X = _X[gene_ind]  # get gene iid also in outcome iid
+#             __ += _X * beta_md[j + 1]
+#         return __
 
-    # multiprocessing starts here
-    with _mp.Pool(_mp.cpu_count()) as pl:
-        _ = pl.map(__parallel_plus, _np.array_split(SNP_ind, core_num))
+# multiprocessing starts here
+
+    _splited_array = _np.array_split(SNP_ind, core_num * multp)
+    _splited_array = [
+        __array for __array in _splited_array if __array.size != 0
+    ]
+    with _mp.Pool(core_num) as pl:
+        _ = pl.map(__parallel_plus, _splited_array)
     _ = _np.array(_).sum(0)
     _ += beta_md[0]  # add the intercept
     _ = _np.tanh(_ / 2.) / 2. - _y + .5
@@ -3234,19 +3294,27 @@ def _SNP_update_smooth_grad_convex_logistic_parallel(N, SNP_ind, bed, beta_md,
     # then calculate _XTXbeta = X.T@X@beta_md = X.T@_
     def __parallel_assign(_ind):
         import numpy as _np
-        k = 0
-        __ = _np.zeros(len(_ind))
-        for j in _ind:
-            _X = bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
-            _X = _X[gene_ind]  # get gene iid also in outcome iid
-            __[k] = _X @ _
-            k += 1
-        return __
+        _X = bed.read(_np.s_[:, _ind],
+                      dtype=_np.int8).flatten().reshape(-1, len(_ind))
+        _X = _X[gene_ind, :]  # get gene iid also in outcome iid
+        return _ @ _X
+#         k = 0
+#         __ = _np.zeros(len(_ind))
+#         for j in _ind:
+#             _X = bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
+#             _X = _X[gene_ind]  # get gene iid also in outcome iid
+#             __[k] = _X @ _
+#             k += 1
+#         return __
 
-    # multiprocessing starts here
-    with _mp.Pool(_mp.cpu_count()) as pl:
-        _XTXbeta = pl.map(__parallel_assign,
-                          _np.array_split(SNP_ind, core_num))
+# multiprocessing starts here
+
+    _splited_array = _np.array_split(SNP_ind, core_num * multp)
+    _splited_array = [
+        __array for __array in _splited_array if __array.size != 0
+    ]
+    with _mp.Pool(core_num) as pl:
+        _XTXbeta = pl.map(__parallel_assign, _splited_array)
     __XTXbeta = _np.hstack(_XTXbeta)
     _XTXbeta = _np.zeros(p + 1)
     _XTXbeta[SNP_ind + 1] = __XTXbeta
@@ -3259,7 +3327,7 @@ def _SNP_update_smooth_grad_convex_logistic_parallel(N, SNP_ind, bed, beta_md,
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_SCAD_logistic_parallel(N, SNP_ind, bed, beta_md, y,
                                                    outcome_iid, _lambda, a,
-                                                   core_num):
+                                                   core_num, multp):
     '''
     Update the gradient of the smooth objective component for SCAD penalty.
     '''
@@ -3270,13 +3338,14 @@ def _SNP_update_smooth_grad_SCAD_logistic_parallel(N, SNP_ind, bed, beta_md, y,
         beta_md=beta_md,
         y=y,
         outcome_iid=outcome_iid,
-        core_num=core_num) + SCAD_concave_grad(x=beta_md, lambda_=_lambda, a=a)
+        core_num=core_num,
+        multp=multp) + SCAD_concave_grad(x=beta_md, lambda_=_lambda, a=a)
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_update_smooth_grad_MCP_logistic_parallel(N, SNP_ind, bed, beta_md, y,
                                                   outcome_iid, _lambda, gamma,
-                                                  core_num):
+                                                  core_num, multp):
     '''
     Update the gradient of the smooth objective component for MCP penalty.
     '''
@@ -3287,13 +3356,14 @@ def _SNP_update_smooth_grad_MCP_logistic_parallel(N, SNP_ind, bed, beta_md, y,
         beta_md=beta_md,
         y=y,
         outcome_iid=outcome_iid,
-        core_num=core_num) + MCP_concave_grad(
+        core_num=core_num,
+        multp=multp) + MCP_concave_grad(
             x=beta_md, lambda_=_lambda, gamma=gamma)
 
 
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def _SNP_lambda_max_logistic_parallel(bed, y, outcome_iid, N, SNP_ind,
-                                      core_num):
+                                      core_num, multp):
     """
     Calculate the lambda_max, i.e., the minimum lambda to nullify all penalized betas.
     """
@@ -3311,7 +3381,8 @@ def _SNP_lambda_max_logistic_parallel(bed, y, outcome_iid, N, SNP_ind,
         beta_md=_np.zeros(len(SNP_ind)),
         y=y,
         outcome_iid=outcome_iid,
-        core_num=core_num)
+        core_num=core_num,
+        multp=multp)
     return _np.linalg.norm(grad_at_0[1:], ord=_np.infty)
 
 
@@ -3330,7 +3401,8 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file,
                                        penalty="SCAD",
                                        a=3.7,
                                        gamma=2.,
-                                       core_num="NOT DECLARED"):
+                                       core_num="NOT DECLARED",
+                                       multp=1):
     '''
     Carry out the optimization for penalized logistic for a fixed lambda.
     '''
@@ -3362,20 +3434,29 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file,
 
         def __parallel_assign(_ind):
             import numpy as _np
-            k = 0
-            __ = _np.zeros(len(_ind))
-            for j in _ind:
-                _X = bed.read(_np.s_[:, j], dtype=_np.float64).flatten()
-                _X = _X[gene_ind]  # get gene iid also in outcome iid
-                _X -= _np.mean(_X)
-                __[k] = _X @ _y / N
-                k += 1
-            return __
+            _X = bed.read(_np.s_[:, _ind],
+                          dtype=_np.float64).flatten().reshape(-1, len(_ind))
+            _X = _X[gene_ind, :]  # get gene iid also in outcome iid
+            _X -= _np.mean(_X, 0).reshape(1, -1)
+            return _y @ _X / N
+#             k = 0
+#             __ = _np.zeros(len(_ind))
+#             for j in _ind:
+#                 _X = bed.read(_np.s_[:, j], dtype=_np.float64).flatten()
+#                 _X = _X[gene_ind]  # get gene iid also in outcome iid
+#                 _X -= _np.mean(_X)
+#                 __[k] = _X @ _y / N
+#                 k += 1
+#             return __
 
-        # multiprocessing starts here
-        with _mp.Pool(_mp.cpu_count()) as pl:
-            _XTy = pl.map(__parallel_assign,
-                          _np.array_split(SNP_ind, core_num))
+# multiprocessing starts here
+
+        _splited_array = _np.array_split(SNP_ind, core_num * multp)
+        _splited_array = [
+            __array for __array in _splited_array if __array.size != 0
+        ]
+        with _mp.Pool(core_num) as pl:
+            _XTy = pl.map(__parallel_assign, _splited_array)
         _XTy = _np.hstack(_XTy)
         beta = _np.zeros(p + 1)
         beta[SNP_ind + 1] = _np.sign(_XTy)
@@ -3422,7 +3503,8 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file,
                 outcome_iid=outcome_iid,
                 _lambda=_lambda,
                 a=a,
-                core_num=core_num)
+                core_num=core_num,
+                multp=multp)
             beta = soft_thresholding(x=beta - opt_lambda * smooth_grad,
                                      lambda_=opt_lambda * _lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta * smooth_grad,
@@ -3459,7 +3541,8 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file,
                 outcome_iid=outcome_iid,
                 _lambda=_lambda,
                 gamma=gamma,
-                core_num=core_num)
+                core_num=core_num,
+                multp=multp)
             beta = soft_thresholding(x=beta - opt_lambda * smooth_grad,
                                      lambda_=opt_lambda * _lambda)
             beta_ag = soft_thresholding(x=beta_md - opt_beta * smooth_grad,
@@ -3484,7 +3567,8 @@ def SNP_solution_path_logistic_parallel(bed_file,
                                         penalty="SCAD",
                                         a=3.7,
                                         gamma=2.,
-                                        core_num="NOT DECLARED"):
+                                        core_num="NOT DECLARED",
+                                        multp=1):
     '''
     Carry out the optimization for the solution path without the strong rule.
     '''
@@ -3519,19 +3603,31 @@ def SNP_solution_path_logistic_parallel(bed_file,
 
     def __parallel_assign(_ind):
         import numpy as _np
-        k = 0
-        __ = _np.zeros(len(_ind))
-        for j in _ind:
-            _X = bed.read(_np.s_[:, j], dtype=_np.float64).flatten()
-            _X = _X[gene_ind]  # get gene iid also in outcome iid
-            _X -= _np.mean(_X)
-            __[k] = _X @ _y / N
-            k += 1
-        return __
+        _X = bed.read(_np.s_[:, _ind],
+                      dtype=_np.float64).flatten().reshape(-1, len(_ind))
+        _X = _X[gene_ind, :]  # get gene iid also in outcome iid
+        _X -= _np.mean(_X, 0).reshape(1, -1)
+        return _y @ _X / N
 
-    # multiprocessing starts here
-    with _mp.Pool(_mp.cpu_count()) as pl:
-        _XTy = pl.map(__parallel_assign, _np.array_split(SNP_ind, core_num))
+
+#         k = 0
+#         __ = _np.zeros(len(_ind))
+#         for j in _ind:
+#             _X = bed.read(_np.s_[:, j], dtype=_np.float64).flatten()
+#             _X = _X[gene_ind]  # get gene iid also in outcome iid
+#             _X -= _np.mean(_X)
+#             __[k] = _X @ _y / N
+#             k += 1
+#         return __
+
+# multiprocessing starts here
+
+    _splited_array = _np.array_split(SNP_ind, core_num * multp)
+    _splited_array = [
+        __array for __array in _splited_array if __array.size != 0
+    ]
+    with _mp.Pool(core_num) as pl:
+        _XTy = pl.map(__parallel_assign, _splited_array)
     _XTy = _np.hstack(_XTy)
     beta = _np.zeros(p + 1)
     beta[SNP_ind + 1] = _XTy  #_np.sign(_XTy)
@@ -3555,5 +3651,6 @@ def SNP_solution_path_logistic_parallel(bed_file,
             outcome_iid=outcome_iid,
             a=a,
             gamma=gamma,
-            core_num=core_num)[1]
+            core_num=core_num,
+            multp=multp)[1]
     return beta_mat[1:, :]
