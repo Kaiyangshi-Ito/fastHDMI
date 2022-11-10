@@ -1,6 +1,6 @@
 # fastHDMI
 
-This packages uses mutual information and accelerated gradient method to screen for SNPs and optimize the nonconvex sparse learning problem on large genetic data based on bed/bim/fam files. The corresponding paper by Yang et al. is coming soon...
+This packages uses mutual information and accelerated gradient method to screen for important variables from (potentially very) high-dimensional large datasets. As a feature, it can be applied on large `.csv` data in parallel in a memory-efficient manner and use FFT for KDE to compute the mutual information extremely fast. It also features screening for SNPs and optimize the nonconvex sparse learning problem on large genetic data based on plink files (`*.bed/*.bim/*.fam`). The corresponding paper by Yang et al. is coming soon...
 
 The available functions are:
 - `continuous_filter` caculates the mutual information between a continuous outcome and a bialletic SNP using FFT. Missing data is acceptable and will be removed. The arguments are:
