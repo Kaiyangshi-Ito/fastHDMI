@@ -1,4 +1,4 @@
-# MI_AG
+# fastHDMI
 
 This packages uses mutual information and accelerated gradient method to screen for SNPs and optimize the nonconvex sparse learning problem on large genetic data based on bed/bim/fam files. The corresponding paper by Yang et al. is coming soon...
 

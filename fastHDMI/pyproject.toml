@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "numpy>=1.14.2", "numba>=0.54.1", "KDEpy>=1.1.0"
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "MI_AG"
+name = "fastHDMI"
 version = "0.9.5.9"
 authors = [
   { name="Kai Yang", email="kai.yang2@mail.mcgill.ca" },
@@ -19,5 +19,5 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/Kaiyangshi-Ito/MI_AG"
-"Bug Tracker" = "https://github.com/Kaiyangshi-Ito/MI_AG/issues"
+"Homepage" = "https://github.com/Kaiyangshi-Ito/fastHDMI"
+"Bug Tracker" = "https://github.com/Kaiyangshi-Ito/fastHDMI/issues"
