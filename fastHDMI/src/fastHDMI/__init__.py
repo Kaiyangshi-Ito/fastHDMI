@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import numpy as _np
+import pandas as _pd
 from bed_reader import open_bed as _open_bed
 from KDEpy import FFTKDE as _FFTKDE
 import multiprocess as _mp
@@ -12,7 +13,14 @@ from numba import njit as _njit
 #############################################################################
 ################# filtering using mutual information ########################
 #############################################################################
-def _MI_continuous(a, b, a_min, a_max, N=500):
+def MI_continuous_SNP(a,
+                      b,
+                      a_min,
+                      a_max,
+                      N=500,
+                      kernel="epa",
+                      bw="silverman",
+                      machine_err=1e-24):
     """
     calculate mutual information between continuous outcome and an SNP variable of 0,1,2
     assume no missing data
@@ -26,19 +34,19 @@ def _MI_continuous(a, b, a_min, a_max, N=500):
     if _np.sum(
             _b0
     ) > 2:  # here proceed to kde only if there are more than 5 data points
-        y_cond_p0 = _FFTKDE(kernel="gaussian", bw="silverman").fit(data=a[_b0])
+        y_cond_p0 = _FFTKDE(kernel=kernel, bw=bw).fit(data=a[_b0])
 #         y_cond_p0 = gaussian_kde(a[_b0])
     else:
         y_cond_p0 = _np.zeros_like
     _b1 = (b == 1)
     if _np.sum(_b1) > 2:
-        y_cond_p1 = _FFTKDE(kernel="gaussian", bw="silverman").fit(data=a[_b1])
+        y_cond_p1 = _FFTKDE(kernel=kernel, bw=bw).fit(data=a[_b1])
 #         y_cond_p1 = gaussian_kde(a[_b1]) # this thing uses Scott's rule instead of Silverman defaulted by FFTKDE and R density
     else:
         y_cond_p1 = _np.zeros_like
     _b2 = (b == 2)
     if _np.sum(_b2) > 2:
-        y_cond_p2 = _FFTKDE(kernel="gaussian", bw="silverman").fit(data=a[_b2])
+        y_cond_p2 = _FFTKDE(kernel=kernel, bw=bw).fit(data=a[_b2])
 
 
 #         y_cond_p2 = gaussian_kde(a[_b2])
@@ -49,25 +57,27 @@ def _MI_continuous(a, b, a_min, a_max, N=500):
     joint[:, 0] = y_cond_p0(a_temp) * p0
     joint[:, 1] = y_cond_p1(a_temp) * p1
     joint[:, 2] = y_cond_p2(a_temp) * p2
-    joint[joint < 1e-20] = 1e-20  # set a threshold to avoid numerical errors
+    joint[
+        joint <
+        machine_err] = machine_err  # set a threshold to avoid numerical errors
     forward_euler_step = a_temp[1] - a_temp[0]
-    #     print("total measure:", _np.sum(joint)*forward_euler_step)
+    #     print("total measure:",  _np.sum(joint)*forward_euler_step)
     temp_log = _np.log(joint)
-    #     temp_log = _np.nan_to_num(temp_log, nan = 0)
+    #     temp_log =  _np.nan_to_num(temp_log, nan = 0)
     temp1 = _np.log(_np.sum(joint, 1))
-    #     temp1 = _np.nan_to_num(temp1, nan = 0)
+    #     temp1 =  _np.nan_to_num(temp1, nan = 0)
     temp_log = temp_log - temp1.reshape(-1, 1)
-    temp2 = _np.log(_np.sum(joint, 0) * forward_euler_step)
-    #     temp2 = _np.nan_to_num(temp2, nan = 0)
+    temp2 = _np.log(_np.sum(joint, 0)) + _np.log(forward_euler_step)
+    #     temp2 =  _np.nan_to_num(temp2, nan = 0)
     temp_log = temp_log - temp2.reshape(1, -1)
     # print(fhat_mat * temp_log)
     temp_mat = joint * temp_log
-    #     temp_mat = _np.nan_to_num(temp_mat, nan=0.) # numerical fix
+    #     temp_mat =  _np.nan_to_num(temp_mat, nan=0.) # numerical fix
     mi_temp = _np.sum(temp_mat) * forward_euler_step
     return mi_temp
 
 
-def _MI_binary(a, b):
+def MI_binary_SNP(a, b):
     """
     calculate mutual information between binary outcome and an SNP variable of 0,1,2
     assume no missing data
@@ -103,15 +113,68 @@ def _MI_binary(a, b):
     return mi_temp
 
 
+# make this function available
+def MI_bivariate_continuous(a,
+                            b,
+                            a_N=300,
+                            b_N=300,
+                            kernel="epa",
+                            bw="silverman",
+                            norm=2,
+                            machine_err=1e-24):
+    """
+    (Single Core version) calculate mutual information on bivariate continuous r.v..
+    """
+    _ = _np.argsort(a)
+    data = _np.hstack((a[_].reshape(-1, 1), b[_].reshape(-1, 1)))
+    grid, joint = _FFTKDE(kernel=kernel, norm=norm).fit(data).evaluate(
+        (a_N, b_N))
+    joint = joint.reshape(b_N, -1).T
+    # this gives joint as a (a_N, b_N) array, following example: https://kdepy.readthedocs.io/en/latest/examples.html#the-effect-of-norms-in-2d
+    a_forward_euler_step = grid[b_N, 0] - grid[0, 0]
+    b_forward_euler_step = grid[1, 1] - grid[0, 1]
+    joint[joint < machine_err] = machine_err
+    log_a_marginal = _np.log(_np.sum(joint, 1)) + _np.log(b_forward_euler_step)
+    log_b_marginal = _np.log(_np.sum(joint, 0)) + _np.log(a_forward_euler_step)
+    log_joint = _np.log(joint)
+    mi_temp = _np.sum(
+        joint *
+        (log_joint - log_a_marginal.reshape(-1, 1) - log_b_marginal.reshape(
+            1, -1))) * a_forward_euler_step * b_forward_euler_step
+    return mi_temp
+
+
+# make this function available
+def MI_binary_continuous(a,
+                         b,
+                         b_min,
+                         b_max,
+                         N=500,
+                         kernel="epa",
+                         bw="silverman",
+                         machine_err=1e-24):
+    return MI_continuous_SNP(a=b,
+                             b=a,
+                             a_min=b_min,
+                             a_max=b_max,
+                             N=N,
+                             kernel=kernel,
+                             bw=bw,
+                             machine_err=machine_err)
+
+
 # outcome_iid should be a  list of strings for identifiers
-def continuous_filter(bed_file,
-                      bim_file,
-                      fam_file,
-                      outcome,
-                      outcome_iid,
-                      a_min=1.2345654321,
-                      a_max=2.34565432,
-                      N=500):
+def continuous_filter_plink(bed_file,
+                            bim_file,
+                            fam_file,
+                            outcome,
+                            outcome_iid,
+                            a_min=1.2345654321,
+                            a_max=2.34565432,
+                            N=500,
+                            kernel="epa",
+                            bw="silverman",
+                            machine_err=1e-24):
     """
     (Single Core version) take plink files to calculate the mutual information between the continuous outcome and many SNP variables.
     """
@@ -139,15 +202,18 @@ def continuous_filter(bed_file,
         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        MI_UKBB[j] = _MI_continuous(a=_outcome,
-                                    b=_SNP,
-                                    a_min=a_min,
-                                    a_max=a_max,
-                                    N=N)
+        MI_UKBB[j] = MI_continuous_SNP(a=_outcome,
+                                       b=_SNP,
+                                       a_min=a_min,
+                                       a_max=a_max,
+                                       N=N,
+                                       kernel=kernel,
+                                       bw=bw,
+                                       machine_err=machine_err)
     return MI_UKBB
 
 
-def binary_filter(bed_file, bim_file, fam_file, outcome, outcome_iid):
+def binary_filter_plink(bed_file, bim_file, fam_file, outcome, outcome_iid):
     """
     (Single Core version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
@@ -172,20 +238,23 @@ def binary_filter(bed_file, bim_file, fam_file, outcome, outcome_iid):
         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        MI_UKBB[j] = _MI_binary(a=_outcome, b=_SNP)
+        MI_UKBB[j] = MI_binary_SNP(a=_outcome, b=_SNP)
     return MI_UKBB
 
 
-def continuous_filter_parallel(bed_file,
-                               bim_file,
-                               fam_file,
-                               outcome,
-                               outcome_iid,
-                               a_min=1.2345654321,
-                               a_max=2.34565432,
-                               N=500,
-                               core_num="NOT DECLARED",
-                               multp=1):
+def continuous_filter_plink_parallel(bed_file,
+                                     bim_file,
+                                     fam_file,
+                                     outcome,
+                                     outcome_iid,
+                                     a_min=1.2345654321,
+                                     a_max=2.34565432,
+                                     N=500,
+                                     kernel="epa",
+                                     bw="silverman",
+                                     machine_err=1e-24,
+                                     core_num="NOT DECLARED",
+                                     multp=1):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the continuous outcome and many SNP variables.
     """
@@ -215,7 +284,7 @@ def continuous_filter_parallel(bed_file,
                                assume_unique=True,
                                return_indices=True)[1]
 
-    def _continuous_filter_slice(_slice):
+    def _continuous_filter_plink_slice(_slice):
         _MI_slice = _np.zeros(len(_slice))
         k = 0
         for j in _slice:
@@ -223,30 +292,33 @@ def continuous_filter_parallel(bed_file,
             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
             _SNP = _SNP[_SNP != -127]  # remove missing SNP
-            _MI_slice[k] = _MI_continuous(a=_outcome,
-                                          b=_SNP,
-                                          a_min=a_min,
-                                          a_max=a_max,
-                                          N=N)
+            _MI_slice[k] = MI_continuous_SNP(a=_outcome,
+                                             b=_SNP,
+                                             a_min=a_min,
+                                             a_max=a_max,
+                                             N=N,
+                                             kernel=kernel,
+                                             bw=bw,
+                                             machine_err=machine_err)
             k += 1
         return _MI_slice
 
     # multiprocessing starts here
     ind = _np.arange(len(bed1_sid))
     with _mp.Pool(core_num) as pl:
-        MI_UKBB = pl.map(_continuous_filter_slice,
+        MI_UKBB = pl.map(_continuous_filter_plink_slice,
                          _np.array_split(ind, core_num * multp))
     MI_UKBB = _np.hstack(MI_UKBB)
     return MI_UKBB
 
 
-def binary_filter_parallel(bed_file,
-                           bim_file,
-                           fam_file,
-                           outcome,
-                           outcome_iid,
-                           core_num="NOT DECLARED",
-                           multp=1):
+def binary_filter_plink_parallel(bed_file,
+                                 bim_file,
+                                 fam_file,
+                                 outcome,
+                                 outcome_iid,
+                                 core_num="NOT DECLARED",
+                                 multp=1):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
@@ -272,7 +344,7 @@ def binary_filter_parallel(bed_file,
                                assume_unique=True,
                                return_indices=True)[1]
 
-    def _binary_filter_slice(_slice):
+    def _binary_filter_plink_slice(_slice):
         _MI_slice = _np.zeros(len(_slice))
         k = 0
         for j in _slice:
@@ -280,17 +352,243 @@ def binary_filter_parallel(bed_file,
             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
             _SNP = _SNP[_SNP != -127]  # remove missing SNP
-            _MI_slice[k] = _MI_binary(a=_outcome, b=_SNP)
+            _MI_slice[k] = MI_binary_SNP(a=_outcome, b=_SNP)
             k += 1
         return _MI_slice
 
     # multiprocessing starts here
     ind = _np.arange(len(bed1_sid))
     with _mp.Pool(core_num) as pl:
-        MI_UKBB = pl.map(_binary_filter_slice,
+        MI_UKBB = pl.map(_binary_filter_plink_slice,
                          _np.array_split(ind, core_num * multp))
     MI_UKBB = _np.hstack(MI_UKBB)
     return MI_UKBB
+
+
+def binary_filter_csv(csv_file,
+                      _usecols=[],
+                      N=500,
+                      kernel="epa",
+                      bw="silverman",
+                      machine_err=1e-24):
+    """
+    Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    The outcome should be binary and the covariates be continuous. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    """
+    # outcome is the first variable by default; if other specifications are needed, put it the first item in _usecols
+    if _np.array(_usecols).size == 0:
+        print(
+            "Variable names not provided -- start reading variable names from csv file now, might take some time, depending on the csv file size."
+        )
+        _usecols = _pd.read_csv(csv_file, index_col=0,
+                                nrows=0).columns.tolist()
+        print("Reading variable names from csv file finished.")
+    else:
+        _usecols = _np.array(_usecols)
+    MI_csv = _np.empty(len(_usecols) - 1)
+    for j in _np.arange(len(_usecols) - 1):
+        __ = [
+            _usecols[0], _usecols[j + 1]
+        ]  # here using _usecol[j + 1] because the left first column is the outcome
+        _ = _pd.read_csv(csv_file,
+                         skipinitialspace=True,
+                         usecols=__,
+                         encoding='unicode_escape').dropna()
+        _a = _[_usecols[0]].to_numpy()
+        _b = _[_usecols[j + 1]].to_numpy()
+        MI_csv[j] = MI_binary_continuous(a=_a,
+                                         b=_b,
+                                         b_min=_np.min(_b) - _np.std(_b),
+                                         b_max=_np.max(_b) + _np.std(_b),
+                                         N=N,
+                                         kernel=kernel,
+                                         bw=bw,
+                                         machine_err=machine_err)
+    return MI_csv
+
+
+def continuous_filter_csv(csv_file,
+                          _usecols=[],
+                          a_N=300,
+                          b_N=300,
+                          kernel="epa",
+                          bw="silverman",
+                          norm=2,
+                          machine_err=1e-24):
+    """
+    Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    Both the outcome and the covariates should be continuous. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    """
+    if _np.array(_usecols).size == 0:
+        print(
+            "Variable names not provided -- start reading variable names from csv file now, might take some time, depending on the csv file size."
+        )
+        _usecols = _pd.read_csv(csv_file, index_col=0,
+                                nrows=0).columns.tolist()
+        print("Reading variable names from csv file finished.")
+    else:
+        _usecols = _np.array(_usecols)
+    MI_csv = _np.empty(len(_usecols) - 1)
+    for j in _np.arange(len(_usecols) - 1):
+        __ = [
+            _usecols[0], _usecols[j + 1]
+        ]  # here using _usecol[j + 1] because the left first column is the outcome
+        _ = _pd.read_csv(csv_file,
+                         skipinitialspace=True,
+                         usecols=__,
+                         encoding='unicode_escape').dropna()
+        _a = _[_usecols[0]].to_numpy()
+        _b = _[_usecols[j + 1]].to_numpy()
+        MI_csv[j] = MI_bivariate_continuous(a=_a,
+                                            b=_b,
+                                            a_N=a_N,
+                                            b_N=b_N,
+                                            kernel=kernel,
+                                            bw=bw,
+                                            norm=norm,
+                                            machine_err=machine_err)
+    return MI_csv
+
+
+def binary_filter_csv_parallel(csv_file,
+                               _usecols=[],
+                               N=500,
+                               kernel="epa",
+                               bw="silverman",
+                               machine_err=1e-24,
+                               core_num="NOT DECLARED",
+                               multp=1):
+    """
+    (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    The outcome should be binary and the covariates be continuous. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    """
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    if _np.array(_usecols).size == 0:
+        print(
+            "Variable names not provided -- start reading variable names from csv file now, might take some time, depending on the csv file size."
+        )
+        _usecols = _pd.read_csv(csv_file, index_col=0,
+                                nrows=0).columns.tolist()
+        print("Reading variable names from csv file finished.")
+    else:
+        _usecols = _np.array(_usecols)
+
+    def _binary_filter_csv_slice(_slice):
+        _MI_slice = _np.zeros(
+            len(_slice))  # returned MI should be of the same length as slice
+        k = 0
+        for j in _slice:
+            __ = [
+                _usecols[0], _usecols[j]
+            ]  # here using _usecol[j] because only input variables indices were splitted
+            _ = _pd.read_csv(csv_file,
+                             skipinitialspace=True,
+                             usecols=__,
+                             encoding='unicode_escape').dropna()
+            _a = _[_usecols[0]].to_numpy()
+            _b = _[_usecols[j]].to_numpy()
+            _MI_slice[k] = MI_binary_continuous(
+                a=_a,
+                b=_b,
+                b_min=_np.min(_b) - _np.std(_b),
+                b_max=_np.max(_b) + _np.std(_b),
+                N=N,
+                kernel=kernel,
+                bw=bw,
+                machine_err=machine_err)
+            k += 1
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(
+        1, len(_usecols)
+    )  # starting from 1 because the first left column should be the outcome
+    with _mp.Pool(core_num) as pl:
+        MI_csv = pl.map(_binary_filter_csv_slice,
+                        _np.array_split(ind, core_num * multp))
+    MI_csv = _np.hstack(MI_csv)
+    return MI_csv
+
+
+def continuous_filter_csv_parallel(csv_file,
+                                   _usecols=[],
+                                   a_N=300,
+                                   b_N=300,
+                                   kernel="epa",
+                                   bw="silverman",
+                                   norm=2,
+                                   machine_err=1e-24,
+                                   core_num="NOT DECLARED",
+                                   multp=1):
+    """
+    (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    Both the outcome and the covariates should be continuous. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    """
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    if _np.array(_usecols).size == 0:
+        print(
+            "Variable names not provided -- start reading variable names from csv file now, might take some time, depending on the csv file size."
+        )
+        _usecols = _pd.read_csv(csv_file, index_col=0,
+                                nrows=0).columns.tolist()
+        print("Reading variable names from csv file finished.")
+    else:
+        _usecols = _np.array(_usecols)
+
+    def _binary_filter_csv_slice(_slice):
+        _MI_slice = _np.zeros(
+            len(_slice))  # returned MI should be of the same length as slice
+        k = 0
+        for j in _slice:
+            __ = [
+                _usecols[0], _usecols[j]
+            ]  # here using _usecol[j] because only input variables indices were splitted
+            _ = _pd.read_csv(csv_file,
+                             skipinitialspace=True,
+                             usecols=__,
+                             encoding='unicode_escape').dropna()
+            _a = _[_usecols[0]].to_numpy()
+            _b = _[_usecols[j]].to_numpy()
+            _MI_slice[k] = MI_bivariate_continuous(a=_a,
+                                                   b=_b,
+                                                   a_N=a_N,
+                                                   b_N=b_N,
+                                                   kernel=kernel,
+                                                   bw=bw,
+                                                   norm=norm,
+                                                   machine_err=machine_err)
+            k += 1
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(
+        1, len(_usecols)
+    )  # starting from 1 because the first left column should be the outcome
+    with _mp.Pool(core_num) as pl:
+        MI_csv = pl.map(_binary_filter_csv_slice,
+                        _np.array_split(ind, core_num * multp))
+    MI_csv = _np.hstack(MI_csv)
+    return MI_csv
 
 
 ##################################################################
@@ -1065,6 +1363,7 @@ def solution_path_LM_strongrule(design_matrix,
     '''
     #     add design matrix column for the intercept, if it's not there already
     _design_matrix = design_matrix.copy()
+    N = _design_matrix.shape[0]
     if add_intercept_column == True:
         if _np.any(
                 design_matrix[:, 0] != design_matrix[0, 0]
@@ -2369,6 +2668,7 @@ def solution_path_logistic(design_matrix,
     Carry out the optimization for the solution path without the strong rule.
     '''
     #     add design matrix column for the intercept, if it's not there already
+    N = design_matrix.shape[0]
     if add_intercept_column == True:
         if _np.any(
                 design_matrix[:, 0] != design_matrix[0, 0]

@@ -1,3 +1,4 @@
+from fastHDMI import *
 import numpy as np
 from bed_reader import open_bed
 # import cupy as cp
@@ -16,15 +17,15 @@ outcome_iid = _bed.iid
 
 true_beta = np.array([4.2, -2.5, 2.6])
 for j in np.arange(3):
-    outcome += true_beta[j] * _bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
-    print(_bed.read(_np.s_[:, j], dtype=_np.float64).flatten())
+    outcome += true_beta[j] * _bed.read(np.s_[:, j], dtype=np.int8).flatten()
+    print(_bed.read(np.s_[:, j], dtype=np.float64).flatten())
 
 iid_ind = np.random.permutation(np.arange(_bed.iid_count))
 outcome = outcome[iid_ind]
 outcome_iid = outcome_iid[iid_ind]
 
 
-MI_continuous = continuous_filter_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, a_min=np.min(outcome)-10, a_max=np.max(outcome)+10, outcome=outcome, outcome_iid=outcome_iid)
+MI_continuous = continuous_filter_plink_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, a_min=np.min(outcome)-10, a_max=np.max(outcome)+10, outcome=outcome, outcome_iid=outcome_iid)
 
 assert np.all(MI_continuous>0)
 
@@ -41,8 +42,8 @@ outcome_iid = _bed.iid
 
 true_beta = np.array([4.2, -2.5, 2.6])
 for j in np.arange(3):
-    outcome += true_beta[j] * _bed.read(_np.s_[:, j], dtype=_np.int8).flatten()
-    print(_bed.read(_np.s_[:, j], dtype=_np.float64).flatten())
+    outcome += true_beta[j] * _bed.read(np.s_[:, j], dtype=np.int8).flatten()
+    print(_bed.read(np.s_[:, j], dtype=np.float64).flatten())
 
 outcome = np.random.binomial(1, np.tanh(outcome / 2) / 2 + .5)
 
@@ -50,8 +51,14 @@ iid_ind = np.random.permutation(np.arange(_bed.iid_count))
 outcome = outcome[iid_ind]
 outcome_iid = outcome_iid[iid_ind]
 
-MI_binary = binary_filter_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, outcome_iid=outcome_iid)
+MI_binary = binary_filter_plink_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, outcome_iid=outcome_iid)
 
+assert np.all(MI_binary>0)
+
+# test for continuous and binary filters for CSV files 
+MI_continuous = continuous_filter_csv_parallel(r"./sim/sim_continuous.csv")
+assert np.all(MI_continuous>0)
+MI_binary = binary_filter_csv_parallel(r"./sim/sim_binary.csv")
 assert np.all(MI_binary>0)
 
 # test for LM numpy
@@ -78,7 +85,7 @@ lambda_seq = lambda_seq[::-1]
 # do NOT include the design matrix intercept column
 LM_beta = solution_path_LM_strongrule(design_matrix=X_sim, outcome=y_sim, lambda_=lambda_seq, beta_0 = np.ones(1), tol=1e-2, maxit=500, penalty="SCAD", a=3.7, gamma=2., add_intercept_column=True)
 
-assert LM_beta.dtype() == "float"
+assert LM_beta.dtype == "float"
 
 
 # test for LM cupy
@@ -102,7 +109,7 @@ assert LM_beta.dtype() == "float"
 
 # fit2 = solution_path_LM(design_matrix=X_sim, outcome=y_sim, tol=1e-2, maxit=500, lambda_=cp.linspace(.1,1,100), penalty="SCAD", a=3.7, gamma=2.)
 
-# assert fit2.dtype() == "float"
+# assert fit2.dtype == "float"
 
 
 # test for logistic numpy
@@ -124,7 +131,7 @@ y_sim = np.random.binomial(1, np.tanh(signal/2)/2+.5)
 
 fit2 = solution_path_logistic(design_matrix=X_sim, outcome=y_sim, tol=1e-2, maxit=500, lambda_=np.linspace(.005,.08,60)[::-1], penalty="SCAD", a=3.7, gamma=2.)
 
-assert fit2.dtype() == "float"
+assert fit2.dtype == "float"
 
 
 # test for logistic cupy
@@ -147,4 +154,4 @@ assert fit2.dtype() == "float"
 
 # fit2 = solution_path_logistic(design_matrix=X_sim, outcome=y_sim, tol=1e-2, maxit=500, lambda_=cp.linspace(.005,.08,60)[::-1], penalty="SCAD", a=3.7, gamma=2.)
 
-# assert fit2.dtype() == "float"
+# assert fit2.dtype == "float"
