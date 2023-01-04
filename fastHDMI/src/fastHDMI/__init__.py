@@ -1137,6 +1137,7 @@ def solution_path_LM(design_matrix,
     Carry out the optimization for the solution path without the strong rule.
     '''
     #     add design matrix column for the intercept, if it's not there already
+    N = design_matrix.shape[0]
     if add_intercept_column == True:
         if _np.any(
                 design_matrix[:, 0] != design_matrix[0, 0]
@@ -1363,7 +1364,7 @@ def solution_path_LM_strongrule(design_matrix,
     '''
     #     add design matrix column for the intercept, if it's not there already
     _design_matrix = design_matrix.copy()
-    N = _design_matrix.shape[0]
+    N = design_matrix.shape[0]
     if add_intercept_column == True:
         if _np.any(
                 design_matrix[:, 0] != design_matrix[0, 0]
@@ -2896,6 +2897,7 @@ def solution_path_logistic_strongrule(design_matrix,
     '''
     #     add design matrix column for the intercept, if it's not there already
     _design_matrix = design_matrix.copy()
+    N = design_matrix.shape[0]
     if add_intercept_column == True:
         if _np.any(
                 design_matrix[:, 0] != design_matrix[0, 0]

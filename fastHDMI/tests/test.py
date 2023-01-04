@@ -3,6 +3,10 @@ import numpy as np
 from bed_reader import open_bed
 # import cupy as cp
 from scipy.linalg import toeplitz, block_diag
+import warnings
+
+warnings.filterwarnings('ignore')
+
 
 # test for continuous_filter_parallel
 bed_file = r"./sim/sim1.bed"
