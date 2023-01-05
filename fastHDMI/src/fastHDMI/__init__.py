@@ -618,7 +618,6 @@ def Pearson_filter_csv_parallel(csv_file,
         _usecols = _np.array(_usecols)
 
     def _Pearson_filter_csv_slice(_slice):
-        import _numpy as _np
         _pearson_slice = _np.zeros(
             len(_slice))  # returned MI should be of the same length as slice
         k = 0

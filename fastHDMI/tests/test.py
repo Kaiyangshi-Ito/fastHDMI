@@ -61,7 +61,7 @@ assert np.all(MI_binary>0)
 
 # test for continuous and binary filters for CSV files 
 MI_continuous = continuous_filter_csv_parallel(r"./sim/sim_continuous.csv")
-pearson = Pearson_filter_csv_parallel(r"./fastHDMI/tests/sim/sim_continuous.csv")
+pearson = Pearson_filter_csv_parallel(r"./sim/sim_continuous.csv")
 assert np.all(MI_continuous>0)
 assert len(pearson) > 1000
 MI_binary = binary_filter_csv_parallel(r"./sim/sim_binary.csv")
