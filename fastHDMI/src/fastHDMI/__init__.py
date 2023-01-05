@@ -591,6 +591,63 @@ def continuous_filter_csv_parallel(csv_file,
     return MI_csv
 
 
+def Pearson_filter_csv_parallel(csv_file,
+                                _usecols=[],
+                                core_num="NOT DECLARED",
+                                multp=1):
+    """
+    (Multiprocessing version) Take a (potentionally large) csv file to calculate the Pearson's correlation between outcome and covariates.
+    If _usecols is given, the returned Pearson correlation will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    """
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    if _np.array(_usecols).size == 0:
+        print(
+            "Variable names not provided -- start reading variable names from csv file now, might take some time, depending on the csv file size."
+        )
+        _usecols = _pd.read_csv(csv_file, index_col=0,
+                                nrows=0).columns.tolist()
+        print("Reading variable names from csv file finished.")
+    else:
+        _usecols = _np.array(_usecols)
+
+    def _Pearson_filter_csv_slice(_slice):
+        import _numpy as _np
+        _pearson_slice = _np.zeros(
+            len(_slice))  # returned MI should be of the same length as slice
+        k = 0
+        for j in _slice:
+            __ = [
+                _usecols[0], _usecols[j]
+            ]  # here using _usecol[j] because only input variables indices were splitted
+            _ = _pd.read_csv(csv_file,
+                             skipinitialspace=True,
+                             usecols=__,
+                             encoding='unicode_escape').dropna()
+            _a = _[_usecols[0]].to_numpy()
+            _b = _[_usecols[j]].to_numpy()
+            # returned Pearson correlation is a symmetric matrix
+            _pearson_slice[k] = _np.corrcoef(_a, _b)[0, 1]
+            k += 1
+        return _pearson_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(
+        1, len(_usecols)
+    )  # starting from 1 because the first left column should be the outcome
+    with _mp.Pool(core_num) as pl:
+        Pearson_csv = pl.map(_Pearson_filter_csv_slice,
+                             _np.array_split(ind, core_num * multp))
+    Pearson_csv = _np.hstack(Pearson_csv)
+    return Pearson_csv
+
+
 ##################################################################
 ################ some fudamentals things #########################
 ##################################################################
