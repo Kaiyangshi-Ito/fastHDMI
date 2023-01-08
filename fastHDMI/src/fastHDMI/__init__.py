@@ -58,20 +58,19 @@ def MI_continuous_SNP(a,
     joint[:, 0] = y_cond_p0(a_temp) * p0
     joint[:, 1] = y_cond_p1(a_temp) * p1
     joint[:, 2] = y_cond_p2(a_temp) * p2
-    joint[
-        joint <
-        machine_err] = machine_err  # set a threshold to avoid numerical errors
+    mask = joint < machine_err
     forward_euler_step = a_temp[1] - a_temp[0]
+    joint[mask] = 0.
     # to scale the cdf to 1.
     joint /= _np.sum(joint) * forward_euler_step
     #     print("total measure:",  _np.sum(joint)*forward_euler_step)
     temp_log = _np.log(joint)
-    #     temp_log =  _np.nan_to_num(temp_log, nan = 0)
+    temp_log = _np.nan_to_num(temp_log, nan=0)
     temp1 = _np.log(_np.sum(joint, 1))
-    #     temp1 =  _np.nan_to_num(temp1, nan = 0)
+    temp1 = _np.nan_to_num(temp1, nan=0)
     temp_log = temp_log - temp1.reshape(-1, 1)
     temp2 = _np.log(_np.sum(joint, 0)) + _np.log(forward_euler_step)
-    #     temp2 =  _np.nan_to_num(temp2, nan = 0)
+    temp2 = _np.nan_to_num(temp2, nan=0)
     temp_log = temp_log - temp2.reshape(1, -1)
     # print(fhat_mat * temp_log)
     temp_mat = joint * temp_log
@@ -146,12 +145,16 @@ def MI_bivariate_continuous(a,
     # this gives joint as a (a_N, b_N) array, following example: https://kdepy.readthedocs.io/en/latest/examples.html#the-effect-of-norms-in-2d
     a_forward_euler_step = grid[b_N, 0] - grid[0, 0]
     b_forward_euler_step = grid[1, 1] - grid[0, 1]
-    joint[joint < machine_err] = machine_err
+    mask = joint < machine_err
+    joint[mask] = 0.
     # to scale the cdf to 1.
     joint /= _np.sum(joint) * a_forward_euler_step * b_forward_euler_step
     log_a_marginal = _np.log(_np.sum(joint, 1)) + _np.log(b_forward_euler_step)
+    log_a_marginal = _np.nan_to_num(log_a_marginal, nan=0)
     log_b_marginal = _np.log(_np.sum(joint, 0)) + _np.log(a_forward_euler_step)
+    log_b_marginal = _np.nan_to_num(log_b_marginal, nan=0)
     log_joint = _np.log(joint)
+    log_joint = _np.nan_to_num(log_joint, nan=0)
     mi_temp = _np.sum(
         joint *
         (log_joint - log_a_marginal.reshape(-1, 1) - log_b_marginal.reshape(
