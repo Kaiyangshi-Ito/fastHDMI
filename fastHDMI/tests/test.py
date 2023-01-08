@@ -29,7 +29,7 @@ outcome = outcome[iid_ind]
 outcome_iid = outcome_iid[iid_ind]
 
 
-MI_continuous = continuous_filter_plink_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, a_min=np.min(outcome)-10, a_max=np.max(outcome)+10, outcome=outcome, outcome_iid=outcome_iid)
+MI_continuous = continuous_filter_plink_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, a_min=np.min(outcome), a_max=np.max(outcome), outcome=outcome, outcome_iid=outcome_iid)
 
 assert np.all(MI_continuous>0)
 
