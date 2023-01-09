@@ -16,12 +16,12 @@ from sklearn.preprocessing import RobustScaler as _scaler
 #############################################################################
 def MI_continuous_SNP(a,
                       b,
-                      a_min,
-                      a_max,
+                      a_min="not given",
+                      a_max="not given",
                       N=500,
                       kernel="epa",
                       bw="silverman",
-                      machine_err=1e-24):
+                      machine_err=1e-16):
     """
     calculate mutual information between continuous outcome and an SNP variable of 0,1,2
     assume no missing data
@@ -30,31 +30,42 @@ def MI_continuous_SNP(a,
     p0 = _np.sum(b == 0) / len(b)
     p1 = _np.sum(b == 1) / len(b)
     p2 = 1. - p0 - p1
-    a = _scaler().fit_transform(a.reshape(-1, 1)).flatten()
+    transformer = _scaler().fit(a.reshape(-1, 1))
+    _a = transformer.transform(a.reshape(-1, 1)).flatten()
+    if a_min == "not given":
+        _a_min = _np.min(_a).copy() - _np.std(_a)
+    else:
+        _a_min = transformer.transform(_np.array(
+            [[a_min]]).copy())[0, 0] - machine_err
+    if a_max == "not given":
+        _a_max = _np.max(_a).copy() + _np.std(_a)
+    else:
+        _a_max = transformer.transform(_np.array(
+            [[a_max]]).copy())[0, 0] + machine_err
     # estimate cond density
     _b0 = (b == 0)
     if _np.sum(_b0) > 2:
         # here proceed to kde only if there are more than 5 data points
-        y_cond_p0 = _FFTKDE(kernel=kernel, bw=bw).fit(data=a[_b0])
-#         y_cond_p0 = gaussian_kde(a[_b0])
+        y_cond_p0 = _FFTKDE(kernel=kernel, bw=bw).fit(data=_a[_b0])
+#         y_cond_p0 = gaussian_kde(_a[_b0])
     else:
         y_cond_p0 = _np.zeros_like
     _b1 = (b == 1)
     if _np.sum(_b1) > 2:
-        y_cond_p1 = _FFTKDE(kernel=kernel, bw=bw).fit(data=a[_b1])
-#         y_cond_p1 = gaussian_kde(a[_b1]) # this thing uses Scott's rule instead of Silverman defaulted by FFTKDE and R density
+        y_cond_p1 = _FFTKDE(kernel=kernel, bw=bw).fit(data=_a[_b1])
+#         y_cond_p1 = gaussian_kde(_a[_b1]) # this thing uses Scott's rule instead of Silverman defaulted by FFTKDE and R density
     else:
         y_cond_p1 = _np.zeros_like
     _b2 = (b == 2)
     if _np.sum(_b2) > 2:
-        y_cond_p2 = _FFTKDE(kernel=kernel, bw=bw).fit(data=a[_b2])
+        y_cond_p2 = _FFTKDE(kernel=kernel, bw=bw).fit(data=_a[_b2])
 
 
-#         y_cond_p2 = gaussian_kde(a[_b2])
+#         y_cond_p2 = gaussian_kde(_a[_b2])
     else:
         y_cond_p2 = _np.zeros_like
     joint = _np.empty((N, 3))
-    a_temp = _np.linspace(a_min, a_max, num=N)
+    a_temp = _np.linspace(_a_min, _a_max, num=N)
     joint[:, 0] = y_cond_p0(a_temp) * p0
     joint[:, 1] = y_cond_p1(a_temp) * p1
     joint[:, 2] = y_cond_p2(a_temp) * p2
@@ -84,7 +95,7 @@ def MI_continuous_SNP(a,
     return mi_temp
 
 
-def MI_binary_SNP(a, b, machine_err=1e-24):
+def MI_binary_SNP(a, b, machine_err=1e-16):
     """
     calculate mutual information between binary outcome and an SNP variable of 0,1,2
     assume no missing data
@@ -132,14 +143,14 @@ def MI_bivariate_continuous(a,
                             kernel="epa",
                             bw="silverman",
                             norm=2,
-                            machine_err=1e-24):
+                            machine_err=1e-16):
     """
     (Single Core version) calculate mutual information on bivariate continuous r.v..
     """
     _ = _np.argsort(a)
     data = _np.hstack((a[_].reshape(-1, 1), b[_].reshape(-1, 1)))
-    data = _scaler().fit_transform(data)
-    grid, joint = _FFTKDE(kernel=kernel, norm=norm).fit(data).evaluate(
+    _data = _scaler().fit_transform(data)
+    grid, joint = _FFTKDE(kernel=kernel, norm=norm).fit(_data).evaluate(
         (a_N, b_N))
     joint = joint.reshape(b_N, -1).T
     # this gives joint as a (a_N, b_N) array, following example: https://kdepy.readthedocs.io/en/latest/examples.html#the-effect-of-norms-in-2d
@@ -170,12 +181,12 @@ def MI_bivariate_continuous(a,
 # make this function available
 def MI_binary_continuous(a,
                          b,
-                         b_min,
-                         b_max,
+                         b_min="not given",
+                         b_max="not given",
                          N=500,
                          kernel="epa",
                          bw="silverman",
-                         machine_err=1e-24):
+                         machine_err=1e-16):
     return MI_continuous_SNP(a=b,
                              b=a,
                              a_min=b_min,
@@ -197,7 +208,7 @@ def continuous_filter_plink(bed_file,
                             N=500,
                             kernel="epa",
                             bw="silverman",
-                            machine_err=1e-24):
+                            machine_err=1e-16):
     """
     (Single Core version) take plink files to calculate the mutual information between the continuous outcome and many SNP variables.
     """
@@ -210,10 +221,7 @@ def continuous_filter_plink(bed_file,
                                       gene_iid,
                                       assume_unique=True,
                                       return_indices=True)[1]]
-    if a_min == "not given":
-        a_min = _np.min(outcome) - _np.std(outcome)
-    if a_max == "not given":
-        a_max = _np.max(outcome) + _np.std(outcome)
+
     # get genetic indices
     gene_ind = _np.intersect1d(gene_iid,
                                outcome_iid,
@@ -241,7 +249,7 @@ def binary_filter_plink(bed_file,
                         fam_file,
                         outcome,
                         outcome_iid,
-                        machine_err=1e-24):
+                        machine_err=1e-16):
     """
     (Single Core version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
@@ -280,7 +288,7 @@ def continuous_filter_plink_parallel(bed_file,
                                      N=500,
                                      kernel="epa",
                                      bw="silverman",
-                                     machine_err=1e-24,
+                                     machine_err=1e-16,
                                      core_num="NOT DECLARED",
                                      multp=1):
     """
@@ -302,10 +310,6 @@ def continuous_filter_plink_parallel(bed_file,
                                       gene_iid,
                                       assume_unique=True,
                                       return_indices=True)[1]]
-    if a_min == "not given":
-        a_min = _np.min(outcome) - _np.std(outcome)
-    if a_max == "not given":
-        a_max = _np.max(outcome) + _np.std(outcome)
     # get genetic indices
     gene_ind = _np.intersect1d(gene_iid,
                                outcome_iid,
@@ -347,7 +351,7 @@ def binary_filter_plink_parallel(bed_file,
                                  outcome_iid,
                                  core_num="NOT DECLARED",
                                  multp=1,
-                                 machine_err=1e-24):
+                                 machine_err=1e-16):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
@@ -401,7 +405,7 @@ def binary_filter_csv(csv_file,
                       N=500,
                       kernel="epa",
                       bw="silverman",
-                      machine_err=1e-24):
+                      machine_err=1e-16):
     """
     Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     The outcome should be binary and the covariates be continuous. 
@@ -431,8 +435,6 @@ def binary_filter_csv(csv_file,
         _b = _[_usecols[j + 1]].to_numpy()
         MI_csv[j] = MI_binary_continuous(a=_a,
                                          b=_b,
-                                         b_min=_np.min(_b),
-                                         b_max=_np.max(_b),
                                          N=N,
                                          kernel=kernel,
                                          bw=bw,
@@ -447,7 +449,7 @@ def continuous_filter_csv(csv_file,
                           kernel="epa",
                           bw="silverman",
                           norm=2,
-                          machine_err=1e-24):
+                          machine_err=1e-16):
     """
     Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     Both the outcome and the covariates should be continuous. 
@@ -490,7 +492,7 @@ def binary_filter_csv_parallel(csv_file,
                                N=500,
                                kernel="epa",
                                bw="silverman",
-                               machine_err=1e-24,
+                               machine_err=1e-16,
                                core_num="NOT DECLARED",
                                multp=1):
     """
@@ -532,8 +534,6 @@ def binary_filter_csv_parallel(csv_file,
             _b = _[_usecols[j]].to_numpy()
             _MI_slice[k] = MI_binary_continuous(a=_a,
                                                 b=_b,
-                                                b_min=_np.min(_b),
-                                                b_max=_np.max(_b),
                                                 N=N,
                                                 kernel=kernel,
                                                 bw=bw,
@@ -559,7 +559,7 @@ def continuous_filter_csv_parallel(csv_file,
                                    kernel="epa",
                                    bw="silverman",
                                    norm=2,
-                                   machine_err=1e-24,
+                                   machine_err=1e-16,
                                    core_num="NOT DECLARED",
                                    multp=1):
     """
