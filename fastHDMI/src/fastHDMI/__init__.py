@@ -211,9 +211,9 @@ def continuous_filter_plink(bed_file,
                                       assume_unique=True,
                                       return_indices=True)[1]]
     if a_min == "not given":
-        a_min = _np.min(outcome) - machine_err
+        a_min = _np.min(outcome) - _np.std(outcome)
     if a_max == "not given":
-        a_max = _np.max(outcome) + machine_err
+        a_max = _np.max(outcome) + _np.std(outcome)
     # get genetic indices
     gene_ind = _np.intersect1d(gene_iid,
                                outcome_iid,
@@ -303,9 +303,9 @@ def continuous_filter_plink_parallel(bed_file,
                                       assume_unique=True,
                                       return_indices=True)[1]]
     if a_min == "not given":
-        a_min = _np.min(outcome) - machine_err
+        a_min = _np.min(outcome) - _np.std(outcome)
     if a_max == "not given":
-        a_max = _np.max(outcome) + machine_err
+        a_max = _np.max(outcome) + _np.std(outcome)
     # get genetic indices
     gene_ind = _np.intersect1d(gene_iid,
                                outcome_iid,
