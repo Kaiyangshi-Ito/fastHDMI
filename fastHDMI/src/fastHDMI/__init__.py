@@ -14,10 +14,9 @@ from sklearn.preprocessing import RobustScaler as _scaler
 #############################################################################
 ################# filtering using mutual information ########################
 #############################################################################
+@_jit
 def MI_continuous_SNP(a,
                       b,
-                      a_min="not given",
-                      a_max="not given",
                       N=500,
                       kernel="epa",
                       bw="silverman",
@@ -30,18 +29,10 @@ def MI_continuous_SNP(a,
     p0 = _np.sum(b == 0) / len(b)
     p1 = _np.sum(b == 1) / len(b)
     p2 = 1. - p0 - p1
-    transformer = _scaler().fit(a.reshape(-1, 1))
-    _a = transformer.transform(a.reshape(-1, 1)).flatten()
-    if a_min == "not given":
-        _a_min = _np.min(_a).copy() - _np.std(_a)
-    else:
-        _a_min = transformer.transform(_np.array(
-            [[a_min]]).copy())[0, 0] - machine_err
-    if a_max == "not given":
-        _a_max = _np.max(_a).copy() + _np.std(_a)
-    else:
-        _a_max = transformer.transform(_np.array(
-            [[a_max]]).copy())[0, 0] + machine_err
+    _a = _scaler().fit_transform(a.reshape(-1, 1)).flatten()
+    # this step is just to get the boundary width for the joint density grid
+    # the three conditional density estimates need to be evaluated on the joint density grid
+    a_temp, _ = _FFTKDE(kernel=kernel, bw=bw).fit(data=a).evaluate(N)
     # estimate cond density
     _b0 = (b == 0)
     if _np.sum(_b0) > 2:
@@ -65,7 +56,6 @@ def MI_continuous_SNP(a,
     else:
         y_cond_p2 = _np.zeros_like
     joint = _np.empty((N, 3))
-    a_temp = _np.linspace(_a_min, _a_max, num=N)
     joint[:, 0] = y_cond_p0(a_temp) * p0
     joint[:, 1] = y_cond_p1(a_temp) * p1
     joint[:, 2] = y_cond_p2(a_temp) * p2
@@ -95,6 +85,7 @@ def MI_continuous_SNP(a,
     return mi_temp
 
 
+@_jit
 def MI_binary_SNP(a, b, machine_err=1e-16):
     """
     calculate mutual information between binary outcome and an SNP variable of 0,1,2
@@ -136,6 +127,7 @@ def MI_binary_SNP(a, b, machine_err=1e-16):
 
 
 # make this function available
+@_jit
 def MI_bivariate_continuous(a,
                             b,
                             a_N=300,
@@ -179,6 +171,7 @@ def MI_bivariate_continuous(a,
 
 
 # make this function available
+@_jit
 def MI_binary_continuous(a,
                          b,
                          b_min="not given",
@@ -189,8 +182,6 @@ def MI_binary_continuous(a,
                          machine_err=1e-16):
     return MI_continuous_SNP(a=b,
                              b=a,
-                             a_min=b_min,
-                             a_max=b_max,
                              N=N,
                              kernel=kernel,
                              bw=bw,
@@ -203,8 +194,6 @@ def continuous_filter_plink(bed_file,
                             fam_file,
                             outcome,
                             outcome_iid,
-                            a_min="not given",
-                            a_max="not given",
                             N=500,
                             kernel="epa",
                             bw="silverman",
@@ -235,8 +224,6 @@ def continuous_filter_plink(bed_file,
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
         MI_UKBB[j] = MI_continuous_SNP(a=_outcome,
                                        b=_SNP,
-                                       a_min=a_min,
-                                       a_max=a_max,
                                        N=N,
                                        kernel=kernel,
                                        bw=bw,
@@ -283,8 +270,6 @@ def continuous_filter_plink_parallel(bed_file,
                                      fam_file,
                                      outcome,
                                      outcome_iid,
-                                     a_min="not given",
-                                     a_max="not given",
                                      N=500,
                                      kernel="epa",
                                      bw="silverman",
@@ -326,8 +311,6 @@ def continuous_filter_plink_parallel(bed_file,
             _SNP = _SNP[_SNP != -127]  # remove missing SNP
             _MI_slice[k] = MI_continuous_SNP(a=_outcome,
                                              b=_SNP,
-                                             a_min=a_min,
-                                             a_max=a_max,
                                              N=N,
                                              kernel=kernel,
                                              bw=bw,
