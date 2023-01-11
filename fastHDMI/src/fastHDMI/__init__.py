@@ -14,7 +14,7 @@ from sklearn.preprocessing import RobustScaler as _scaler
 #############################################################################
 ################# filtering using mutual information ########################
 #############################################################################
-@_jit
+@_jit(nogil=True, cache=True, parallel=True)
 def MI_continuous_SNP(a,
                       b,
                       N=500,
@@ -85,7 +85,7 @@ def MI_continuous_SNP(a,
     return mi_temp
 
 
-@_jit
+@_jit(nogil=True, cache=True, parallel=True)
 def MI_binary_SNP(a, b, machine_err=1e-16):
     """
     calculate mutual information between binary outcome and an SNP variable of 0,1,2
@@ -127,7 +127,7 @@ def MI_binary_SNP(a, b, machine_err=1e-16):
 
 
 # make this function available
-@_jit
+@_jit(nogil=True, cache=True, parallel=True)
 def MI_bivariate_continuous(a,
                             b,
                             a_N=300,
@@ -171,11 +171,9 @@ def MI_bivariate_continuous(a,
 
 
 # make this function available
-@_jit
+@_jit(nogil=True, cache=True, parallel=True)
 def MI_binary_continuous(a,
                          b,
-                         b_min="not given",
-                         b_max="not given",
                          N=500,
                          kernel="epa",
                          bw="silverman",
@@ -255,7 +253,6 @@ def binary_filter_plink(bed_file,
                                assume_unique=True,
                                return_indices=True)[1]
     MI_UKBB = _np.zeros(len(bed1_sid))
-    print(outcome)
     for j in range(len(MI_UKBB)):
         _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
