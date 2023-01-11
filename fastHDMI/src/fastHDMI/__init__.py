@@ -32,7 +32,7 @@ def MI_continuous_SNP(a,
     _a = _scaler().fit_transform(a.reshape(-1, 1)).flatten()
     # this step is just to get the boundary width for the joint density grid
     # the three conditional density estimates need to be evaluated on the joint density grid
-    a_temp, _ = _FFTKDE(kernel=kernel, bw=bw).fit(data=a).evaluate(N)
+    a_temp, _ = _FFTKDE(kernel=kernel, bw=bw).fit(data=_a).evaluate(N)
     # estimate cond density
     _b0 = (b == 0)
     if _np.sum(_b0) > 2:
