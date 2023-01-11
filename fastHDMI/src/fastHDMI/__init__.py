@@ -9,18 +9,20 @@ import multiprocess as _mp
 from numba import jit as _jit
 from numba import njit as _njit
 from sklearn.preprocessing import RobustScaler as _scaler
+import warnings as _warnings
 
+_warnings.filterwarnings('ignore')
 
 #############################################################################
 ################# filtering using mutual information ########################
 #############################################################################
-@_jit(nogil=True, cache=True, parallel=True)
+@_jit(forceobj=True, nogil=True, cache=True, parallel=True)
 def MI_continuous_SNP(a,
                       b,
                       N=500,
                       kernel="epa",
                       bw="silverman",
-                      machine_err=1e-16):
+                      machine_err=1e-12):
     """
     calculate mutual information between continuous outcome and an SNP variable of 0,1,2
     assume no missing data
@@ -66,12 +68,12 @@ def MI_continuous_SNP(a,
     joint /= _np.sum(joint) * forward_euler_step
     #     print("total measure:",  _np.sum(joint)*forward_euler_step)
     temp_log = _np.log(joint)
-    temp_log = _np.nan_to_num(temp_log, nan=0)
+    temp_log = _np.nan_to_num(temp_log, nan=0.)
     temp1 = _np.log(_np.sum(joint, 1))
-    temp1 = _np.nan_to_num(temp1, nan=0)
+    temp1 = _np.nan_to_num(temp1, nan=0.)
     temp_log = temp_log - temp1.reshape(-1, 1)
     temp2 = _np.log(_np.sum(joint, 0)) + _np.log(forward_euler_step)
-    temp2 = _np.nan_to_num(temp2, nan=0)
+    temp2 = _np.nan_to_num(temp2, nan=0.)
     temp_log = temp_log - temp2.reshape(1, -1)
     # print(fhat_mat * temp_log)
     temp_mat = joint * temp_log
@@ -85,8 +87,16 @@ def MI_continuous_SNP(a,
     return mi_temp
 
 
-@_jit(nogil=True, cache=True, parallel=True)
-def MI_binary_SNP(a, b, machine_err=1e-16):
+@_jit(nopython=True, nogil=True, cache=True, parallel=True)
+def _nan_to_0(x):
+    """
+    To convert NaN to 0 in nopython mode.
+    """
+    return _np.where(_np.isnan(x), 0., x)
+
+
+@_jit(nopython=True, nogil=True, cache=True, parallel=True)
+def MI_binary_SNP(a, b, machine_err=1e-12):
     """
     calculate mutual information between binary outcome and an SNP variable of 0,1,2
     assume no missing data
@@ -112,12 +122,12 @@ def MI_binary_SNP(a, b, machine_err=1e-16):
     joint[0, 2] = _np.sum(a[_b2] == 0) / len(a)
     joint[1, 2] = _np.sum(a[_b2] == 1) / len(a)
 
-    _ = a_marginal * b_marginal
-    _ = joint / _
-    __ = joint * _np.log(_)
-    __ = _np.nan_to_num(__, nan=0.0)  # for possible nuemrical issues
+    _temp = a_marginal * b_marginal
+    _temp = joint / _temp
+    _temp = joint * _np.log(_temp)
+    _temp = _nan_to_0(_temp)  # for possible nuemrical issues
 
-    mi_temp = _np.sum(__)
+    mi_temp = _np.sum(_temp)
 
     # this is to ensure that estimated MI is positive, to solve an numerical issue
     if mi_temp < machine_err:
@@ -127,7 +137,7 @@ def MI_binary_SNP(a, b, machine_err=1e-16):
 
 
 # make this function available
-@_jit(nogil=True, cache=True, parallel=True)
+@_jit(forceobj=True, nogil=True, cache=True, parallel=True)
 def MI_bivariate_continuous(a,
                             b,
                             a_N=300,
@@ -135,12 +145,12 @@ def MI_bivariate_continuous(a,
                             kernel="epa",
                             bw="silverman",
                             norm=2,
-                            machine_err=1e-16):
+                            machine_err=1e-12):
     """
     (Single Core version) calculate mutual information on bivariate continuous r.v..
     """
-    _ = _np.argsort(a)
-    data = _np.hstack((a[_].reshape(-1, 1), b[_].reshape(-1, 1)))
+    _temp = _np.argsort(a)
+    data = _np.hstack((a[_temp].reshape(-1, 1), b[_temp].reshape(-1, 1)))
     _data = _scaler().fit_transform(data)
     grid, joint = _FFTKDE(kernel=kernel, norm=norm).fit(_data).evaluate(
         (a_N, b_N))
@@ -153,11 +163,11 @@ def MI_bivariate_continuous(a,
     # to scale the cdf to 1.
     joint /= _np.sum(joint) * a_forward_euler_step * b_forward_euler_step
     log_a_marginal = _np.log(_np.sum(joint, 1)) + _np.log(b_forward_euler_step)
-    log_a_marginal = _np.nan_to_num(log_a_marginal, nan=0)
+    log_a_marginal = _np.nan_to_num(log_a_marginal, nan=0.)
     log_b_marginal = _np.log(_np.sum(joint, 0)) + _np.log(a_forward_euler_step)
-    log_b_marginal = _np.nan_to_num(log_b_marginal, nan=0)
+    log_b_marginal = _np.nan_to_num(log_b_marginal, nan=0.)
     log_joint = _np.log(joint)
-    log_joint = _np.nan_to_num(log_joint, nan=0)
+    log_joint = _np.nan_to_num(log_joint, nan=0.)
     mi_temp = _np.sum(
         joint *
         (log_joint - log_a_marginal.reshape(-1, 1) - log_b_marginal.reshape(
@@ -171,13 +181,13 @@ def MI_bivariate_continuous(a,
 
 
 # make this function available
-@_jit(nogil=True, cache=True, parallel=True)
+@_jit(forceobj=True, nogil=True, cache=True, parallel=True)
 def MI_binary_continuous(a,
                          b,
                          N=500,
                          kernel="epa",
                          bw="silverman",
-                         machine_err=1e-16):
+                         machine_err=1e-12):
     return MI_continuous_SNP(a=b,
                              b=a,
                              N=N,
@@ -195,7 +205,7 @@ def continuous_filter_plink(bed_file,
                             N=500,
                             kernel="epa",
                             bw="silverman",
-                            machine_err=1e-16):
+                            machine_err=1e-12):
     """
     (Single Core version) take plink files to calculate the mutual information between the continuous outcome and many SNP variables.
     """
@@ -234,7 +244,7 @@ def binary_filter_plink(bed_file,
                         fam_file,
                         outcome,
                         outcome_iid,
-                        machine_err=1e-16):
+                        machine_err=1e-12):
     """
     (Single Core version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
@@ -270,7 +280,7 @@ def continuous_filter_plink_parallel(bed_file,
                                      N=500,
                                      kernel="epa",
                                      bw="silverman",
-                                     machine_err=1e-16,
+                                     machine_err=1e-12,
                                      core_num="NOT DECLARED",
                                      multp=1):
     """
@@ -331,7 +341,7 @@ def binary_filter_plink_parallel(bed_file,
                                  outcome_iid,
                                  core_num="NOT DECLARED",
                                  multp=1,
-                                 machine_err=1e-16):
+                                 machine_err=1e-12):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
@@ -385,7 +395,7 @@ def binary_filter_csv(csv_file,
                       N=500,
                       kernel="epa",
                       bw="silverman",
-                      machine_err=1e-16):
+                      machine_err=1e-12):
     """
     Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     The outcome should be binary and the covariates be continuous. 
@@ -429,7 +439,7 @@ def continuous_filter_csv(csv_file,
                           kernel="epa",
                           bw="silverman",
                           norm=2,
-                          machine_err=1e-16):
+                          machine_err=1e-12):
     """
     Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     Both the outcome and the covariates should be continuous. 
@@ -472,7 +482,7 @@ def binary_filter_csv_parallel(csv_file,
                                N=500,
                                kernel="epa",
                                bw="silverman",
-                               machine_err=1e-16,
+                               machine_err=1e-12,
                                core_num="NOT DECLARED",
                                multp=1):
     """
@@ -539,7 +549,7 @@ def continuous_filter_csv_parallel(csv_file,
                                    kernel="epa",
                                    bw="silverman",
                                    norm=2,
-                                   machine_err=1e-16,
+                                   machine_err=1e-12,
                                    core_num="NOT DECLARED",
                                    multp=1):
     """
@@ -565,7 +575,7 @@ def continuous_filter_csv_parallel(csv_file,
     else:
         _usecols = _np.array(_usecols)
 
-    def _binary_filter_csv_slice(_slice):
+    def _continuous_filter_csv_slice(_slice):
         _MI_slice = _np.zeros(
             len(_slice))  # returned MI should be of the same length as slice
         k = 0
@@ -595,7 +605,7 @@ def continuous_filter_csv_parallel(csv_file,
         1, len(_usecols)
     )  # starting from 1 because the first left column should be the outcome
     with _mp.Pool(core_num) as pl:
-        MI_csv = pl.map(_binary_filter_csv_slice,
+        MI_csv = pl.map(_continuous_filter_csv_slice,
                         _np.array_split(ind, core_num * multp))
     MI_csv = _np.hstack(MI_csv)
     return MI_csv
