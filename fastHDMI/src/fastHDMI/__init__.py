@@ -16,7 +16,7 @@ _warnings.filterwarnings('ignore')
 #############################################################################
 ################# filtering using mutual information ########################
 #############################################################################
-@_jit(forceobj=True, nogil=True, cache=True, parallel=True)
+@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def MI_continuous_SNP(a,
                       b,
                       N=500,
@@ -87,7 +87,7 @@ def MI_continuous_SNP(a,
     return mi_temp
 
 
-@_jit(nopython=True, nogil=True, cache=True, parallel=True)
+@_jit(nopython=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def _nan_to_0(x):
     """
     To convert NaN to 0 in nopython mode.
@@ -95,7 +95,7 @@ def _nan_to_0(x):
     return _np.where(_np.isnan(x), 0., x)
 
 
-@_jit(nopython=True, nogil=True, cache=True, parallel=True)
+@_jit(nopython=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def MI_binary_SNP(a, b, machine_err=1e-12):
     """
     calculate mutual information between binary outcome and an SNP variable of 0,1,2
@@ -137,7 +137,7 @@ def MI_binary_SNP(a, b, machine_err=1e-12):
 
 
 # make this function available
-@_jit(forceobj=True, nogil=True, cache=True, parallel=True)
+@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def MI_bivariate_continuous(a,
                             b,
                             a_N=300,
@@ -181,7 +181,7 @@ def MI_bivariate_continuous(a,
 
 
 # make this function available
-@_jit(forceobj=True, nogil=True, cache=True, parallel=True)
+@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def MI_binary_continuous(a,
                          b,
                          N=500,
@@ -195,8 +195,8 @@ def MI_binary_continuous(a,
                              bw=bw,
                              machine_err=machine_err)
 
-
 # outcome_iid should be a  list of strings for identifiers
+#@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def continuous_filter_plink(bed_file,
                             bim_file,
                             fam_file,
@@ -239,6 +239,7 @@ def continuous_filter_plink(bed_file,
     return MI_UKBB
 
 
+#@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def binary_filter_plink(bed_file,
                         bim_file,
                         fam_file,
@@ -272,6 +273,7 @@ def binary_filter_plink(bed_file,
     return MI_UKBB
 
 
+#@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def continuous_filter_plink_parallel(bed_file,
                                      bim_file,
                                      fam_file,
@@ -308,6 +310,7 @@ def continuous_filter_plink_parallel(bed_file,
                                assume_unique=True,
                                return_indices=True)[1]
 
+    @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _continuous_filter_plink_slice(_slice):
         _MI_slice = _np.zeros(len(_slice))
         k = 0
@@ -334,6 +337,7 @@ def continuous_filter_plink_parallel(bed_file,
     return MI_UKBB
 
 
+#@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def binary_filter_plink_parallel(bed_file,
                                  bim_file,
                                  fam_file,
@@ -367,6 +371,7 @@ def binary_filter_plink_parallel(bed_file,
                                assume_unique=True,
                                return_indices=True)[1]
 
+    @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _binary_filter_plink_slice(_slice):
         _MI_slice = _np.zeros(len(_slice))
         k = 0
@@ -390,6 +395,7 @@ def binary_filter_plink_parallel(bed_file,
     return MI_UKBB
 
 
+#@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def binary_filter_csv(csv_file,
                       _usecols=[],
                       N=500,
@@ -432,6 +438,7 @@ def binary_filter_csv(csv_file,
     return MI_csv
 
 
+#@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def continuous_filter_csv(csv_file,
                           _usecols=[],
                           a_N=300,
@@ -477,6 +484,7 @@ def continuous_filter_csv(csv_file,
     return MI_csv
 
 
+#@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def binary_filter_csv_parallel(csv_file,
                                _usecols=[],
                                N=500,
@@ -508,6 +516,7 @@ def binary_filter_csv_parallel(csv_file,
     else:
         _usecols = _np.array(_usecols)
 
+    @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _binary_filter_csv_slice(_slice):
         _MI_slice = _np.zeros(
             len(_slice))  # returned MI should be of the same length as slice
@@ -542,6 +551,7 @@ def binary_filter_csv_parallel(csv_file,
     return MI_csv
 
 
+#@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def continuous_filter_csv_parallel(csv_file,
                                    _usecols=[],
                                    a_N=300,
@@ -575,6 +585,7 @@ def continuous_filter_csv_parallel(csv_file,
     else:
         _usecols = _np.array(_usecols)
 
+    @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _continuous_filter_csv_slice(_slice):
         _MI_slice = _np.zeros(
             len(_slice))  # returned MI should be of the same length as slice
@@ -611,6 +622,7 @@ def continuous_filter_csv_parallel(csv_file,
     return MI_csv
 
 
+#@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def Pearson_filter_csv_parallel(csv_file,
                                 _usecols=[],
                                 core_num="NOT DECLARED",
@@ -638,6 +650,7 @@ def Pearson_filter_csv_parallel(csv_file,
     else:
         _usecols = _np.array(_usecols)
 
+    @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _Pearson_filter_csv_slice(_slice):
         _pearson_slice = _np.zeros(
             len(_slice))  # returned MI should be of the same length as slice
