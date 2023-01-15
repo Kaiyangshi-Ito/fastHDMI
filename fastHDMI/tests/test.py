@@ -31,7 +31,7 @@ outcome_iid = outcome_iid[iid_ind]
 
 MI_continuous = continuous_filter_plink_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, outcome_iid=outcome_iid)
 
-assert np.all(MI_continuous>0)
+assert np.all(MI_continuous>0), MI_continuous
 
 # test for binary_filter_parallel
 bed_file = r"./sim/sim1.bed"
@@ -57,15 +57,15 @@ outcome_iid = outcome_iid[iid_ind]
 
 MI_binary = binary_filter_plink_parallel(bed_file=bed_file, bim_file=bim_file, fam_file=fam_file, outcome=outcome, outcome_iid=outcome_iid)
 
-assert np.all(MI_binary>0)
+assert np.all(MI_binary>0), MI_binary
 
 # test for continuous and binary filters for CSV files 
 MI_continuous = continuous_filter_csv_parallel(r"./sim/sim_continuous.csv")
 pearson = Pearson_filter_csv_parallel(r"./sim/sim_continuous.csv")
-assert np.all(MI_continuous>0)
+assert np.all(MI_continuous>0), MI_continuous
 assert len(pearson) > 1000
 MI_binary = binary_filter_csv_parallel(r"./sim/sim_binary.csv")
-assert np.all(MI_binary>0)
+assert np.all(MI_binary>0), MI_binary
 
 # test for LM numpy
 np.random.seed(1)

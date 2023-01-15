@@ -3,6 +3,7 @@
 
 import numpy as _np
 import pandas as _pd
+from dask import dataframe as _dd
 from bed_reader import open_bed as _open_bed
 from KDEpy import FFTKDE as _FFTKDE
 import multiprocess as _mp
@@ -288,6 +289,7 @@ def continuous_filter_plink_parallel(bed_file,
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the continuous outcome and many SNP variables.
     """
+    # check some basic things
     if core_num == "NOT DECLARED":
         core_num = _mp.cpu_count()
     else:
@@ -295,6 +297,7 @@ def continuous_filter_plink_parallel(bed_file,
         ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
+    # read some metadata
     bed1 = _open_bed(filepath=bed_file,
                      fam_filepath=fam_file,
                      bim_filepath=bim_file)
@@ -349,6 +352,7 @@ def binary_filter_plink_parallel(bed_file,
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
+    # check basic things
     if core_num == "NOT DECLARED":
         core_num = _mp.cpu_count()
     else:
@@ -356,6 +360,7 @@ def binary_filter_plink_parallel(bed_file,
         ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
+    # read some metadata
     bed1 = _open_bed(filepath=bed_file,
                      fam_filepath=fam_file,
                      bim_filepath=bim_file)
@@ -401,7 +406,9 @@ def binary_filter_csv(csv_file,
                       N=500,
                       kernel="epa",
                       bw="silverman",
-                      machine_err=1e-12):
+                      machine_err=1e-12,
+                      csv_engine="pyarrow",
+                      parquet_file="_"):
     """
     Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     The outcome should be binary and the covariates be continuous. 
@@ -409,12 +416,23 @@ def binary_filter_csv(csv_file,
     By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
     """
     # outcome is the first variable by default; if other specifications are needed, put it the first item in _usecols
+    # choose to use dask or pandas to read_csv
+    assert csv_engine == "dask" or csv_engine == "pyarrow" or csv_engine == "fastparquet", "Only dask and pandas pyarrow or fastparquet are supported to read csv files."
     if _np.array(_usecols).size == 0:
         print(
             "Variable names not provided -- start reading variable names from csv file now, might take some time, depending on the csv file size."
         )
-        _usecols = _pd.read_csv(csv_file, index_col=0,
-                                nrows=0).columns.tolist()
+        if csv_engine == "dask":
+            _csv = _dd.read_csv(csv_file)
+            _usecols = list(_csv.columns)[1:]
+        elif csv_engine == "pyarrow":
+            _csv = _pd.read_csv(csv_file,
+                                encoding='unicode_escape',
+                                engine="pyarrow")
+            _usecols = _csv.columns.to_list()[1:]
+        elif csv_engine == "fastparquet":
+            _csv = _pd.read_parquet(parquet_file, engine="fastparquet")
+            _usecols = _csv.columns.to_list()[1:]
         print("Reading variable names from csv file finished.")
     else:
         _usecols = _np.array(_usecols)
@@ -423,12 +441,14 @@ def binary_filter_csv(csv_file,
         __ = [
             _usecols[0], _usecols[j + 1]
         ]  # here using _usecol[j + 1] because the left first column is the outcome
-        _ = _pd.read_csv(csv_file,
-                         skipinitialspace=True,
-                         usecols=__,
-                         encoding='unicode_escape').dropna()
-        _a = _[_usecols[0]].to_numpy()
-        _b = _[_usecols[j + 1]].to_numpy()
+        if csv_engine == "dask":
+            _ = _np.asarray(_csv[__].dropna().compute())
+            _a = _[:, 0]
+            _b = _[:, 1]
+        elif csv_engine == "pyarrow" or csv_engine == "fastparquet":
+            _ = _csv[__].dropna().to_numpy()
+            _a = _[:, 0]
+            _b = _[:, 1]
         MI_csv[j] = MI_binary_continuous(a=_a,
                                          b=_b,
                                          N=N,
@@ -446,19 +466,32 @@ def continuous_filter_csv(csv_file,
                           kernel="epa",
                           bw="silverman",
                           norm=2,
-                          machine_err=1e-12):
+                          machine_err=1e-12,
+                          csv_engine="pyarrow",
+                          parquet_file="_"):
     """
     Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     Both the outcome and the covariates should be continuous. 
     If _usecols is given, the returned mutual information will match _usecols. 
     By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
     """
+    # choose to use dask or pandas to read_csv
+    assert csv_engine == "dask" or csv_engine == "pyarrow" or csv_engine == "fastparquet", "Only dask and pandas pyarrow or fastparquet are supported to read csv files."
     if _np.array(_usecols).size == 0:
         print(
             "Variable names not provided -- start reading variable names from csv file now, might take some time, depending on the csv file size."
         )
-        _usecols = _pd.read_csv(csv_file, index_col=0,
-                                nrows=0).columns.tolist()
+        if csv_engine == "dask":
+            _csv = _dd.read_csv(csv_file)
+            _usecols = list(_csv.columns)[1:]
+        elif csv_engine == "pyarrow":
+            _csv = _pd.read_csv(csv_file,
+                                encoding='unicode_escape',
+                                engine="pyarrow")
+            _usecols = _csv.columns.to_list()[1:]
+        elif csv_engine == "fastparquet":
+            _csv = _pd.read_parquet(parquet_file, engine="fastparquet")
+            _usecols = _csv.columns.to_list()[1:]
         print("Reading variable names from csv file finished.")
     else:
         _usecols = _np.array(_usecols)
@@ -467,12 +500,14 @@ def continuous_filter_csv(csv_file,
         __ = [
             _usecols[0], _usecols[j + 1]
         ]  # here using _usecol[j + 1] because the left first column is the outcome
-        _ = _pd.read_csv(csv_file,
-                         skipinitialspace=True,
-                         usecols=__,
-                         encoding='unicode_escape').dropna()
-        _a = _[_usecols[0]].to_numpy()
-        _b = _[_usecols[j + 1]].to_numpy()
+        if csv_engine == "dask":
+            _ = _np.asarray(_csv[__].dropna().compute())
+            _a = _[:, 0]
+            _b = _[:, 1]
+        elif csv_engine == "pyarrow" or csv_engine == "fastparquet":
+            _ = _csv[__].dropna().to_numpy()
+            _a = _[:, 0]
+            _b = _[:, 1]
         MI_csv[j] = MI_bivariate_continuous(a=_a,
                                             b=_b,
                                             a_N=a_N,
@@ -492,13 +527,16 @@ def binary_filter_csv_parallel(csv_file,
                                bw="silverman",
                                machine_err=1e-12,
                                core_num="NOT DECLARED",
-                               multp=1):
+                               multp=1,
+                               csv_engine="pyarrow",
+                               parquet_file="_"):
     """
     (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     The outcome should be binary and the covariates be continuous. 
     If _usecols is given, the returned mutual information will match _usecols. 
     By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
     """
+    # check some basic things
     if core_num == "NOT DECLARED":
         core_num = _mp.cpu_count()
     else:
@@ -506,12 +544,23 @@ def binary_filter_csv_parallel(csv_file,
         ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
+    # choose to use dask or pandas to read_csv
+    assert csv_engine == "dask" or csv_engine == "pyarrow" or csv_engine == "fastparquet", "Only dask and pandas pyarrow or fastparquet are supported to read csv files."
     if _np.array(_usecols).size == 0:
         print(
             "Variable names not provided -- start reading variable names from csv file now, might take some time, depending on the csv file size."
         )
-        _usecols = _pd.read_csv(csv_file, index_col=0,
-                                nrows=0).columns.tolist()
+        if csv_engine == "dask":
+            _csv = _dd.read_csv(csv_file)
+            _usecols = list(_csv.columns)[1:]
+        elif csv_engine == "pyarrow":
+            _csv = _pd.read_csv(csv_file,
+                                encoding='unicode_escape',
+                                engine="pyarrow")
+            _usecols = _csv.columns.to_list()[1:]
+        elif csv_engine == "fastparquet":
+            _csv = _pd.read_parquet(parquet_file, engine="fastparquet")
+            _usecols = _csv.columns.to_list()[1:]
         print("Reading variable names from csv file finished.")
     else:
         _usecols = _np.array(_usecols)
@@ -525,12 +574,14 @@ def binary_filter_csv_parallel(csv_file,
             __ = [
                 _usecols[0], _usecols[j]
             ]  # here using _usecol[j] because only input variables indices were splitted
-            _ = _pd.read_csv(csv_file,
-                             skipinitialspace=True,
-                             usecols=__,
-                             encoding='unicode_escape').dropna()
-            _a = _[_usecols[0]].to_numpy()
-            _b = _[_usecols[j]].to_numpy()
+            if csv_engine == "dask":
+                _ = _np.asarray(_csv[__].dropna().compute())
+                _a = _[:, 0]
+                _b = _[:, 1]
+            elif csv_engine == "pyarrow" or csv_engine == "fastparquet":
+                _ = _csv[__].dropna().to_numpy()
+                _a = _[:, 0]
+                _b = _[:, 1]
             _MI_slice[k] = MI_binary_continuous(a=_a,
                                                 b=_b,
                                                 N=N,
@@ -561,13 +612,16 @@ def continuous_filter_csv_parallel(csv_file,
                                    norm=2,
                                    machine_err=1e-12,
                                    core_num="NOT DECLARED",
-                                   multp=1):
+                                   multp=1,
+                                   csv_engine="pyarrow",
+                                   parquet_file="_"):
     """
     (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     Both the outcome and the covariates should be continuous. 
     If _usecols is given, the returned mutual information will match _usecols. 
     By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
     """
+    # check some basic things
     if core_num == "NOT DECLARED":
         core_num = _mp.cpu_count()
     else:
@@ -575,12 +629,23 @@ def continuous_filter_csv_parallel(csv_file,
         ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
+    # choose to use dask or pandas to read_csv
+    assert csv_engine == "dask" or csv_engine == "pyarrow" or csv_engine == "fastparquet", "Only dask and pandas pyarrow or fastparquet are supported to read csv files."
     if _np.array(_usecols).size == 0:
         print(
             "Variable names not provided -- start reading variable names from csv file now, might take some time, depending on the csv file size."
         )
-        _usecols = _pd.read_csv(csv_file, index_col=0,
-                                nrows=0).columns.tolist()
+        if csv_engine == "dask":
+            _csv = _dd.read_csv(csv_file)
+            _usecols = list(_csv.columns)[1:]
+        elif csv_engine == "pyarrow":
+            _csv = _pd.read_csv(csv_file,
+                                encoding='unicode_escape',
+                                engine="pyarrow")
+            _usecols = _csv.columns.to_list()[1:]
+        elif csv_engine == "fastparquet":
+            _csv = _pd.read_parquet(parquet_file, engine="fastparquet")
+            _usecols = _csv.columns.to_list()[1:]
         print("Reading variable names from csv file finished.")
     else:
         _usecols = _np.array(_usecols)
@@ -594,12 +659,15 @@ def continuous_filter_csv_parallel(csv_file,
             __ = [
                 _usecols[0], _usecols[j]
             ]  # here using _usecol[j] because only input variables indices were splitted
-            _ = _pd.read_csv(csv_file,
-                             skipinitialspace=True,
-                             usecols=__,
-                             encoding='unicode_escape').dropna()
-            _a = _[_usecols[0]].to_numpy()
-            _b = _[_usecols[j]].to_numpy()
+
+            if csv_engine == "dask":
+                _ = _np.asarray(_csv[__].dropna().compute())
+                _a = _[:, 0]
+                _b = _[:, 1]
+            elif csv_engine == "pyarrow" or csv_engine == "fastparquet":
+                _ = _csv[__].dropna().to_numpy()
+                _a = _[:, 0]
+                _b = _[:, 1]
             _MI_slice[k] = MI_bivariate_continuous(a=_a,
                                                    b=_b,
                                                    a_N=a_N,
@@ -626,13 +694,16 @@ def continuous_filter_csv_parallel(csv_file,
 def Pearson_filter_csv_parallel(csv_file,
                                 _usecols=[],
                                 core_num="NOT DECLARED",
-                                multp=1):
+                                multp=1,
+                                csv_engine="pyarrow",
+                                parquet_file="_"):
     """
     (Multiprocessing version) Take a (potentionally large) csv file to calculate the Pearson's correlation between outcome and covariates.
     If _usecols is given, the returned Pearson correlation will match _usecols. 
     By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
     This function accounts for missing data better than the Pearson's correlation matrix function provided by numpy.
     """
+    # check some basic things
     if core_num == "NOT DECLARED":
         core_num = _mp.cpu_count()
     else:
@@ -640,12 +711,23 @@ def Pearson_filter_csv_parallel(csv_file,
         ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
+    # choose to use dask or pandas to read_csv
+    assert csv_engine == "dask" or csv_engine == "pyarrow" or csv_engine == "fastparquet", "Only dask and pandas pyarrow or fastparquet are supported to read csv files."
     if _np.array(_usecols).size == 0:
         print(
             "Variable names not provided -- start reading variable names from csv file now, might take some time, depending on the csv file size."
         )
-        _usecols = _pd.read_csv(csv_file, index_col=0,
-                                nrows=0).columns.tolist()
+        if csv_engine == "dask":
+            _csv = _dd.read_csv(csv_file)
+            _usecols = list(_csv.columns)[1:]
+        elif csv_engine == "pyarrow":
+            _csv = _pd.read_csv(csv_file,
+                                encoding='unicode_escape',
+                                engine="pyarrow")
+            _usecols = _csv.columns.to_list()[1:]
+        elif csv_engine == "fastparquet":
+            _csv = _pd.read_parquet(parquet_file, engine="fastparquet")
+            _usecols = _csv.columns.to_list()[1:]
         print("Reading variable names from csv file finished.")
     else:
         _usecols = _np.array(_usecols)
@@ -659,12 +741,14 @@ def Pearson_filter_csv_parallel(csv_file,
             __ = [
                 _usecols[0], _usecols[j]
             ]  # here using _usecol[j] because only input variables indices were splitted
-            _ = _pd.read_csv(csv_file,
-                             skipinitialspace=True,
-                             usecols=__,
-                             encoding='unicode_escape').dropna()
-            _a = _[_usecols[0]].to_numpy()
-            _b = _[_usecols[j]].to_numpy()
+            if csv_engine == "dask":
+                _ = _np.asarray(_csv[__].dropna().compute())
+                _a = _[:, 0]
+                _b = _[:, 1]
+            elif csv_engine == "pyarrow" or csv_engine == "fastparquet":
+                _ = _csv[__].dropna().to_numpy()
+                _a = _[:, 0]
+                _b = _[:, 1]
             # returned Pearson correlation is a symmetric matrix
             _pearson_slice[k] = _np.corrcoef(_a, _b)[0, 1]
             k += 1
