@@ -17,7 +17,7 @@ The available functions are:
 - `binary_filter_csv`, `continuous_filter_csv`, `binary_filter_csv_parallel`, and `continuous_filter_csv_parallel` are to work on large CSV files directly in a memory efficient manner. **Note that it is assumed the left first column should be the outcome;** if not, use `_usecols` to set the first element to be the outcome column label.
   * `_usecols` is a list of column labels to be used, **the first element should be the outcome. Returned mutual information calculation results match `_usecols`.**
   * `Pearson_filter_csv_parallel` calculate Pearson's correlation between only the outcome and the covariates in similiar manner -- since `pandas.DataFrame.corr` calculate pairwise Pearson's correlation for the dataframe.
-  * `csv_engine` can use `dask` for low memory situations, or `pandas`'s `pyarrow` and `parquet` engines for faster speed.
+  * `csv_engine` can use `dask` for low memory situations, or `pandas`'s `read_csv` `engine`s and `fastparquet` engine for a created `parquet` file for faster speed. If `fastparquet` is chosen, declare `parquet_file` as the filepath to the parquet file; if `dask` is chosen to read very large CSV, it might be useful to specify a larger [`sample`](https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html).
 
 
 - `UAG_LM_SCAD_MCP`, `UAG_logistic_SCAD_MCP`: these functions find a local minizer for the SCAD/MCP penalized linear models/logistic models. The arguments are:
