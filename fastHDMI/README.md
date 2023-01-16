@@ -12,7 +12,7 @@ The available functions are:
 
 - `continuous_filter_plink_parallel` and `binary_filter_plink_parallel` are the multiprocessing version of the above two functions, with `core_num` can be used to declare the number of cores to be used for multiprocessing.
 
-- `MI_bivariate_continuous` and `MI_binary_continuous` are to calculate mutual information between two continuous variables and binary and continuous variables, respectively.
+- `MI_bivariate_continuous` and `MI_binary_continuous` are to calculate mutual information between two continuous variables and binary and continuous variables, respectively. `MI_binary_SNP` is a `jit` complied function.
 
 - `binary_filter_csv`, `continuous_filter_csv`, `binary_filter_csv_parallel`, and `continuous_filter_csv_parallel` are to work on large CSV files directly in a memory efficient manner. **Note that it is assumed the left first column should be the outcome;** if not, use `_usecols` to set the first element to be the outcome column label.
   * `_usecols` is a list of column labels to be used, **the first element should be the outcome. Returned mutual information calculation results match `_usecols`.**

@@ -17,7 +17,7 @@ _warnings.filterwarnings('ignore')
 #############################################################################
 ################# filtering using mutual information ########################
 #############################################################################
-@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def MI_continuous_SNP(a,
                       b,
                       N=500,
@@ -138,7 +138,7 @@ def MI_binary_SNP(a, b, machine_err=1e-12):
 
 
 # make this function available
-@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def MI_bivariate_continuous(a,
                             b,
                             a_N=300,
@@ -182,7 +182,7 @@ def MI_bivariate_continuous(a,
 
 
 # make this function available
-@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def MI_binary_continuous(a,
                          b,
                          N=500,
@@ -312,7 +312,7 @@ def continuous_filter_plink_parallel(bed_file,
                                assume_unique=True,
                                return_indices=True)[1]
 
-    @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _continuous_filter_plink_slice(_slice):
         _MI_slice = _np.zeros(len(_slice))
         k = 0
@@ -375,7 +375,7 @@ def binary_filter_plink_parallel(bed_file,
                                assume_unique=True,
                                return_indices=True)[1]
 
-    @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _binary_filter_plink_slice(_slice):
         _MI_slice = _np.zeros(len(_slice))
         k = 0
@@ -397,7 +397,7 @@ def binary_filter_plink_parallel(bed_file,
                          _np.array_split(ind, core_num * multp))
     MI_UKBB = _np.hstack(MI_UKBB)
     return MI_UKBB
-@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def _read_csv(csv_file, _usecols, csv_engine, parquet_file, sample):
     """
     Read a csv file using differnet engines. Use dask to read csv if low in memory.
@@ -434,7 +434,7 @@ def _read_csv(csv_file, _usecols, csv_engine, parquet_file, sample):
     return _csv, _usecols
 
 
-@_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def _read_two_columns(_csv, __, csv_engine):
     """
     Read two columns from a dataframe object, remove NaN. Use dask to read csv if low in memory.
@@ -563,7 +563,7 @@ def binary_filter_csv_parallel(csv_file,
                                parquet_file=parquet_file,
                                sample=sample)
 
-    @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _binary_filter_csv_slice(_slice):
         _MI_slice = _np.zeros(
             len(_slice))  # returned MI should be of the same length as slice
@@ -628,7 +628,7 @@ def continuous_filter_csv_parallel(csv_file,
                                parquet_file=parquet_file,
                                sample=sample)
 
-    @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _continuous_filter_csv_slice(_slice):
         _MI_slice = _np.zeros(
             len(_slice))  # returned MI should be of the same length as slice
@@ -689,7 +689,7 @@ def Pearson_filter_csv_parallel(csv_file,
                                parquet_file=parquet_file,
                                sample=sample)
 
-    @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _Pearson_filter_csv_slice(_slice):
         _pearson_slice = _np.zeros(
             len(_slice))  # returned MI should be of the same length as slice
