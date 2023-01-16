@@ -20,8 +20,8 @@ csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_
 abide = pd.read_csv(csv_file, encoding='unicode_escape', engine="c")
 abide = dd.read_csv(csv_file, sample=1250000)
 
-_abide_name = abide.columns.tolist()  #[1:]
-_abide_name = list(abide.columns)  #[1:]
+_abide_name = abide.columns.tolist()[1:]
+_abide_name = list(abide.columns)[1:]
 
 print(_abide_name)
 
