@@ -20,8 +20,8 @@ csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_
 abide = pd.read_csv(csv_file, encoding='unicode_escape', engine="c")
 abide = dd.read_csv(csv_file, sample=1250000)
 
-_abide_name = abide.columns.tolist()#[1:]
-_abide_name = list(abide.columns)#[1:]
+_abide_name = abide.columns.tolist()  #[1:]
+_abide_name = list(abide.columns)  #[1:]
 
 print(_abide_name)
 
@@ -30,12 +30,12 @@ abide_name = [_abide_name[-1]] + _abide_name[1:-3]
 
 mi_output = mi.binary_filter_csv_parallel(csv_file,
                                           _usecols=abide_name,
-                                          csv_engine="pyarrow")
+                                          csv_engine="c")
 np.save(r"/home/kyang/ABIDE_MI_output", mi_output)
 
 pearson_output = mi.Pearson_filter_csv_parallel(csv_file,
                                                 _usecols=abide_name,
-                                                csv_engine="pyarrow")
+                                                csv_engine="c")
 np.save(r"/home/kyang/ABIDE_Pearson_output", pearson_output)
 
 
