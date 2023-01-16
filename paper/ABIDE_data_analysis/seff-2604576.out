@@ -1,0 +1,11 @@
+Job ID: 2604576
+Cluster: graham
+User/Group: kyang/kyang
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 20
+CPU Utilized: 00:50:08
+CPU Efficiency: 8.25% of 10:07:20 core-walltime
+Job Wall-clock time: 00:30:22
+Memory Utilized: 60.39 GB
+Memory Efficiency: 75.49% of 80.00 GB
