@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0", "numpy>=1.14.2", "numba>=0.54.1", "KDEpy>=1.1.0", "scikit-learn>=1.0.2", "bed_reader", "multiprocess>=0.70.6",  "bed-reader", "pandas>=1.4.4", "pyarrow>=8.0.0", "dask>=2022.02.1"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "fastHDMI"
-version = "1.16.0"
+version = "1.16.1"
 authors = [
   { name="Kai Yang", email="kai.yang2@mail.mcgill.ca" },
 ]
@@ -12,6 +12,7 @@ description = "Use fast FFT-based mutual information and accelerated gradient me
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.7"
+dependencies = ["numpy>=1.14.2", "numba>=0.54.1", "KDEpy>=1.1.0", "scikit-learn>=1.0.2", "bed_reader", "multiprocess>=0.70.6",  "bed-reader", "pandas>=1.4.4", "pyarrow>=8.0.0", "dask>=2022.02.1"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
