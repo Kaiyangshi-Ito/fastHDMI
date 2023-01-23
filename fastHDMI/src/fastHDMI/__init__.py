@@ -817,7 +817,7 @@ def Pearson_filter_csv_parallel(csv_file,
             _b -= _np.mean(_b)
             _b /= _np.std(_b)
             #             return _np.corrcoef(_a, _b)[0, 1]
-            return _a @ _b
+            return _a @ _b / len(_a)
 
         _pearson_slice = _np.array(list(map(_map_foo, _slice)))
         return _pearson_slice
