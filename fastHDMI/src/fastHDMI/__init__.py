@@ -812,7 +812,12 @@ def Pearson_filter_csv_parallel(csv_file,
             ]  # here using _usecol[j] because only input variables indices were splitted
             _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
             # returned Pearson correlation is a symmetric matrix
-            return _np.corrcoef(_a, _b)[0, 1]
+            _a -= _np.mean(_a)
+            _a /= _np.std(_a)
+            _b -= _np.mean(_b)
+            _b /= _np.std(_b)
+            #             return _np.corrcoef(_a, _b)[0, 1]
+            return _a @ _b
 
         _pearson_slice = _np.array(list(map(_map_foo, _slice)))
         return _pearson_slice
