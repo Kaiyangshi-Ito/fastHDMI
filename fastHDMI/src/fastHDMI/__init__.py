@@ -224,18 +224,33 @@ def continuous_filter_plink(bed_file,
                                outcome_iid,
                                assume_unique=True,
                                return_indices=True)[1]
-    MI_UKBB = _np.zeros(len(bed1_sid))
-    for j in range(len(MI_UKBB)):
+
+    #     MI_UKBB = _np.zeros(len(bed1_sid))
+    #     for j in range(len(MI_UKBB)):
+    #         _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
+    #         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
+    #         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
+    #         _SNP = _SNP[_SNP != -127]  # remove missing SNP
+    #         MI_UKBB[j] = MI_continuous_SNP(a=_outcome,
+    #                                        b=_SNP,
+    #                                        N=N,
+    #                                        kernel=kernel,
+    #                                        bw=bw,
+    #                                        machine_err=machine_err)
+
+    def _map_foo(j):
         _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        MI_UKBB[j] = MI_continuous_SNP(a=_outcome,
-                                       b=_SNP,
-                                       N=N,
-                                       kernel=kernel,
-                                       bw=bw,
-                                       machine_err=machine_err)
+        return MI_continuous_SNP(a=_outcome,
+                                 b=_SNP,
+                                 N=N,
+                                 kernel=kernel,
+                                 bw=bw,
+                                 machine_err=machine_err)
+
+    MI_UKBB = _np.array(list(map(_map_foo, range(len(bed1_sid)))))
     return MI_UKBB
 
 
@@ -263,13 +278,23 @@ def binary_filter_plink(bed_file,
                                outcome_iid,
                                assume_unique=True,
                                return_indices=True)[1]
-    MI_UKBB = _np.zeros(len(bed1_sid))
-    for j in range(len(MI_UKBB)):
+
+    #     MI_UKBB = _np.zeros(len(bed1_sid))
+    #     for j in range(len(MI_UKBB)):
+    #         _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
+    #         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
+    #         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
+    #         _SNP = _SNP[_SNP != -127]  # remove missing SNP
+    #         MI_UKBB[j] = MI_binary_SNP(a=_outcome, b=_SNP, machine_err=machine_err)
+
+    def _map_foo(j):
         _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        MI_UKBB[j] = MI_binary_SNP(a=_outcome, b=_SNP, machine_err=machine_err)
+        return MI_binary_SNP(a=_outcome, b=_SNP, machine_err=machine_err)
+
+    MI_UKBB = _np.array(list(map(_map_foo, range(len(bed1_sid)))))
     return MI_UKBB
 
 
@@ -314,20 +339,33 @@ def continuous_filter_plink_parallel(bed_file,
 
     # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _continuous_filter_plink_slice(_slice):
-        _MI_slice = _np.zeros(len(_slice))
-        k = 0
-        for j in _slice:
+        #         _MI_slice = _np.zeros(len(_slice))
+        #         k = 0
+        #         for j in _slice:
+        #             _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
+        #             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
+        #             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
+        #             _SNP = _SNP[_SNP != -127]  # remove missing SNP
+        #             _MI_slice[k] = MI_continuous_SNP(a=_outcome,
+        #                                              b=_SNP,
+        #                                              N=N,
+        #                                              kernel=kernel,
+        #                                              bw=bw,
+        #                                              machine_err=machine_err)
+        #             k += 1
+        def _map_foo(j):
             _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
             _SNP = _SNP[_SNP != -127]  # remove missing SNP
-            _MI_slice[k] = MI_continuous_SNP(a=_outcome,
-                                             b=_SNP,
-                                             N=N,
-                                             kernel=kernel,
-                                             bw=bw,
-                                             machine_err=machine_err)
-            k += 1
+            return MI_continuous_SNP(a=_outcome,
+                                     b=_SNP,
+                                     N=N,
+                                     kernel=kernel,
+                                     bw=bw,
+                                     machine_err=machine_err)
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
 
     # multiprocessing starts here
@@ -377,17 +415,25 @@ def binary_filter_plink_parallel(bed_file,
 
     # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _binary_filter_plink_slice(_slice):
-        _MI_slice = _np.zeros(len(_slice))
-        k = 0
-        for j in _slice:
+        #         _MI_slice = _np.zeros(len(_slice))
+        #         k = 0
+        #         for j in _slice:
+        #             _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
+        #             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
+        #             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
+        #             _SNP = _SNP[_SNP != -127]  # remove missing SNP
+        #             _MI_slice[k] = MI_binary_SNP(a=_outcome,
+        #                                          b=_SNP,
+        #                                          machine_err=machine_err)
+        #             k += 1
+        def _map_foo(j):
             _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
             _SNP = _SNP[_SNP != -127]  # remove missing SNP
-            _MI_slice[k] = MI_binary_SNP(a=_outcome,
-                                         b=_SNP,
-                                         machine_err=machine_err)
-            k += 1
+            return MI_binary_SNP(a=_outcome, b=_SNP, machine_err=machine_err)
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
 
     # multiprocessing starts here
@@ -441,12 +487,11 @@ def _read_two_columns(_csv, __, csv_engine):
     """
     if csv_engine == "dask":
         _ = _np.asarray(_csv[__].dropna().compute())
-        _a = _[:, 0]
-        _b = _[:, 1]
     elif csv_engine == "pyarrow" or csv_engine == "c" or csv_engine == "python" or csv_engine == "fastparquet":
         _ = _csv[__].dropna().to_numpy()
-        _a = _[:, 0]
-        _b = _[:, 1]
+
+    _a = _[:, 0]
+    _b = _[:, 1]
     return _a, _b
 
 
@@ -473,18 +518,34 @@ def binary_filter_csv(csv_file,
                                csv_engine=csv_engine,
                                parquet_file=parquet_file,
                                sample=sample)
-    MI_csv = _np.empty(len(_usecols) - 1)
-    for j in _np.arange(len(_usecols) - 1):
+
+    #     MI_csv = _np.empty(len(_usecols) - 1)
+    #     for j in _np.arange(len(_usecols) - 1):
+    #         __ = [
+    #             _usecols[0], _usecols[j + 1]
+    #         ]  # here using _usecol[j + 1] because the left first column is the outcome
+    #         _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
+    #         MI_csv[j] = MI_binary_continuous(a=_a,
+    #                                          b=_b,
+    #                                          N=N,
+    #                                          kernel=kernel,
+    #                                          bw=bw,
+    #                                          machine_err=machine_err)
+
+    def _map_foo(j):
         __ = [
             _usecols[0], _usecols[j + 1]
         ]  # here using _usecol[j + 1] because the left first column is the outcome
         _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-        MI_csv[j] = MI_binary_continuous(a=_a,
-                                         b=_b,
-                                         N=N,
-                                         kernel=kernel,
-                                         bw=bw,
-                                         machine_err=machine_err)
+        return MI_binary_continuous(a=_a,
+                                    b=_b,
+                                    N=N,
+                                    kernel=kernel,
+                                    bw=bw,
+                                    machine_err=machine_err)
+
+    MI_csv = _np.array(list(map(_map_foo, _np.arange(len(_usecols) - 1))))
+
     return MI_csv
 
 
@@ -513,20 +574,35 @@ def continuous_filter_csv(csv_file,
                                parquet_file=parquet_file,
                                sample=sample)
 
-    MI_csv = _np.empty(len(_usecols) - 1)
-    for j in _np.arange(len(_usecols) - 1):
+    #     MI_csv = _np.empty(len(_usecols) - 1)
+    #     for j in _np.arange(len(_usecols) - 1):
+    #         __ = [
+    #             _usecols[0], _usecols[j + 1]
+    #         ]  # here using _usecol[j + 1] because the left first column is the outcome
+    #         _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
+    #         MI_csv[j] = MI_bivariate_continuous(a=_a,
+    #                                             b=_b,
+    #                                             a_N=a_N,
+    #                                             b_N=b_N,
+    #                                             kernel=kernel,
+    #                                             bw=bw,
+    #                                             norm=norm,
+    #                                             machine_err=machine_err)
+    def _map_foo(j):
         __ = [
             _usecols[0], _usecols[j + 1]
         ]  # here using _usecol[j + 1] because the left first column is the outcome
         _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-        MI_csv[j] = MI_bivariate_continuous(a=_a,
-                                            b=_b,
-                                            a_N=a_N,
-                                            b_N=b_N,
-                                            kernel=kernel,
-                                            bw=bw,
-                                            norm=norm,
-                                            machine_err=machine_err)
+        return MI_bivariate_continuous(a=_a,
+                                       b=_b,
+                                       a_N=a_N,
+                                       b_N=b_N,
+                                       kernel=kernel,
+                                       bw=bw,
+                                       norm=norm,
+                                       machine_err=machine_err)
+
+    MI_csv = _np.array(list(map(_map_foo, _np.arange(len(_usecols) - 1))))
     return MI_csv
 
 
@@ -565,21 +641,34 @@ def binary_filter_csv_parallel(csv_file,
 
     # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _binary_filter_csv_slice(_slice):
-        _MI_slice = _np.zeros(
-            len(_slice))  # returned MI should be of the same length as slice
-        k = 0
-        for j in _slice:
+        #         _MI_slice = _np.zeros(
+        #             len(_slice))  # returned MI should be of the same length as slice
+        #         k = 0
+        #         for j in _slice:
+        #             __ = [
+        #                 _usecols[0], _usecols[j]
+        #             ]  # here using _usecol[j] because only input variables indices were splitted
+        #             _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
+        #             _MI_slice[k] = MI_binary_continuous(a=_a,
+        #                                                 b=_b,
+        #                                                 N=N,
+        #                                                 kernel=kernel,
+        #                                                 bw=bw,
+        #                                                 machine_err=machine_err)
+        #             k += 1
+        def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
             ]  # here using _usecol[j] because only input variables indices were splitted
             _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-            _MI_slice[k] = MI_binary_continuous(a=_a,
-                                                b=_b,
-                                                N=N,
-                                                kernel=kernel,
-                                                bw=bw,
-                                                machine_err=machine_err)
-            k += 1
+            return MI_binary_continuous(a=_a,
+                                        b=_b,
+                                        N=N,
+                                        kernel=kernel,
+                                        bw=bw,
+                                        machine_err=machine_err)
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
 
     # multiprocessing starts here
@@ -630,23 +719,38 @@ def continuous_filter_csv_parallel(csv_file,
 
     # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _continuous_filter_csv_slice(_slice):
-        _MI_slice = _np.zeros(
-            len(_slice))  # returned MI should be of the same length as slice
-        k = 0
-        for j in _slice:
+        #         _MI_slice = _np.zeros(
+        #             len(_slice))  # returned MI should be of the same length as slice
+        #         k = 0
+        #         for j in _slice:
+        #             __ = [
+        #                 _usecols[0], _usecols[j]
+        #             ]  # here using _usecol[j] because only input variables indices were splitted
+        #             _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
+        #             _MI_slice[k] = MI_bivariate_continuous(a=_a,
+        #                                                    b=_b,
+        #                                                    a_N=a_N,
+        #                                                    b_N=b_N,
+        #                                                    kernel=kernel,
+        #                                                    bw=bw,
+        #                                                    norm=norm,
+        #                                                    machine_err=machine_err)
+        #             k += 1
+        def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
             ]  # here using _usecol[j] because only input variables indices were splitted
             _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-            _MI_slice[k] = MI_bivariate_continuous(a=_a,
-                                                   b=_b,
-                                                   a_N=a_N,
-                                                   b_N=b_N,
-                                                   kernel=kernel,
-                                                   bw=bw,
-                                                   norm=norm,
-                                                   machine_err=machine_err)
-            k += 1
+            return MI_bivariate_continuous(a=_a,
+                                           b=_b,
+                                           a_N=a_N,
+                                           b_N=b_N,
+                                           kernel=kernel,
+                                           bw=bw,
+                                           norm=norm,
+                                           machine_err=machine_err)
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
 
     # multiprocessing starts here
@@ -691,17 +795,26 @@ def Pearson_filter_csv_parallel(csv_file,
 
     # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _Pearson_filter_csv_slice(_slice):
-        _pearson_slice = _np.zeros(
-            len(_slice))  # returned MI should be of the same length as slice
-        k = 0
-        for j in _slice:
+        #         _pearson_slice = _np.zeros(
+        #             len(_slice))  # returned MI should be of the same length as slice
+        #         k = 0
+        #         for j in _slice:
+        #             __ = [
+        #                 _usecols[0], _usecols[j]
+        #             ]  # here using _usecol[j] because only input variables indices were splitted
+        #             _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
+        #             # returned Pearson correlation is a symmetric matrix
+        #             _pearson_slice[k] = _np.corrcoef(_a, _b)[0, 1]
+        #             k += 1
+        def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
             ]  # here using _usecol[j] because only input variables indices were splitted
             _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
             # returned Pearson correlation is a symmetric matrix
-            _pearson_slice[k] = _np.corrcoef(_a, _b)[0, 1]
-            k += 1
+            return _np.corrcoef(_a, _b)[0, 1]
+
+        _pearson_slice = _np.array(list(map(_map_foo, _slice)))
         return _pearson_slice
 
     # multiprocessing starts here

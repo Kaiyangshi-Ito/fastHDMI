@@ -8,7 +8,7 @@ The available functions are:
   * `outcome`, `outcome_iid` are the outcome values and the iids for the outcome. For genetic data, it is usual that the order of SNP iid and the outcome iid don't match. While SNP iid can be obtained from the plink1 files, outcome iid here is to be declared separately. `outcome_iid` should be a list of strings or a one-dimensional numpy string array.
   * `a_min`, `a_max` are the minimum and maximum of the continous outcome used to evaluate the support; `N=500` is the default values for grid size for FFT.
 
-- `binary_filter_plink` works similarly, execpt that `a_min, a_max, N` are not available obviously.
+- `binary_filter_plink` works similarly, execpt that `a_min, a_max, N` are not available obviously. 
 
 - `continuous_filter_plink_parallel` and `binary_filter_plink_parallel` are the multiprocessing version of the above two functions, with `core_num` can be used to declare the number of cores to be used for multiprocessing.
 
