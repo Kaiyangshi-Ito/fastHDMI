@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[3]:
+# In[ ]:
 
 
 import numpy as np
@@ -21,16 +21,18 @@ import fastHDMI as mi
 
 
 # csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
-# abide = pd.read_csv(csv_file, encoding='unicode_escape', engine="c")
-# # abide = dd.read_csv(csv_file, sample=1250000)
+# # abide = pd.read_csv(csv_file, encoding='unicode_escape', engine="c")
+# abide = dd.read_csv(csv_file, sample=1250000)
 
-# _abide_name = abide.columns.tolist()[1:]
-# # _abide_name = list(abide.columns)[1:]
+# # _abide_name = abide.columns.tolist()[1:]
+# _abide_name = list(abide.columns)[1:]
 
 # # print(_abide_name)
 
 # # we don't inlcude age and sex in the screening since they should always be included in the model
 # abide_name = [_abide_name[-3]] + _abide_name[1:-3]
+
+# np.save(r"/home/kyang/ABIDE_columns", _abide_name[1:-3])
 
 # # so that the left first column is the outcome and the rest columns are areas
 
@@ -84,9 +86,9 @@ import fastHDMI as mi
 
 
 # print("Kendall's tau: \n",
-#       kendalltau(rankdata(-abide_mi), rankdata(-abide_pearson)))
+#       kendalltau(rankdata(-abide_mi), rankdata(-np.abs(abide_pearson))))
 # print("Pearson's correlation: \n",
-#       np.corrcoef(rankdata(-abide_mi), rankdata(-abide_pearson)))
+#       np.corrcoef(rankdata(-abide_mi), rankdata(-np.abs(abide_pearson))))
 
 
 # # Calculate MI for ABIDE data
@@ -97,11 +99,11 @@ import fastHDMI as mi
 
 
 csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
-abide = pd.read_csv(csv_file, encoding='unicode_escape', engine="c")
-# abide = dd.read_csv(csv_file, sample=1250000)
+# abide = pd.read_csv(csv_file, encoding='unicode_escape', engine="c")
+abide = dd.read_csv(csv_file, sample=1250000)
 
-_abide_name = abide.columns.tolist()[1:]
-# _abide_name = list(abide.columns)[1:]
+# _abide_name = abide.columns.tolist()[1:]
+_abide_name = list(abide.columns)[1:]
 
 # print(_abide_name)
 
@@ -113,29 +115,29 @@ mi_output = mi.binary_filter_csv_parallel(csv_file,
                                           _usecols=abide_name,
                                           csv_engine="c",
                                           sample=1250000)
-np.save(r"/home/kyang/ABIDE_MI_output", mi_output)
+np.save(r"/home/kyang/ABIDE_diagnosis_MI_output", mi_output)
 
 pearson_output = mi.Pearson_filter_csv_parallel(csv_file,
                                                 _usecols=abide_name,
                                                 csv_engine="c",
                                                 sample=1250000)
-np.save(r"/home/kyang/ABIDE_Pearson_output", pearson_output)
+np.save(r"/home/kyang/ABIDE_diagnosis_Pearson_output", pearson_output)
 
 
 # # Plots
 
-# In[4]:
+# In[ ]:
 
 
-abide_mi = np.load(r"./ABIDE_MI_output.npy")
+abide_mi = np.load(r"./ABIDE_diagnosis_MI_output.npy")
 plt.hist(np.log(abide_mi), 500)
 plt.show()
 
 
-# In[5]:
+# In[ ]:
 
 
-abide_pearson = np.load(r"./ABIDE_Pearson_output.npy")
+abide_pearson = np.load(r"./ABIDE_diagnosis_Pearson_output.npy")
 plt.hist(np.log(np.abs(abide_pearson)), 500)
 plt.show()
 
@@ -146,7 +148,7 @@ plt.show()
 # 
 # **So in summary, the two ranking vary greatly.**
 
-# In[6]:
+# In[ ]:
 
 
 plt.plot(np.log(abide_mi), abide_pearson, 'o')
@@ -155,13 +157,13 @@ plt.show()
 # PREDICT AGE
 
 
-# In[7]:
+# In[ ]:
 
 
 print("Kendall's tau: \n",
-      kendalltau(rankdata(-abide_mi), rankdata(-abide_pearson)))
+      kendalltau(rankdata(-abide_mi), rankdata(-np.abs(abide_pearson))))
 print("Pearson's correlation: \n",
-      np.corrcoef(rankdata(-abide_mi), rankdata(-abide_pearson)))
+      np.corrcoef(rankdata(-abide_mi), rankdata(-np.abs(abide_pearson))))
 
 
 # In[ ]:
