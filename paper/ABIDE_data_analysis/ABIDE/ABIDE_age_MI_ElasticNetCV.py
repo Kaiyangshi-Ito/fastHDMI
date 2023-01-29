@@ -28,7 +28,7 @@ def testing_error(num_covariates=20,
     abide_mi = np.load(r"./ABIDE_age_MI_output.npy"
                        )  # for Pearson, use ABIDE_age_Pearson_output.npy
     _usecols = np.hstack((outcome_name, "SEX", "DX_GROUP",
-                          columns[np.argsort(abide_mi)][:num_covariates]))
+                          columns[np.argsort(-abide_mi)][:num_covariates]))
 
     df = original_df[_usecols].dropna(inplace=False).sample(
         frac=1, random_state=seed, replace=False).reset_index(drop=True,
