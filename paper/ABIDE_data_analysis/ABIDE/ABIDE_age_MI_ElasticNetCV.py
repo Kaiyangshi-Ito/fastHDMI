@@ -12,10 +12,7 @@ from sklearn.metrics import r2_score
 import multiprocess as mp
 
 csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
-original_df = pd.read_csv(csv_file,
-                          encoding='unicode_escape',
-                          usecols=_usecols,
-                          engine='c')
+original_df = pd.read_csv(csv_file, encoding='unicode_escape', engine='c')
 
 
 def testing_error(num_covariates=20,
