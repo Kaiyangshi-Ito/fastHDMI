@@ -444,15 +444,16 @@ def binary_filter_plink_parallel(bed_file,
     MI_UKBB = _np.hstack(MI_UKBB)
     return MI_UKBB
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def _read_csv(csv_file, _usecols, csv_engine, parquet_file, sample):
+def _read_csv(csv_file, _usecols, csv_engine, parquet_file, sample, verbose=0):
     """
     Read a csv file using differnet engines. Use dask to read csv if low in memory.
     """
     assert csv_engine == "dask" or csv_engine == "pyarrow" or csv_engine == "fastparquet" or csv_engine == "c" or csv_engine == "python", "Only dask and pandas csv engines or fastparquet are supported to read csv files."
     if _np.array(_usecols).size == 0:
-        print(
-            "Variable names not provided -- start reading variable names from csv file now, might take some time, depending on the csv file size."
-        )
+        if verbose > 0:
+            print(
+                "Variable names not provided -- start reading variable names from csv file now, might take some time, depending on the csv file size."
+            )
         if csv_engine == "dask":
             _csv = _dd.read_csv(csv_file, sample=sample)
             _usecols = list(_csv.columns)[1:]
@@ -464,7 +465,8 @@ def _read_csv(csv_file, _usecols, csv_engine, parquet_file, sample):
         elif csv_engine == "fastparquet":
             _csv = _pd.read_parquet(parquet_file, engine="fastparquet")
             _usecols = _csv.columns.to_list()[1:]
-        print("Reading variable names from csv file finished.")
+        if verbose > 0:
+            print("Reading variable names from csv file finished.")
     else:
         _usecols = _np.array(_usecols)
         if csv_engine == "dask":
@@ -504,7 +506,8 @@ def binary_filter_csv(csv_file,
                       machine_err=1e-12,
                       csv_engine="c",
                       parquet_file="_",
-                      sample=256000):
+                      sample=256000,
+                      verbose=0):
     """
     Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     The outcome should be binary and the covariates be continuous. 
@@ -517,7 +520,8 @@ def binary_filter_csv(csv_file,
                                _usecols=_usecols,
                                csv_engine=csv_engine,
                                parquet_file=parquet_file,
-                               sample=sample)
+                               sample=sample,
+                               verbose=verbose)
 
     #     MI_csv = _np.empty(len(_usecols) - 1)
     #     for j in _np.arange(len(_usecols) - 1):
@@ -560,7 +564,8 @@ def continuous_filter_csv(csv_file,
                           machine_err=1e-12,
                           csv_engine="c",
                           parquet_file="_",
-                          sample=256000):
+                          sample=256000,
+                          verbose=0):
     """
     Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     Both the outcome and the covariates should be continuous. 
@@ -572,7 +577,8 @@ def continuous_filter_csv(csv_file,
                                _usecols=_usecols,
                                csv_engine=csv_engine,
                                parquet_file=parquet_file,
-                               sample=sample)
+                               sample=sample,
+                               verbose=verbose)
 
     #     MI_csv = _np.empty(len(_usecols) - 1)
     #     for j in _np.arange(len(_usecols) - 1):
@@ -617,7 +623,8 @@ def binary_filter_csv_parallel(csv_file,
                                multp=1,
                                csv_engine="c",
                                parquet_file="_",
-                               sample=256000):
+                               sample=256000,
+                               verbose=0):
     """
     (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     The outcome should be binary and the covariates be continuous. 
@@ -637,7 +644,8 @@ def binary_filter_csv_parallel(csv_file,
                                _usecols=_usecols,
                                csv_engine=csv_engine,
                                parquet_file=parquet_file,
-                               sample=sample)
+                               sample=sample,
+                               verbose=verbose)
 
     # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _binary_filter_csv_slice(_slice):
@@ -695,7 +703,8 @@ def continuous_filter_csv_parallel(csv_file,
                                    multp=1,
                                    csv_engine="c",
                                    parquet_file="_",
-                                   sample=256000):
+                                   sample=256000,
+                                   verbose=0):
     """
     (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     Both the outcome and the covariates should be continuous. 
@@ -715,7 +724,8 @@ def continuous_filter_csv_parallel(csv_file,
                                _usecols=_usecols,
                                csv_engine=csv_engine,
                                parquet_file=parquet_file,
-                               sample=sample)
+                               sample=sample,
+                               verbose=verbose)
 
     # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _continuous_filter_csv_slice(_slice):
@@ -771,7 +781,8 @@ def Pearson_filter_csv_parallel(csv_file,
                                 multp=1,
                                 csv_engine="c",
                                 parquet_file="_",
-                                sample=256000):
+                                sample=256000,
+                                verbose=0):
     """
     (Multiprocessing version) Take a (potentionally large) csv file to calculate the Pearson's correlation between outcome and covariates.
     If _usecols is given, the returned Pearson correlation will match _usecols. 
@@ -791,7 +802,8 @@ def Pearson_filter_csv_parallel(csv_file,
                                _usecols=_usecols,
                                csv_engine=csv_engine,
                                parquet_file=parquet_file,
-                               sample=sample)
+                               sample=sample,
+                               verbose=verbose)
 
     # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _Pearson_filter_csv_slice(_slice):
@@ -831,6 +843,7 @@ def Pearson_filter_csv_parallel(csv_file,
                              _np.array_split(ind, core_num * multp))
     Pearson_csv = _np.hstack(Pearson_csv)
     return Pearson_csv
+
 
 
 ##################################################################
