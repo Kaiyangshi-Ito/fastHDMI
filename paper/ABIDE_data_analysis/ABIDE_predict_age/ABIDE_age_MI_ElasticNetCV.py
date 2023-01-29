@@ -36,7 +36,10 @@ def testing_error(num_covariates=20,
                                    1:], df.iloc[:train_test_div, 0]
         X_test, y_test = df.iloc[train_test_div:, 1:], df.iloc[train_test_div:,
                                                                0]
-        fit = fun(cv=5, random_state=seed).fit(X_train, y_train)
+        if fun in [ElasticNetCV, LassoCV]:
+            fit = fun(cv=5, random_state=seed).fit(X_train, y_train)
+        elif fun in [RidgeCV]:  # RidgeCV doesn't have seed setting
+            fit = fun(cv=5).fit(X_train, y_train)
         y_pred = fit.predict(X_test)
         out = r2_score(y_test, y_pred)
     else:

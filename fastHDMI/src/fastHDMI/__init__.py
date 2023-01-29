@@ -448,7 +448,9 @@ def _read_csv(csv_file, _usecols, csv_engine, parquet_file, sample, verbose=0):
     """
     Read a csv file using differnet engines. Use dask to read csv if low in memory.
     """
-    assert csv_engine == "dask" or csv_engine == "pyarrow" or csv_engine == "fastparquet" or csv_engine == "c" or csv_engine == "python", "Only dask and pandas csv engines or fastparquet are supported to read csv files."
+    assert csv_engine in [
+        "dask", "pyarrow", "fastparquet", "c", "python"
+    ], "Only dask and pandas csv engines or fastparquet are supported to read csv files."
     if _np.array(_usecols).size == 0:
         if verbose > 0:
             print(
@@ -457,7 +459,8 @@ def _read_csv(csv_file, _usecols, csv_engine, parquet_file, sample, verbose=0):
         if csv_engine == "dask":
             _csv = _dd.read_csv(csv_file, sample=sample)
             _usecols = list(_csv.columns)[1:]
-        elif csv_engine == "pyarrow" or csv_engine == "c" or csv_engine == "python":
+        elif csv_engine in ["pyarrow", "c",
+                            "python"]:  # these are pandas CSV engines
             _csv = _pd.read_csv(csv_file,
                                 encoding='unicode_escape',
                                 engine=csv_engine)
@@ -471,7 +474,7 @@ def _read_csv(csv_file, _usecols, csv_engine, parquet_file, sample, verbose=0):
         _usecols = _np.array(_usecols)
         if csv_engine == "dask":
             _csv = _dd.read_csv(csv_file, names=_usecols, sample=sample)
-        elif csv_engine == "pyarrow" or csv_engine == "c" or csv_engine == "python":
+        elif csv_engine in ["pyarrow", "c", "python"]:
             _csv = _pd.read_csv(csv_file,
                                 encoding='unicode_escape',
                                 usecols=_usecols,
@@ -489,7 +492,8 @@ def _read_two_columns(_csv, __, csv_engine):
     """
     if csv_engine == "dask":
         _ = _np.asarray(_csv[__].dropna().compute())
-    elif csv_engine == "pyarrow" or csv_engine == "c" or csv_engine == "python" or csv_engine == "fastparquet":
+    elif csv_engine in ["pyarrow", "c", "python",
+                        "fastparquet"]:  # these are engines using pandas
         _ = _csv[__].dropna().to_numpy()
 
     _a = _[:, 0]
