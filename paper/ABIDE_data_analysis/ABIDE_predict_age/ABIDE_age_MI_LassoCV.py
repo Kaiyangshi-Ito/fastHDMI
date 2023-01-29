@@ -13,6 +13,9 @@ import multiprocess as mp
 
 csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
 original_df = pd.read_csv(csv_file, encoding='unicode_escape', engine='c')
+columns = np.load(r"./ABIDE_columns.npy")
+abide_dep = np.load(r"./ABIDE_age_MI_output.npy"
+                   )  # for Pearson, use ABIDE_age_Pearson_output.npy
 
 
 def testing_error(num_covariates=20,
@@ -21,12 +24,8 @@ def testing_error(num_covariates=20,
                   outcome_name="AGE_AT_SCAN",
                   seed=1):
     np.random.seed(seed)
-    columns = np.load(r"./ABIDE_columns.npy")
-    abide_mi = np.load(r"./ABIDE_age_MI_output.npy"
-                       )  # for Pearson, use ABIDE_age_Pearson_output.npy
     _usecols = np.hstack((outcome_name, "SEX", "DX_GROUP",
-                          columns[np.argsort(-abide_mi)][:num_covariates]))
-
+                          columns[np.argsort(-abide_dep)][:num_covariates]))
     df = original_df[_usecols].dropna(inplace=False).sample(
         frac=1, random_state=seed, replace=False).reset_index(drop=True,
                                                               inplace=False)
@@ -81,10 +80,11 @@ def testing_error_num_attr(num_attr,
 output = testing_error_num_attr(
     num_attr=list(
         map(int,
-            np.around(np.linspace(0, 149959 / 100, 50 + 1)[1:]).tolist())
+            np.around(np.linspace(0,
+                                  len(columns) / 20, 500 + 1)[1:]).tolist())
     ),  # so here it will screen the number of covariates roughly 30 apart
     training_proportion=.8,  # 80/20 training+validation/testing division
-    fun=LassoCV,  # here it says to use ElasticNetCV
+    fun=LassoCV,  # here it says to use LassoCV
     outcome_name="AGE_AT_SCAN",
     num_rep=200)
 np.save(r"./ABIDE_age_MI_LassoCV", output)
