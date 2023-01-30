@@ -1,4 +1,6 @@
 # fastHDMI -- fast High-Dimensional Mutual Information estimation
+## Kai Yang
+## <kai.yang2@mail.mcgill.ca>
 
 This packages uses mutual information and accelerated gradient method to screen for important variables from (potentially very) high-dimensional large datasets. As a feature, it can be applied on large `.csv` data in parallel in a memory-efficient manner and use FFT for KDE to estimate the mutual information extremely fast. The corresponding paper by Yang et al. is coming soon...
 
