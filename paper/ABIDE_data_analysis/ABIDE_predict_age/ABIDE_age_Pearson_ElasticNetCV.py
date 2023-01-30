@@ -10,6 +10,7 @@ from sklearn.linear_model import ElasticNetCV
 from sklearn.linear_model import RidgeCV
 from sklearn.metrics import r2_score
 import multiprocess as mp
+from tqdm import tqdm
 
 csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
 original_df = pd.read_csv(csv_file, encoding='unicode_escape', engine='c')
@@ -23,9 +24,19 @@ def testing_error(num_covariates=20,
                   fun=ElasticNetCV,
                   outcome_name="AGE_AT_SCAN",
                   seed=1):
-    np.random.seed(seed)
-    _usecols = np.hstack((outcome_name, "SEX", "DX_GROUP",
-                          columns[np.argsort(-abide_dep)][:num_covariates]))
+    np.random.sedef testing_error_num_attr(num_attr,
+                           training_proportion=.8,
+                           fun=ElasticNetCV,
+                           outcome_name="AGE_AT_SCAN",
+                           num_rep=10):
+    def _testing_error_rep(_num_attr):
+        return testing_error_rep(num_covariates=_num_attr,
+                                 training_proportion=training_proportion,
+                                 fun=fun,
+                                 outcome_name=outcome_name,
+                                 num_rep=num_rep)
+
+    return np.array(list(map(_testing_error_rep, num_attr)))          columns[np.argsort(-abide_dep)][:num_covariates]))
     df = original_df[_usecols].dropna(inplace=False).sample(
         frac=1, random_state=seed, replace=False).reset_index(drop=True,
                                                               inplace=False)
@@ -74,7 +85,7 @@ def testing_error_num_attr(num_attr,
                                  outcome_name=outcome_name,
                                  num_rep=num_rep)
 
-    return np.array(list(map(_testing_error_rep, num_attr)))
+    return np.array(list(map(_testing_error_rep, tqdm(num_attr))))
 
 
 output = testing_error_num_attr(

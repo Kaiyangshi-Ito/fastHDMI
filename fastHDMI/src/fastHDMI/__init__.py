@@ -10,6 +10,7 @@ import multiprocess as _mp
 from numba import jit as _jit
 from numba import njit as _njit
 from sklearn.preprocessing import RobustScaler as _scaler
+from tqdm import tqdm as _tqdm
 import warnings as _warnings
 
 _warnings.filterwarnings('ignore')
@@ -241,6 +242,14 @@ def MI_binary_continuous(a,
                              kernel=kernel,
                              bw=bw,
                              machine_err=machine_err)
+
+
+@_jit(nopython=True, nogil=True, cache=True, parallel=True, fastmath=True)
+def MI_to_Linfoot(mi):
+    """
+    Convert calcualted mutual information estimator to Linfoot's measure of association.
+    """
+    return (1. - _np.exp(-2. * mi))**.5
 # outcome_iid should be a  list of strings for identifiers
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def continuous_filter_plink(bed_file,
@@ -296,7 +305,7 @@ def continuous_filter_plink(bed_file,
                                  bw=bw,
                                  machine_err=machine_err)
 
-    MI_UKBB = _np.array(list(map(_map_foo, range(len(bed1_sid)))))
+    MI_UKBB = _np.array(list(map(_map_foo, _tqdm(range(len(bed1_sid))))))
     return MI_UKBB
 
 
@@ -340,7 +349,7 @@ def binary_filter_plink(bed_file,
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
         return MI_binary_012(a=_outcome, b=_SNP, machine_err=machine_err)
 
-    MI_UKBB = _np.array(list(map(_map_foo, range(len(bed1_sid)))))
+    MI_UKBB = _np.array(list(map(_map_foo, _tqdm(range(len(bed1_sid))))))
     return MI_UKBB
 
 
@@ -411,7 +420,7 @@ def continuous_filter_plink_parallel(bed_file,
                                      bw=bw,
                                      machine_err=machine_err)
 
-        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        _MI_slice = _np.array(list(map(_map_foo, _tqdm(_slice))))
         return _MI_slice
 
     # multiprocessing starts here
@@ -479,7 +488,7 @@ def binary_filter_plink_parallel(bed_file,
             _SNP = _SNP[_SNP != -127]  # remove missing SNP
             return MI_binary_012(a=_outcome, b=_SNP, machine_err=machine_err)
 
-        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        _MI_slice = _np.array(list(map(_map_foo, _tqdm(_slice))))
         return _MI_slice
 
     # multiprocessing starts here
@@ -598,7 +607,8 @@ def binary_filter_csv(csv_file,
                                     bw=bw,
                                     machine_err=machine_err)
 
-    MI_csv = _np.array(list(map(_map_foo, _np.arange(len(_usecols) - 1))))
+    MI_csv = _np.array(
+        list(map(_map_foo, _tqdm(_np.arange(len(_usecols) - 1)))))
 
     return MI_csv
 
@@ -658,7 +668,8 @@ def continuous_filter_csv(csv_file,
                                         norm=norm,
                                         machine_err=machine_err)
 
-    MI_csv = _np.array(list(map(_map_foo, _np.arange(len(_usecols) - 1))))
+    MI_csv = _np.array(
+        list(map(_map_foo, _tqdm(_np.arange(len(_usecols) - 1)))))
     return MI_csv
 
 
@@ -735,7 +746,7 @@ def binary_filter_csv_parallel(csv_file,
     )  # starting from 1 because the first left column should be the outcome
     with _mp.Pool(core_num) as pl:
         MI_csv = pl.map(_binary_filter_csv_slice,
-                        _np.array_split(ind, core_num * multp))
+                        _tqdm(_np.array_split(ind, core_num * multp)))
     MI_csv = _np.hstack(MI_csv)
     return MI_csv
 
@@ -819,7 +830,7 @@ def continuous_filter_csv_parallel(csv_file,
     )  # starting from 1 because the first left column should be the outcome
     with _mp.Pool(core_num) as pl:
         MI_csv = pl.map(_continuous_filter_csv_slice,
-                        _np.array_split(ind, core_num * multp))
+                        _tqdm(_np.array_split(ind, core_num * multp)))
     MI_csv = _np.hstack(MI_csv)
     return MI_csv
 
@@ -890,7 +901,7 @@ def Pearson_filter_csv_parallel(csv_file,
     )  # starting from 1 because the first left column should be the outcome
     with _mp.Pool(core_num) as pl:
         Pearson_csv = pl.map(_Pearson_filter_csv_slice,
-                             _np.array_split(ind, core_num * multp))
+                             _tqdm(_np.array_split(ind, core_num * multp)))
     Pearson_csv = _np.hstack(Pearson_csv)
     return Pearson_csv
 

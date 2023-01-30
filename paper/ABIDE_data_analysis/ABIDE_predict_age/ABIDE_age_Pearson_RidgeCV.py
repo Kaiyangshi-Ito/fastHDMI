@@ -10,6 +10,7 @@ from sklearn.linear_model import ElasticNetCV
 from sklearn.linear_model import RidgeCV
 from sklearn.metrics import r2_score
 import multiprocess as mp
+from tqdm import tqdm
 
 csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
 original_df = pd.read_csv(csv_file, encoding='unicode_escape', engine='c')
@@ -74,7 +75,7 @@ def testing_error_num_attr(num_attr,
                                  outcome_name=outcome_name,
                                  num_rep=num_rep)
 
-    return np.array(list(map(_testing_error_rep, num_attr)))
+    return np.array(list(map(_testing_error_rep, tqdm(num_attr))))
 
 
 output = testing_error_num_attr(
