@@ -18,7 +18,7 @@ _warnings.filterwarnings('ignore')
 ################# filtering using mutual information ########################
 #############################################################################
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def MI_continuous_SNP(a,
+def MI_continuous_012(a,
                       b,
                       N=500,
                       kernel="epa",
@@ -97,7 +97,7 @@ def _nan_to_0(x):
 
 
 @_jit(nopython=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def MI_binary_SNP(a, b, machine_err=1e-12):
+def MI_binary_012(a, b, machine_err=1e-12):
     """
     calculate mutual information between binary outcome and an SNP variable of 0,1,2
     assume no missing data
@@ -109,9 +109,9 @@ def MI_binary_SNP(a, b, machine_err=1e-12):
     b_marginal = _np.array([p0, p1, p2])
     # estimate pmf of the binary outcome
     a_p0 = _np.sum(a == 0) / len(a)
-    a_p1 = _np.sum(a == 1) / len(a)
+    a_p1 = 1. - a_p0
     a_marginal = _np.array([a_p0, a_p1]).reshape(-1, 1)
-    # estimate the cond density
+    # estimate the cond pmf
     joint = _np.zeros((2, 3))
     _b0 = (b == 0)
     joint[0, 0] = _np.sum(a[_b0] == 0) / len(a)
@@ -137,16 +137,62 @@ def MI_binary_SNP(a, b, machine_err=1e-12):
     return mi_temp
 
 
+@_jit(nopython=True, nogil=True, cache=True, parallel=True, fastmath=True)
+def MI_012_012(a, b, machine_err=1e-12):
+    """
+    calculate mutual information between two SNPs
+    assume no missing data
+    could be very useful for a MI-based clumping
+    """
+    # first estimate the pmf of SNP
+    p0 = _np.sum(b == 0) / len(b)
+    p1 = _np.sum(b == 1) / len(b)
+    p2 = 1. - p0 - p1
+    b_marginal = _np.array([p0, p1, p2])
+    # estimate pmf of the binary outcome
+    a_p0 = _np.sum(a == 0) / len(a)
+    a_p1 = _np.sum(a == 1) / len(a)
+    a_p2 = 1. - a_p0 - a_p1
+    a_marginal = _np.array([a_p0, a_p1, a_p2]).reshape(-1, 1)
+    # estimate the cond pmf
+    joint = _np.zeros((3, 3))
+    _b0 = (b == 0)
+    joint[0, 0] = _np.sum(a[_b0] == 0) / len(a)
+    joint[1, 0] = _np.sum(a[_b0] == 1) / len(a)
+    joint[2, 0] = _np.sum(a[_b0] == 2) / len(a)
+    _b1 = (b == 1)
+    joint[0, 1] = _np.sum(a[_b1] == 0) / len(a)
+    joint[1, 1] = _np.sum(a[_b1] == 1) / len(a)
+    joint[2, 1] = _np.sum(a[_b1] == 2) / len(a)
+    _b2 = (b == 2)
+    joint[0, 2] = _np.sum(a[_b2] == 0) / len(a)
+    joint[1, 2] = _np.sum(a[_b2] == 1) / len(a)
+    joint[2, 2] = _np.sum(a[_b2] == 2) / len(a)
+
+    _temp = a_marginal * b_marginal
+    _temp = joint / _temp
+    _temp = joint * _np.log(_temp)
+    _temp = _nan_to_0(_temp)  # for possible nuemrical issues
+
+    mi_temp = _np.sum(_temp)
+
+    # this is to ensure that estimated MI is positive, to solve an numerical issue
+    if mi_temp < machine_err:
+        mi_temp = machine_err
+
+    return mi_temp
+
+
 # make this function available
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def MI_bivariate_continuous(a,
-                            b,
-                            a_N=300,
-                            b_N=300,
-                            kernel="epa",
-                            bw="silverman",
-                            norm=2,
-                            machine_err=1e-12):
+def MI_continuous_continuous(a,
+                             b,
+                             a_N=300,
+                             b_N=300,
+                             kernel="epa",
+                             bw="silverman",
+                             norm=2,
+                             machine_err=1e-12):
     """
     (Single Core version) calculate mutual information on bivariate continuous r.v..
     """
@@ -189,7 +235,7 @@ def MI_binary_continuous(a,
                          kernel="epa",
                          bw="silverman",
                          machine_err=1e-12):
-    return MI_continuous_SNP(a=b,
+    return MI_continuous_012(a=b,
                              b=a,
                              N=N,
                              kernel=kernel,
@@ -231,7 +277,7 @@ def continuous_filter_plink(bed_file,
     #         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
     #         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
     #         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-    #         MI_UKBB[j] = MI_continuous_SNP(a=_outcome,
+    #         MI_UKBB[j] = MI_continuous_012(a=_outcome,
     #                                        b=_SNP,
     #                                        N=N,
     #                                        kernel=kernel,
@@ -243,7 +289,7 @@ def continuous_filter_plink(bed_file,
         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        return MI_continuous_SNP(a=_outcome,
+        return MI_continuous_012(a=_outcome,
                                  b=_SNP,
                                  N=N,
                                  kernel=kernel,
@@ -285,14 +331,14 @@ def binary_filter_plink(bed_file,
     #         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
     #         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
     #         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-    #         MI_UKBB[j] = MI_binary_SNP(a=_outcome, b=_SNP, machine_err=machine_err)
+    #         MI_UKBB[j] = MI_binary_012(a=_outcome, b=_SNP, machine_err=machine_err)
 
     def _map_foo(j):
         _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        return MI_binary_SNP(a=_outcome, b=_SNP, machine_err=machine_err)
+        return MI_binary_012(a=_outcome, b=_SNP, machine_err=machine_err)
 
     MI_UKBB = _np.array(list(map(_map_foo, range(len(bed1_sid)))))
     return MI_UKBB
@@ -346,7 +392,7 @@ def continuous_filter_plink_parallel(bed_file,
         #             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
         #             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
         #             _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        #             _MI_slice[k] = MI_continuous_SNP(a=_outcome,
+        #             _MI_slice[k] = MI_continuous_012(a=_outcome,
         #                                              b=_SNP,
         #                                              N=N,
         #                                              kernel=kernel,
@@ -358,7 +404,7 @@ def continuous_filter_plink_parallel(bed_file,
             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
             _SNP = _SNP[_SNP != -127]  # remove missing SNP
-            return MI_continuous_SNP(a=_outcome,
+            return MI_continuous_012(a=_outcome,
                                      b=_SNP,
                                      N=N,
                                      kernel=kernel,
@@ -422,7 +468,7 @@ def binary_filter_plink_parallel(bed_file,
         #             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
         #             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
         #             _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        #             _MI_slice[k] = MI_binary_SNP(a=_outcome,
+        #             _MI_slice[k] = MI_binary_012(a=_outcome,
         #                                          b=_SNP,
         #                                          machine_err=machine_err)
         #             k += 1
@@ -431,7 +477,7 @@ def binary_filter_plink_parallel(bed_file,
             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
             _SNP = _SNP[_SNP != -127]  # remove missing SNP
-            return MI_binary_SNP(a=_outcome, b=_SNP, machine_err=machine_err)
+            return MI_binary_012(a=_outcome, b=_SNP, machine_err=machine_err)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -590,7 +636,7 @@ def continuous_filter_csv(csv_file,
     #             _usecols[0], _usecols[j + 1]
     #         ]  # here using _usecol[j + 1] because the left first column is the outcome
     #         _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-    #         MI_csv[j] = MI_bivariate_continuous(a=_a,
+    #         MI_csv[j] = MI_continuous_continuous(a=_a,
     #                                             b=_b,
     #                                             a_N=a_N,
     #                                             b_N=b_N,
@@ -603,14 +649,14 @@ def continuous_filter_csv(csv_file,
             _usecols[0], _usecols[j + 1]
         ]  # here using _usecol[j + 1] because the left first column is the outcome
         _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-        return MI_bivariate_continuous(a=_a,
-                                       b=_b,
-                                       a_N=a_N,
-                                       b_N=b_N,
-                                       kernel=kernel,
-                                       bw=bw,
-                                       norm=norm,
-                                       machine_err=machine_err)
+        return MI_continuous_continuous(a=_a,
+                                        b=_b,
+                                        a_N=a_N,
+                                        b_N=b_N,
+                                        kernel=kernel,
+                                        bw=bw,
+                                        norm=norm,
+                                        machine_err=machine_err)
 
     MI_csv = _np.array(list(map(_map_foo, _np.arange(len(_usecols) - 1))))
     return MI_csv
@@ -741,7 +787,7 @@ def continuous_filter_csv_parallel(csv_file,
         #                 _usecols[0], _usecols[j]
         #             ]  # here using _usecol[j] because only input variables indices were splitted
         #             _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-        #             _MI_slice[k] = MI_bivariate_continuous(a=_a,
+        #             _MI_slice[k] = MI_continuous_continuous(a=_a,
         #                                                    b=_b,
         #                                                    a_N=a_N,
         #                                                    b_N=b_N,
@@ -755,14 +801,14 @@ def continuous_filter_csv_parallel(csv_file,
                 _usecols[0], _usecols[j]
             ]  # here using _usecol[j] because only input variables indices were splitted
             _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-            return MI_bivariate_continuous(a=_a,
-                                           b=_b,
-                                           a_N=a_N,
-                                           b_N=b_N,
-                                           kernel=kernel,
-                                           bw=bw,
-                                           norm=norm,
-                                           machine_err=machine_err)
+            return MI_continuous_continuous(a=_a,
+                                            b=_b,
+                                            a_N=a_N,
+                                            b_N=b_N,
+                                            kernel=kernel,
+                                            bw=bw,
+                                            norm=norm,
+                                            machine_err=machine_err)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice

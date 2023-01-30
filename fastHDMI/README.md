@@ -1,9 +1,9 @@
-# fastHDMI -- fast High-Dimensional Mutual Information
+# fastHDMI -- fast High-Dimensional Mutual Information estimation
 
-This packages uses mutual information and accelerated gradient method to screen for important variables from (potentially very) high-dimensional large datasets. As a feature, it can be applied on large `.csv` data in parallel in a memory-efficient manner and use FFT for KDE to estimate the mutual information extremely fast. It also features screening for SNPs and optimize the nonconvex sparse learning problem on large genetic data using plink files (`*.bed/*.bim/*.fam`). The corresponding paper by Yang et al. is coming soon...
+This packages uses mutual information and accelerated gradient method to screen for important variables from (potentially very) high-dimensional large datasets. As a feature, it can be applied on large `.csv` data in parallel in a memory-efficient manner and use FFT for KDE to estimate the mutual information extremely fast. The corresponding paper by Yang et al. is coming soon...
 
 The available functions are:
-- `continuous_filter_plink` caculates the mutual information between a continuous outcome and a bialletic SNP using FFT. Missing data is acceptable and will be removed. The arguments are:
+- `continuous_filter_plink` caculates the mutual information between a continuous outcome and a bialletic SNP using FFT. Missing data in the input variables is acceptable and will be removed per bivariate calculation. The arguments are:
   * `bed_file`, `bim_file`, `fam_file` are the location of the plink1 files;
   * `outcome`, `outcome_iid` are the outcome values and the iids for the outcome. For genetic data, it is usual that the order of SNP iid and the outcome iid don't match. While SNP iid can be obtained from the plink1 files, outcome iid here is to be declared separately. `outcome_iid` should be a list of strings or a one-dimensional numpy string array.
   * `N=500` is the default values for grid size for FFT.
@@ -12,12 +12,12 @@ The available functions are:
 
 - `continuous_filter_plink_parallel` and `binary_filter_plink_parallel` are the multiprocessing version of the above two functions, with `core_num` can be used to declare the number of cores to be used for multiprocessing.
 
-- `MI_bivariate_continuous` and `MI_binary_continuous` are to calculate mutual information between two continuous variables and binary and continuous variables, respectively. `MI_binary_SNP` is a `jit` complied function.
+- `MI_continuous_continuous` and `MI_binary_continuous` are to calculate mutual information between two continuous variables and binary and continuous variables, respectively. `MI_binary_012` and `MI_012_012` are `jit` complied functions -- the later can be used for clumping for very large genetic datasets.
 
 - `binary_filter_csv`, `continuous_filter_csv`, `binary_filter_csv_parallel`, and `continuous_filter_csv_parallel` are to work on large CSV files directly in a memory efficient manner. **Note that it is assumed the left first column should be the outcome;** if not, use `_usecols` to set the first element to be the outcome column label.
   * `_usecols` is a list of column labels to be used, **the first element should be the outcome. Returned mutual information calculation results match `_usecols`.**
   * `Pearson_filter_csv_parallel` calculate Pearson's correlation between only the outcome and the covariates in similiar manner -- since `pandas.DataFrame.corr` calculate pairwise Pearson's correlation for the entire dataframe.
-  * `csv_engine` can use `dask` for low memory situations, or `pandas`'s `read_csv` `engine`s and `fastparquet` engine for a created `parquet` file for faster speed. If `fastparquet` is chosen, declare `parquet_file` as the filepath to the parquet file; if `dask` is chosen to read very large CSV, it might be useful to specify a larger [`sample`](https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html).
+  * `csv_engine` can use `dask` for low memory situations, or `pandas`'s `read_csv` `engine`s, or `fastparquet` engine for a created `parquet` file for faster speed. If `fastparquet` is chosen, declare `parquet_file` as the filepath to the parquet file; if `dask` is chosen to read very large CSV, it might need to specify a larger [`sample`](https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html).
 
 
 - `UAG_LM_SCAD_MCP`, `UAG_logistic_SCAD_MCP`: these functions find a local minizer for the SCAD/MCP penalized linear models/logistic models. The arguments are:
