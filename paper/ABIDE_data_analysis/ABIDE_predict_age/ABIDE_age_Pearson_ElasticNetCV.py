@@ -24,19 +24,9 @@ def testing_error(num_covariates=20,
                   fun=ElasticNetCV,
                   outcome_name="AGE_AT_SCAN",
                   seed=1):
-    np.random.sedef testing_error_num_attr(num_attr,
-                           training_proportion=.8,
-                           fun=ElasticNetCV,
-                           outcome_name="AGE_AT_SCAN",
-                           num_rep=10):
-    def _testing_error_rep(_num_attr):
-        return testing_error_rep(num_covariates=_num_attr,
-                                 training_proportion=training_proportion,
-                                 fun=fun,
-                                 outcome_name=outcome_name,
-                                 num_rep=num_rep)
-
-    return np.array(list(map(_testing_error_rep, num_attr)))          columns[np.argsort(-abide_dep)][:num_covariates]))
+    np.random.seed(seed)
+    _usecols = np.hstack((outcome_name, "SEX", "DX_GROUP",
+                          columns[np.argsort(-abide_dep)][:num_covariates]))
     df = original_df[_usecols].dropna(inplace=False).sample(
         frac=1, random_state=seed, replace=False).reset_index(drop=True,
                                                               inplace=False)
