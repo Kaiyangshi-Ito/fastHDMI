@@ -16,7 +16,7 @@ csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_
 original_df = pd.read_csv(csv_file, encoding='unicode_escape', engine='c')
 columns = np.load(r"./ABIDE_columns.npy")
 abide_dep = np.load(r"./ABIDE_age_MI_output.npy"
-                   )  # for Pearson, use ABIDE_age_Pearson_output.npy
+                    )  # for Pearson, use ABIDE_age_Pearson_output.npy
 
 
 def testing_error(num_covariates=20,
@@ -82,10 +82,10 @@ output = testing_error_num_attr(
     num_attr=list(
         map(int,
             np.around(np.linspace(0,
-                                  len(columns) / 2, 3000 + 1)[1:]).tolist())
+                                  len(columns) / 20, 500 + 1)[1:]).tolist())
     ),  # so here it will screen the number of covariates roughly 30 apart
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=LassoCV,  # here it says to use LassoCV
     outcome_name="AGE_AT_SCAN",
-    num_rep=100)
+    num_rep=200)
 np.save(r"./ABIDE_age_MI_LassoCV", output)

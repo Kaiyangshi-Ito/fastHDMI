@@ -16,9 +16,11 @@ import warnings as _warnings
 _warnings.filterwarnings('ignore')
 
 #############################################################################
-################# filtering using mutual information ########################
+############# clumping and screening using mutual information ###############
 #############################################################################
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+
+
 def MI_continuous_012(a,
                       b,
                       N=500,
@@ -245,6 +247,14 @@ def MI_binary_continuous(a,
 
 
 @_jit(nopython=True, nogil=True, cache=True, parallel=True, fastmath=True)
+def Pearson_to_MI_Gaussian(corr):
+    """
+    Assuming the input variables are bivariate Gaussian, convert their Pearson correlatin to mutual information.
+    """
+    return -.5 * (_np.log(1 + corr) + _np.log(1 - corr))
+
+
+@_jit(nopython=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def MI_to_Linfoot(mi):
     """
     Convert calcualted mutual information estimator to Linfoot's measure of association.
@@ -252,15 +262,18 @@ def MI_to_Linfoot(mi):
     return (1. - _np.exp(-2. * mi))**.5
 # outcome_iid should be a  list of strings for identifiers
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def continuous_filter_plink(bed_file,
-                            bim_file,
-                            fam_file,
-                            outcome,
-                            outcome_iid,
-                            N=500,
-                            kernel="epa",
-                            bw="silverman",
-                            machine_err=1e-12):
+
+
+def continuous_screening_plink(bed_file,
+                               bim_file,
+                               fam_file,
+                               outcome,
+                               outcome_iid,
+                               N=500,
+                               kernel="epa",
+                               bw="silverman",
+                               machine_err=1e-12,
+                               verbose=1):
     """
     (Single Core version) take plink files to calculate the mutual information between the continuous outcome and many SNP variables.
     """
@@ -305,17 +318,21 @@ def continuous_filter_plink(bed_file,
                                  bw=bw,
                                  machine_err=machine_err)
 
-    MI_UKBB = _np.array(list(map(_map_foo, _tqdm(range(len(bed1_sid))))))
+    _iter = range(len(bed1_sid))
+    if verbose > 1:
+        _iter = _tqdm(iter)
+    MI_UKBB = _np.array(list(map(_map_foo, _iter)))
     return MI_UKBB
 
 
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def binary_filter_plink(bed_file,
-                        bim_file,
-                        fam_file,
-                        outcome,
-                        outcome_iid,
-                        machine_err=1e-12):
+def binary_screening_plink(bed_file,
+                           bim_file,
+                           fam_file,
+                           outcome,
+                           outcome_iid,
+                           machine_err=1e-12,
+                           verbose=1):
     """
     (Single Core version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
@@ -349,22 +366,26 @@ def binary_filter_plink(bed_file,
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
         return MI_binary_012(a=_outcome, b=_SNP, machine_err=machine_err)
 
-    MI_UKBB = _np.array(list(map(_map_foo, _tqdm(range(len(bed1_sid))))))
+    _iter = range(len(bed1_sid))
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    MI_UKBB = _np.array(list(map(_map_foo, _iter)))
     return MI_UKBB
 
 
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def continuous_filter_plink_parallel(bed_file,
-                                     bim_file,
-                                     fam_file,
-                                     outcome,
-                                     outcome_iid,
-                                     N=500,
-                                     kernel="epa",
-                                     bw="silverman",
-                                     machine_err=1e-12,
-                                     core_num="NOT DECLARED",
-                                     multp=1):
+def continuous_screening_plink_parallel(bed_file,
+                                        bim_file,
+                                        fam_file,
+                                        outcome,
+                                        outcome_iid,
+                                        N=500,
+                                        kernel="epa",
+                                        bw="silverman",
+                                        machine_err=1e-12,
+                                        core_num="NOT DECLARED",
+                                        multp=10,
+                                        verbose=1):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the continuous outcome and many SNP variables.
     """
@@ -393,7 +414,7 @@ def continuous_filter_plink_parallel(bed_file,
                                return_indices=True)[1]
 
     # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-    def _continuous_filter_plink_slice(_slice):
+    def _continuous_screening_plink_slice(_slice):
         #         _MI_slice = _np.zeros(len(_slice))
         #         k = 0
         #         for j in _slice:
@@ -420,27 +441,30 @@ def continuous_filter_plink_parallel(bed_file,
                                      bw=bw,
                                      machine_err=machine_err)
 
-        _MI_slice = _np.array(list(map(_map_foo, _tqdm(_slice))))
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
 
     # multiprocessing starts here
     ind = _np.arange(len(bed1_sid))
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
     with _mp.Pool(core_num) as pl:
-        MI_UKBB = pl.map(_continuous_filter_plink_slice,
-                         _np.array_split(ind, core_num * multp))
+        MI_UKBB = pl.map(_continuous_screening_plink_slice, _iter)
     MI_UKBB = _np.hstack(MI_UKBB)
     return MI_UKBB
 
 
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def binary_filter_plink_parallel(bed_file,
-                                 bim_file,
-                                 fam_file,
-                                 outcome,
-                                 outcome_iid,
-                                 core_num="NOT DECLARED",
-                                 multp=1,
-                                 machine_err=1e-12):
+def binary_screening_plink_parallel(bed_file,
+                                    bim_file,
+                                    fam_file,
+                                    outcome,
+                                    outcome_iid,
+                                    core_num="NOT DECLARED",
+                                    multp=10,
+                                    machine_err=1e-12,
+                                    verbose=1):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
@@ -469,7 +493,7 @@ def binary_filter_plink_parallel(bed_file,
                                return_indices=True)[1]
 
     # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-    def _binary_filter_plink_slice(_slice):
+    def _binary_screening_plink_slice(_slice):
         #         _MI_slice = _np.zeros(len(_slice))
         #         k = 0
         #         for j in _slice:
@@ -488,18 +512,92 @@ def binary_filter_plink_parallel(bed_file,
             _SNP = _SNP[_SNP != -127]  # remove missing SNP
             return MI_binary_012(a=_outcome, b=_SNP, machine_err=machine_err)
 
-        _MI_slice = _np.array(list(map(_map_foo, _tqdm(_slice))))
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
 
     # multiprocessing starts here
     ind = _np.arange(len(bed1_sid))
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose > 1:
+        _iter = _tqdm(_iter)
     with _mp.Pool(core_num) as pl:
-        MI_UKBB = pl.map(_binary_filter_plink_slice,
-                         _np.array_split(ind, core_num * multp))
+        MI_UKBB = pl.map(_binary_screening_plink_slice, _iter)
     MI_UKBB = _np.hstack(MI_UKBB)
     return MI_UKBB
+
+
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def _read_csv(csv_file, _usecols, csv_engine, parquet_file, sample, verbose=0):
+def clump_plink_parallel(bed_file,
+                         bim_file,
+                         fam_file,
+                         clumping_threshold=Pearson_to_MI_Gaussian(.6),
+                         num_SNPS_exam=_np.infty,
+                         core_num="NOT DECLARED",
+                         multp=10,
+                         machine_err=1e-12,
+                         verbose=1):
+    """
+    (Multiprocessing version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
+    """
+    # check basic things
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    # read some metadata
+    bed1 = _open_bed(filepath=bed_file,
+                     fam_filepath=fam_file,
+                     bim_filepath=bim_file)
+    bed1_sid = _np.array(list(bed1.sid))
+    if num_SNPS_exam == _np.infty:
+        num_SNPS_exam = len(bed1_sid) - 1
+    keep_cols = _np.arange(
+        len(bed1_sid))  # pruning by keeping all SNPS at the beginning
+    _iter = _np.arange(num_SNPS_exam)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    for current_var_ind in _iter:  # note that here _iter and keep_cols don't need to agree, by the break command comes later
+        if current_var_ind + 1 <= len(keep_cols):
+            outcome = bed1.read(_np.s_[:, current_var_ind],
+                                dtype=_np.int8).flatten()
+            gene_ind = _np.where(outcome != -127)
+            outcome = outcome[gene_ind]
+
+            # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+            def _012_012_plink_slice(_slice):
+                def _map_foo(j):
+                    _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
+                    _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
+                    _outcome = outcome[_SNP !=
+                                       -127]  # remove missing SNP in outcome
+                    _SNP = _SNP[_SNP != -127]  # remove missing SNP
+                    return MI_012_012(a=_outcome,
+                                      b=_SNP,
+                                      machine_err=machine_err)
+
+                _MI_slice = _np.array(list(map(_map_foo, _slice)))
+                return _MI_slice
+
+            # multiprocessing starts here
+            ind = keep_cols[current_var_ind + 1:]
+            __iter = _np.array_split(ind, core_num * multp)
+            with _mp.Pool(core_num) as pl:
+                MI_UKBB = pl.map(_012_012_plink_slice, __iter)
+            MI_UKBB = _np.hstack(MI_UKBB)
+            keep_cols = _np.hstack(
+                (keep_cols[:current_var_ind + 1],
+                 keep_cols[current_var_ind +
+                           1:][MI_UKBB <= clumping_threshold]))
+        else:
+            break
+    return current_var_ind, bed1_sid[keep_cols]
+# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+
+
+def _read_csv(csv_file, _usecols, csv_engine, parquet_file, sample, verbose=1):
     """
     Read a csv file using differnet engines. Use dask to read csv if low in memory.
     """
@@ -507,23 +605,23 @@ def _read_csv(csv_file, _usecols, csv_engine, parquet_file, sample, verbose=0):
         "dask", "pyarrow", "fastparquet", "c", "python"
     ], "Only dask and pandas csv engines or fastparquet are supported to read csv files."
     if _np.array(_usecols).size == 0:
-        if verbose > 0:
+        if verbose > 1:
             print(
                 "Variable names not provided -- start reading variable names from csv file now, might take some time, depending on the csv file size."
             )
         if csv_engine == "dask":
             _csv = _dd.read_csv(csv_file, sample=sample)
-            _usecols = list(_csv.columns)[1:]
+            _usecols = _np.array(list(_csv.columns)[1:])
         elif csv_engine in ["pyarrow", "c",
                             "python"]:  # these are pandas CSV engines
             _csv = _pd.read_csv(csv_file,
                                 encoding='unicode_escape',
                                 engine=csv_engine)
-            _usecols = _csv.columns.to_list()[1:]
+            _usecols = _np.array(_csv.columns.to_list()[1:])
         elif csv_engine == "fastparquet":
             _csv = _pd.read_parquet(parquet_file, engine="fastparquet")
-            _usecols = _csv.columns.to_list()[1:]
-        if verbose > 0:
+            _usecols = _np.array(_csv.columns.to_list()[1:])
+        if verbose > 1:
             print("Reading variable names from csv file finished.")
     else:
         _usecols = _np.array(_usecols)
@@ -557,22 +655,23 @@ def _read_two_columns(_csv, __, csv_engine):
 
 
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def binary_filter_csv(csv_file,
-                      _usecols=[],
-                      N=500,
-                      kernel="epa",
-                      bw="silverman",
-                      machine_err=1e-12,
-                      csv_engine="c",
-                      parquet_file="_",
-                      sample=256000,
-                      verbose=0):
+def binary_screening_csv(csv_file="_",
+                         _usecols=[],
+                         N=500,
+                         kernel="epa",
+                         bw="silverman",
+                         machine_err=1e-12,
+                         csv_engine="c",
+                         parquet_file="_",
+                         sample=256000,
+                         verbose=1):
     """
     Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     The outcome should be binary and the covariates be continuous. 
     If _usecols is given, the returned mutual information will match _usecols. 
     By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
     """
+    assert csv_file != "_" or parquet_file != "_", "CSV or parquet filepath should be declared"
     # outcome is the first variable by default; if other specifications are needed, put it the first item in _usecols
     # read csv
     _csv, _usecols = _read_csv(csv_file=csv_file,
@@ -607,31 +706,33 @@ def binary_filter_csv(csv_file,
                                     bw=bw,
                                     machine_err=machine_err)
 
-    MI_csv = _np.array(
-        list(map(_map_foo, _tqdm(_np.arange(len(_usecols) - 1)))))
-
+    _iter = _np.arange(len(_usecols) - 1)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    MI_csv = _np.array(list(map(_map_foo, _iter)))
     return MI_csv
 
 
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def continuous_filter_csv(csv_file,
-                          _usecols=[],
-                          a_N=300,
-                          b_N=300,
-                          kernel="epa",
-                          bw="silverman",
-                          norm=2,
-                          machine_err=1e-12,
-                          csv_engine="c",
-                          parquet_file="_",
-                          sample=256000,
-                          verbose=0):
+def continuous_screening_csv(csv_file="_",
+                             _usecols=[],
+                             a_N=300,
+                             b_N=300,
+                             kernel="epa",
+                             bw="silverman",
+                             norm=2,
+                             machine_err=1e-12,
+                             csv_engine="c",
+                             parquet_file="_",
+                             sample=256000,
+                             verbose=1):
     """
     Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     Both the outcome and the covariates should be continuous. 
     If _usecols is given, the returned mutual information will match _usecols. 
     By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
     """
+    assert csv_file != "_" or parquet_file != "_", "CSV or parquet filepath should be declared"
     # read csv
     _csv, _usecols = _read_csv(csv_file=csv_file,
                                _usecols=_usecols,
@@ -668,24 +769,26 @@ def continuous_filter_csv(csv_file,
                                         norm=norm,
                                         machine_err=machine_err)
 
-    MI_csv = _np.array(
-        list(map(_map_foo, _tqdm(_np.arange(len(_usecols) - 1)))))
+    _iter = _np.arange(len(_usecols) - 1)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    MI_csv = _np.array(list(map(_map_foo, _iter)))
     return MI_csv
 
 
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def binary_filter_csv_parallel(csv_file,
-                               _usecols=[],
-                               N=500,
-                               kernel="epa",
-                               bw="silverman",
-                               machine_err=1e-12,
-                               core_num="NOT DECLARED",
-                               multp=1,
-                               csv_engine="c",
-                               parquet_file="_",
-                               sample=256000,
-                               verbose=0):
+def binary_screening_csv_parallel(csv_file="_",
+                                  _usecols=[],
+                                  N=500,
+                                  kernel="epa",
+                                  bw="silverman",
+                                  machine_err=1e-12,
+                                  core_num="NOT DECLARED",
+                                  multp=10,
+                                  csv_engine="c",
+                                  parquet_file="_",
+                                  sample=256000,
+                                  verbose=1):
     """
     (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     The outcome should be binary and the covariates be continuous. 
@@ -693,6 +796,8 @@ def binary_filter_csv_parallel(csv_file,
     By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
     """
     # check some basic things
+    assert csv_file != "_" or parquet_file != "_", "CSV or parquet filepath should be declared"
+
     if core_num == "NOT DECLARED":
         core_num = _mp.cpu_count()
     else:
@@ -709,7 +814,7 @@ def binary_filter_csv_parallel(csv_file,
                                verbose=verbose)
 
     # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-    def _binary_filter_csv_slice(_slice):
+    def _binary_screening_csv_slice(_slice):
         #         _MI_slice = _np.zeros(
         #             len(_slice))  # returned MI should be of the same length as slice
         #         k = 0
@@ -744,28 +849,30 @@ def binary_filter_csv_parallel(csv_file,
     ind = _np.arange(
         1, len(_usecols)
     )  # starting from 1 because the first left column should be the outcome
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
     with _mp.Pool(core_num) as pl:
-        MI_csv = pl.map(_binary_filter_csv_slice,
-                        _tqdm(_np.array_split(ind, core_num * multp)))
+        MI_csv = pl.map(_binary_screening_csv_slice, _iter)
     MI_csv = _np.hstack(MI_csv)
     return MI_csv
 
 
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def continuous_filter_csv_parallel(csv_file,
-                                   _usecols=[],
-                                   a_N=300,
-                                   b_N=300,
-                                   kernel="epa",
-                                   bw="silverman",
-                                   norm=2,
-                                   machine_err=1e-12,
-                                   core_num="NOT DECLARED",
-                                   multp=1,
-                                   csv_engine="c",
-                                   parquet_file="_",
-                                   sample=256000,
-                                   verbose=0):
+def continuous_screening_csv_parallel(csv_file="_",
+                                      _usecols=[],
+                                      a_N=300,
+                                      b_N=300,
+                                      kernel="epa",
+                                      bw="silverman",
+                                      norm=2,
+                                      machine_err=1e-12,
+                                      core_num="NOT DECLARED",
+                                      multp=10,
+                                      csv_engine="c",
+                                      parquet_file="_",
+                                      sample=256000,
+                                      verbose=1):
     """
     (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     Both the outcome and the covariates should be continuous. 
@@ -773,6 +880,8 @@ def continuous_filter_csv_parallel(csv_file,
     By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
     """
     # check some basic things
+    assert csv_file != "_" or parquet_file != "_", "CSV or parquet filepath should be declared"
+
     if core_num == "NOT DECLARED":
         core_num = _mp.cpu_count()
     else:
@@ -789,7 +898,7 @@ def continuous_filter_csv_parallel(csv_file,
                                verbose=verbose)
 
     # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-    def _continuous_filter_csv_slice(_slice):
+    def _continuous_screening_csv_slice(_slice):
         #         _MI_slice = _np.zeros(
         #             len(_slice))  # returned MI should be of the same length as slice
         #         k = 0
@@ -828,22 +937,25 @@ def continuous_filter_csv_parallel(csv_file,
     ind = _np.arange(
         1, len(_usecols)
     )  # starting from 1 because the first left column should be the outcome
+
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
     with _mp.Pool(core_num) as pl:
-        MI_csv = pl.map(_continuous_filter_csv_slice,
-                        _tqdm(_np.array_split(ind, core_num * multp)))
+        MI_csv = pl.map(_continuous_screening_csv_slice, _iter)
     MI_csv = _np.hstack(MI_csv)
     return MI_csv
 
 
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def Pearson_filter_csv_parallel(csv_file,
-                                _usecols=[],
-                                core_num="NOT DECLARED",
-                                multp=1,
-                                csv_engine="c",
-                                parquet_file="_",
-                                sample=256000,
-                                verbose=0):
+def Pearson_screening_csv_parallel(csv_file="_",
+                                   _usecols=[],
+                                   core_num="NOT DECLARED",
+                                   multp=10,
+                                   csv_engine="c",
+                                   parquet_file="_",
+                                   sample=256000,
+                                   verbose=1):
     """
     (Multiprocessing version) Take a (potentionally large) csv file to calculate the Pearson's correlation between outcome and covariates.
     If _usecols is given, the returned Pearson correlation will match _usecols. 
@@ -851,6 +963,8 @@ def Pearson_filter_csv_parallel(csv_file,
     This function accounts for missing data better than the Pearson's correlation matrix function provided by numpy.
     """
     # check some basic things
+    assert csv_file != "_" or parquet_file != "_", "CSV or parquet filepath should be declared"
+
     if core_num == "NOT DECLARED":
         core_num = _mp.cpu_count()
     else:
@@ -867,7 +981,7 @@ def Pearson_filter_csv_parallel(csv_file,
                                verbose=verbose)
 
     # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-    def _Pearson_filter_csv_slice(_slice):
+    def _Pearson_screening_csv_slice(_slice):
         #         _pearson_slice = _np.zeros(
         #             len(_slice))  # returned MI should be of the same length as slice
         #         k = 0
@@ -899,12 +1013,67 @@ def Pearson_filter_csv_parallel(csv_file,
     ind = _np.arange(
         1, len(_usecols)
     )  # starting from 1 because the first left column should be the outcome
+
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
     with _mp.Pool(core_num) as pl:
-        Pearson_csv = pl.map(_Pearson_filter_csv_slice,
-                             _tqdm(_np.array_split(ind, core_num * multp)))
+        Pearson_csv = pl.map(_Pearson_screening_csv_slice, _iter)
     Pearson_csv = _np.hstack(Pearson_csv)
     return Pearson_csv
 
+
+def clump_continuous_csv_parallel(
+        csv_file="_",
+        _usecols=[],
+        a_N=300,
+        b_N=300,
+        kernel="epa",
+        bw="silverman",
+        norm=2,
+        clumping_threshold=Pearson_to_MI_Gaussian(.6),
+        num_vars_exam=_np.infty,
+        machine_err=1e-12,
+        core_num="NOT DECLARED",
+        multp=10,
+        csv_engine="c",
+        parquet_file="_",
+        sample=256000,
+        verbose=1):
+    """
+    Perform clumping based on mutual information thresholding
+    The clumping process starts from the left to right, preserve input variables under the clumping threshold
+    """
+    # initialization
+    _, keep_cols = _read_csv(csv_file=csv_file,
+                             _usecols=_usecols,
+                             csv_engine="dask",
+                             parquet_file=parquet_file,
+                             sample=sample,
+                             verbose=verbose)
+    if num_vars_exam == _np.infty:
+        num_vars_exam = len(keep_cols) - 1
+    _iter = _np.arange(num_vars_exam)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    for current_var_ind in _iter:  # note that here _iter and keep_cols don't need to agree, by the break command comes later
+        if current_var_ind + 1 <= len(keep_cols):
+            _MI = continuous_screening_csv_parallel(
+                csv_file=csv_file,
+                _usecols=keep_cols[current_var_ind:],
+                core_num=core_num,
+                multp=multp,
+                csv_engine=csv_engine,
+                parquet_file=parquet_file,
+                sample=sample,
+                verbose=0)
+            # current_var_ind + 1 since the current variable will be included anyway
+            keep_cols = _np.hstack(
+                (keep_cols[:current_var_ind + 1],
+                 keep_cols[current_var_ind + 1:][_MI <= clumping_threshold]))
+        else:
+            break
+    return current_var_ind, keep_cols
 
 
 ##################################################################
@@ -1049,6 +1218,8 @@ def MCP_concave_grad(x, lambda_, gamma):
 ######## some fudamentals things for the PCA versions ############
 ##################################################################
 ######################################  some SCAD and MCP things  #######################################
+
+
 @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
 def soft_thresholding_PCA(x, lambda_, pca_p):
     '''
@@ -1183,7 +1354,6 @@ def MCP_concave_grad_PCA(x, lambda_, gamma, pca_p):
         _np.abs(x) < gamma * lambda_, -x / gamma, -lambda_ * _np.sign(x))
     temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
     return temp
-
 
 
 ##################################################################
@@ -1336,8 +1506,9 @@ def UAG_LM_SCAD_MCP(design_matrix,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -1369,8 +1540,9 @@ def UAG_LM_SCAD_MCP(design_matrix,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -1557,8 +1729,9 @@ def _UAG_LM_SCAD_MCP_strongrule(design_matrix,
             else:  # restarting
                 opt_alpha = 2. / (
                     1. + (1. + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1. - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -1590,8 +1763,9 @@ def _UAG_LM_SCAD_MCP_strongrule(design_matrix,
             else:  # restarting
                 opt_alpha = 2 / (
                     1. + (1. + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1. - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -1714,7 +1888,6 @@ def solution_path_LM_strongrule(design_matrix,
             add_intercept_column=False)[1]
         beta_mat[j + 1, :] = _new_beta
     return beta_mat[1:, :]
-
 
 
 ##################################################################
@@ -1850,7 +2023,7 @@ def SNP_UAG_LM_SCAD_MCP(bed_file,
             _X = _X[gene_ind]  # get gene iid also in outcome iid
             _X -= _np.mean(_X)
             _[j] = _X @ _y / N
-        beta = _  #_np.sign(_)
+        beta = _  # _np.sign(_)
         beta = _np.hstack((_np.array([0]), beta))
     else:
         beta = beta_0
@@ -1877,8 +2050,9 @@ def SNP_UAG_LM_SCAD_MCP(bed_file,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -1913,8 +2087,9 @@ def SNP_UAG_LM_SCAD_MCP(bed_file,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -1985,7 +2160,7 @@ def SNP_solution_path_LM(bed_file,
         _X = _X[gene_ind]  # get gene iid also in outcome iid
         _X -= _np.mean(_X)
         _[j] = _X @ _y / N
-    beta = _  #_np.sign(_)
+    beta = _  # _np.sign(_)
     beta = _np.hstack((_np.array([0]), beta)).reshape(1, -1)
 
     beta_mat = _np.zeros((len(lambda_) + 1, p + 1))
@@ -2006,7 +2181,6 @@ def SNP_solution_path_LM(bed_file,
                                                  a=a,
                                                  gamma=gamma)[1]
     return beta_mat[1:, :]
-
 
 
 ##################################################################
@@ -2151,7 +2325,7 @@ def SNP_UAG_LM_SCAD_MCP_PCA(bed_file,
             _X = _X[gene_ind]  # get gene iid also in outcome iid
             _X -= _np.mean(_X)
             _[j] = _X @ _y / N / _np.var(_X)
-        beta = _  #_np.sign(_)
+        beta = _  # _np.sign(_)
         _pca = _y @ pca[gene_ind, :] / N
         beta = _np.hstack((_np.array([_np.mean(_y)]), _pca, beta))
     else:
@@ -2179,8 +2353,9 @@ def SNP_UAG_LM_SCAD_MCP_PCA(bed_file,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -2219,8 +2394,9 @@ def SNP_UAG_LM_SCAD_MCP_PCA(bed_file,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -2297,7 +2473,7 @@ def SNP_solution_path_LM_PCA(bed_file,
         _X = _X[gene_ind]  # get gene iid also in outcome iid
         _X -= _np.mean(_X)
         _[j] = _X @ _y / N / _np.var(_X)
-    beta = _  #_np.sign(_)
+    beta = _  # _np.sign(_)
     _pca = _y @ pca[gene_ind, :] / N
     beta = _np.hstack((_np.array([_np.mean(_y)]), _pca, beta)).reshape(1, -1)
     beta_mat = _np.repeat(beta, len(lambda_) + 1, axis=0)
@@ -2323,6 +2499,8 @@ def SNP_solution_path_LM_PCA(bed_file,
 ########### LM AG SNP version using bed-reader, multiprocess ######################
 ###################################################################################
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+
+
 def _SNP_update_smooth_grad_convex_LM_parallel(N, SNP_ind, bed, beta_md, y,
                                                outcome_iid, core_num, multp):
     '''
@@ -2533,7 +2711,7 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file,
             _XTy = pl.map(__parallel_assign, _splited_array)
         _XTy = _np.hstack(_XTy)
         beta = _np.zeros(p + 1)
-        beta[SNP_ind + 1] = _  #_np.sign(_XTy)
+        beta[SNP_ind + 1] = _  # _np.sign(_XTy)
     else:
         beta = beta_0
     # passing other parameters
@@ -2559,8 +2737,9 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -2597,8 +2776,9 @@ def SNP_UAG_LM_SCAD_MCP_parallel(bed_file,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -2703,7 +2883,7 @@ def SNP_solution_path_LM_parallel(bed_file,
         _XTy = pl.map(__parallel_assign, _splited_array)
     _XTy = _np.hstack(_XTy)
     beta = _np.zeros(p + 1)
-    beta[SNP_ind + 1] = _XTy  #_np.sign(_XTy)
+    beta[SNP_ind + 1] = _XTy  # _np.sign(_XTy)
     beta = beta.reshape(1, -1)
 
     beta_mat = _np.zeros((len(lambda_) + 1, p + 1))
@@ -2727,7 +2907,6 @@ def SNP_solution_path_LM_parallel(bed_file,
             core_num=core_num,
             multp=multp)[1]
     return beta_mat[1:, :]
-
 
 
 ##################################################################
@@ -2868,8 +3047,9 @@ def UAG_logistic_SCAD_MCP(design_matrix,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -2901,8 +3081,9 @@ def UAG_logistic_SCAD_MCP(design_matrix,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -3090,8 +3271,9 @@ def _UAG_logistic_SCAD_MCP_strongrule(design_matrix,
             else:  # restarting
                 opt_alpha = 2. / (
                     1. + (1. + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1. - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -3123,8 +3305,9 @@ def _UAG_logistic_SCAD_MCP_strongrule(design_matrix,
             else:  # restarting
                 opt_alpha = 2 / (
                     1. + (1. + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1. - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -3247,7 +3430,6 @@ def solution_path_logistic_strongrule(design_matrix,
             add_intercept_column=False)[1]
         beta_mat[j + 1, :] = _new_beta
     return beta_mat[1:, :]
-
 
 
 ############################################################################
@@ -3412,8 +3594,9 @@ def SNP_UAG_logistic_SCAD_MCP(bed_file,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -3448,8 +3631,9 @@ def SNP_UAG_logistic_SCAD_MCP(bed_file,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -3521,7 +3705,7 @@ def SNP_solution_path_logistic(bed_file,
         _X = _X[gene_ind]  # get gene iid also in outcome iid
         _X -= _np.mean(_X)
         _[j] = _X @ _y / N
-    beta = _  #_np.sign(_)
+    beta = _  # _np.sign(_)
     beta = _np.hstack((_np.array([0]), beta)).reshape(1, -1)
 
     beta_mat = _np.zeros((len(lambda_) + 1, p + 1))
@@ -3542,7 +3726,6 @@ def SNP_solution_path_logistic(bed_file,
                                                        a=a,
                                                        gamma=gamma)[1]
     return beta_mat[1:, :]
-
 
 
 ############################################################################
@@ -3690,7 +3873,7 @@ def SNP_UAG_logistic_SCAD_MCP_PCA(bed_file,
             _X = _X[gene_ind]  # get gene iid also in outcome iid
             _X -= _np.mean(_X)
             _[j] = _X @ _y / N / _np.var(_X)
-        beta = _  #_np.sign(_)
+        beta = _  # _np.sign(_)
         _pca = _y @ pca[gene_ind, :] / N / _np.var(pca[gene_ind, :], 0)
         beta = _np.hstack((_np.array([0.]), _pca, beta))
 #         beta = _np.sign(beta)
@@ -3719,8 +3902,9 @@ def SNP_UAG_logistic_SCAD_MCP_PCA(bed_file,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -3759,8 +3943,9 @@ def SNP_UAG_logistic_SCAD_MCP_PCA(bed_file,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -3838,7 +4023,7 @@ def SNP_solution_path_logistic_PCA(bed_file,
         _X = _X[gene_ind]  # get gene iid also in outcome iid
         _X -= _np.mean(_X)
         _[j] = _X @ _y / N / _np.var(_X)
-    beta = _  #_np.sign(_)
+    beta = _  # _np.sign(_)
     _pca = _y @ pca[gene_ind, :] / N / _np.var(pca[gene_ind, :], 0)
     beta = _np.hstack((_np.array([0.]), _pca, beta)).reshape(1, -1)
     #     beta = _np.sign(beta)
@@ -3866,6 +4051,8 @@ def SNP_solution_path_logistic_PCA(bed_file,
 ################ logsitic AG SNP bed-reader version with multiprocess ########################
 ##############################################################################################
 # @_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+
+
 def _SNP_update_smooth_grad_convex_logistic_parallel(N, SNP_ind, bed, beta_md,
                                                      y, outcome_iid, core_num,
                                                      multp):
@@ -4103,8 +4290,9 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -4141,8 +4329,9 @@ def SNP_UAG_logistic_SCAD_MCP_parallel(bed_file,
             else:  # restarting
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
-                )  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
-            opt_lambda = opt_beta / opt_alpha  #parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+                )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
+            opt_lambda = opt_beta / opt_alpha
             beta_md_old = beta_md.copy()  # restarting
             beta_md = (1 - opt_alpha) * beta_ag + opt_alpha * beta
             old_speed_norm = speed_norm  # restarting
@@ -4248,7 +4437,7 @@ def SNP_solution_path_logistic_parallel(bed_file,
         _XTy = pl.map(__parallel_assign, _splited_array)
     _XTy = _np.hstack(_XTy)
     beta = _np.zeros(p + 1)
-    beta[SNP_ind + 1] = _XTy  #_np.sign(_XTy)
+    beta[SNP_ind + 1] = _XTy  # _np.sign(_XTy)
     beta = beta.reshape(1, -1)
 
     beta_mat = _np.zeros((len(lambda_) + 1, p + 1))

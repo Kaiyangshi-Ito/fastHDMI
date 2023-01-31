@@ -68,9 +68,9 @@ import fastHDMI as mi
 
 
 # # ## Comparing two ranking with Kendall's $\tau$
-# # 
+# #
 # # The results show that the two ranking by mutual information and Pearson's correlation vary greatly by Kendall's tau -- I also tried the Pearson's correlation between two ranking (not that I should do this) and the correlation is also very small.
-# # 
+# #
 # # **So in summary, the two ranking vary greatly.**
 
 # # In[ ]:
@@ -145,9 +145,9 @@ plt.show()
 
 
 # ## Comparing two ranking with Kendall's $\tau$
-# 
+#
 # The results show that the two ranking by mutual information and Pearson's correlation vary greatly by Kendall's tau -- I also tried the Pearson's correlation between two ranking (not that I should do this) and the correlation is also very small.
-# 
+#
 # **So in summary, the two ranking vary greatly.**
 
 # In[ ]:
@@ -169,7 +169,3 @@ print("Pearson's correlation: \n",
 
 
 # In[ ]:
-
-
-
-
