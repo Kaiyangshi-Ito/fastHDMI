@@ -70,9 +70,9 @@ MI_binary = binary_screening_csv_parallel(r"./sim/sim_binary.csv")
 assert np.all(MI_binary > 0), MI_binary
 
 # test for clumping for plink and csv files
-bed_file = r"./fastHDMI/tests/sim/sim1.bed"
-bim_file = r"./fastHDMI/tests/sim/sim1.bim"
-fam_file = r"./fastHDMI/tests/sim/sim1.fam"
+bed_file = r"./sim/sim1.bed"
+bim_file = r"./sim/sim1.bim"
+fam_file = r"./sim/sim1.fam"
 
 clump_plink_parallel(bed_file=bed_file,
                      bim_file=bim_file,
@@ -80,7 +80,7 @@ clump_plink_parallel(bed_file=bed_file,
                      num_SNPS_exam=5)
 
 clump_continuous_csv_parallel(
-    csv_file=r"./fastHDMI/tests/sim/sim_continuous.csv", num_vars_exam=5)
+    csv_file=r"./sim/sim_continuous.csv", num_vars_exam=5)
 
 # test for LM numpy
 np.random.seed(1)
@@ -111,10 +111,10 @@ LM_beta = solution_path_LM_strongrule(design_matrix=X_sim, outcome=y_sim, lambda
 assert LM_beta.dtype == "float"
 
 # single-thread continuous screening for csv
-a = continuous_screening_csv(r"./fastHDMI/tests/sim/sim_continuous.csv")
+a = continuous_screening_csv(r"./sim/sim_continuous.csv")
 
 # single-thread binary screening for csv
-a = binary_screening_csv(r"./fastHDMI/tests/sim/sim_binary.csv")
+a = binary_screening_csv(r"./sim/sim_binary.csv")
 
 
 # test for LM cupy
