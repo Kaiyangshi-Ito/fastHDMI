@@ -82,10 +82,10 @@ output = testing_error_num_attr(
     num_attr=list(
         map(int,
             np.around(np.linspace(0,
-                                  len(columns) / 20, 500 + 1)[1:]).tolist())
+                                  len(columns) / 5, 1500 + 1)[1:]).tolist())
     ),  # so here it will screen the number of covariates roughly 30 apart
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=ElasticNetCV,  # here it says to use ElasticNetCV
     outcome_name="AGE_AT_SCAN",
-    num_rep=200)
+    num_rep=100)
 np.save(r"./ABIDE_age_Pearson_ElasticNetCV", output)
