@@ -1,0 +1,41 @@
+
+Lmod is automatically replacing "intel/2020.1.217" with "gcc/9.3.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) libfabric/1.10.1     2) openmpi/4.0.3     3) ucx/1.8.0
+
+created virtual environment CPython3.8.10.final.0-64 in 3053ms
+  creator CPython3Posix(dest=/home/kyang/jupyter_py3, clear=False, global=False)
+  seeder FromAppData(download=False, pip=latest, setuptools=latest, wheel=latest, via=copy, app_data_dir=/home/kyang/.local/share/virtualenv/seed-app-data/v1.0.1)
+  activators BashActivator,CShellActivator,FishActivator,PowerShellActivator,PythonActivator,XonshActivator
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+Architecture:        x86_64
+CPU op-mode(s):      32-bit, 64-bit
+Byte Order:          Little Endian
+Address sizes:       46 bits physical, 48 bits virtual
+CPU(s):              32
+On-line CPU(s) list: 0-31
+Thread(s) per core:  1
+Core(s) per socket:  16
+Socket(s):           2
+NUMA node(s):        2
+Vendor ID:           GenuineIntel
+CPU family:          6
+Model:               79
+Model name:          Intel(R) Xeon(R) CPU E5-2683 v4 @ 2.10GHz
+Stepping:            1
+CPU MHz:             1286.865
+CPU max MHz:         3000.0000
+CPU min MHz:         1200.0000
+BogoMIPS:            4190.44
+Virtualization:      VT-x
+L1d cache:           32K
+L1i cache:           32K
+L2 cache:            256K
+L3 cache:            40960K
+NUMA node0 CPU(s):   0-15
+NUMA node1 CPU(s):   16-31
+Flags:               fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch epb cat_l3 cdp_l3 invpcid_single intel_ppin ssbd rsb_ctxsw ibrs ibpb stibp tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm cqm rdt_a rdseed adx smap intel_pt xsaveopt cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local dtherm ida arat pln pts md_clear spec_ctrl intel_stibp flush_l1d
+  0%|          | 0/500 [00:00<?, ?it/s]  0%|          | 1/500 [00:23<3:17:02, 23.69s/it]  0%|          | 2/500 [01:02<4:31:49, 32.75s/it]  1%|          | 3/500 [02:00<6:04:08, 43.96s/it]  1%|          | 4/500 [03:09<7:26:53, 54.06s/it]  1%|          | 5/500 [05:21<11:16:40, 82.02s/it]  1%|          | 6/500 [08:27<16:05:46, 117.30s/it]  1%|▏         | 7/500 [12:04<20:33:44, 150.15s/it]  2%|▏         | 8/500 [17:15<27:30:06, 201.23s/it]  2%|▏         | 9/500 [23:03<33:41:18, 247.00s/it]  2%|▏         | 10/500 [29:43<40:04:11, 294.39s/it]  2%|▏         | 11/500 [38:14<48:59:10, 360.63s/it]  2%|▏         | 12/500 [49:38<62:14:32, 459.16s/it]  3%|▎         | 13/500 [1:03:38<77:42:23, 574.42s/it]  3%|▎         | 14/500 [1:18:57<91:34:39, 678.35s/it]  3%|▎         | 15/500 [1:37:55<110:05:21, 817.16s/it]  3%|▎         | 16/500 [1:57:29<124:17:00, 924.42s/it]  3%|▎         | 17/500 [2:19:55<141:01:42, 1051.14s/it]  4%|▎         | 18/500 [2:42:23<152:40:35, 1140.32s/it]  4%|▍         | 19/500 [3:10:04<173:16:47, 1296.90s/it]  4%|▍         | 20/500 [3:39:22<191:22:18, 1435.29s/it]  4%|▍         | 21/500 [4:12:30<213:02:50, 1601.19s/it]  4%|▍         | 22/500 [4:44:42<225:47:29, 1700.52s/it]  5%|▍         | 23/500 [5:22:31<247:55:42, 1871.16s/it]  5%|▍         | 24/500 [6:00:48<264:17:03, 1998.79s/it]  5%|▌         | 25/500 [6:44:28<288:19:56, 2185.26s/it]  5%|▌         | 26/500 [7:26:57<302:04:35, 2294.25s/it]  5%|▌         | 27/500 [8:14:25<323:16:27, 2460.44s/it]  6%|▌         | 28/500 [9:05:11<345:37:23, 2636.11s/it]  6%|▌         | 29/500 [9:59:08<368:28:58, 2816.43s/it]  6%|▌         | 30/500 [10:53:44<385:42:41, 2954.39s/it]  6%|▌         | 31/500 [11:52:42<407:41:44, 3129.43s/it]  6%|▋         | 32/500 [12:51:35<422:32:24, 3250.31s/it]  7%|▋         | 33/500 [13:56:49<447:28:23, 3449.47s/it]  7%|▋         | 34/500 [14:58:07<455:24:14, 3518.14s/it]  7%|▋         | 35/500 [16:08:27<481:36:27, 3728.58s/it]  7%|▋         | 36/500 [17:18:16<498:23:48, 3866.87s/it]  7%|▋         | 37/500 [18:32:32<520:03:36, 4043.66s/it]  8%|▊         | 38/500 [19:46:00<532:55:42, 4152.69s/it]  8%|▊         | 39/500 [21:07:14<559:29:16, 4369.10s/it]  8%|▊         | 40/500 [22:30:24<582:05:25, 4555.49s/it]  8%|▊         | 41/500 [23:59:50<611:50:39, 4798.78s/it]  8%|▊         | 42/500 [25:32:20<639:09:55, 5024.01s/it]  9%|▊         | 43/500 [27:08:42<666:37:24, 5251.30s/it]  9%|▉         | 44/500 [28:45:03<685:17:53, 5410.25s/it]  9%|▉         | 45/500 [33:04:44<1069:27:10, 8461.61s/it]  9%|▉         | 46/500 [37:06:56<1296:45:31, 10282.67s/it]  9%|▉         | 47/500 [41:49:02<1544:40:46, 12275.60s/it] 10%|▉         | 48/500 [46:33:15<1721:14:36, 13709.02s/it] 10%|▉         | 49/500 [50:33:53<1744:48:01, 13927.45s/it] 10%|█         | 50/500 [55:07:34<1834:27:05, 14675.61s/it]
