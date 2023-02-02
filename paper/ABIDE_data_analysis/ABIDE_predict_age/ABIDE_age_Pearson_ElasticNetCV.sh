@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-masd
-#SBATCH --cpus-per-task=20
+#SBATCH --cpus-per-task=10
 #SBATCH --mem=50G
 #SBATCH --time=2-00:00:00
 #SBATCH --job-name=ABIDE_age
