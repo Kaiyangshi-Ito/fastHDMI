@@ -13,4 +13,4 @@ source $HOME/jupyter_py3/bin/activate
 nvidia-smi
 lscpu
 
-python3 ABIDE_age_MI_LassoCV.py
+python3 ABIDE_age_Pearson_LarsCV.py

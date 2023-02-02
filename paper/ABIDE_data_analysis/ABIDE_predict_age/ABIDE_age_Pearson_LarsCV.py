@@ -16,7 +16,7 @@ from tqdm import tqdm
 csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
 original_df = pd.read_csv(csv_file, encoding='unicode_escape', engine='c')
 columns = np.load(r"./ABIDE_columns.npy")
-abide_dep = np.load(r"./ABIDE_age_MI_output.npy"
+abide_dep = np.load(r"./ABIDE_age_Pearson_output.npy"
                     )  # for Pearson, use ABIDE_age_Pearson_output.npy
 
 
@@ -89,7 +89,7 @@ output = testing_error_num_attr(
                                   len(columns), 50 + 1)[1:]).tolist())
     ),  # so here it will screen the number of covariates roughly 30 apart
     training_proportion=.8,  # 80/20 training+validation/testing division
-    fun=ElasticNetCV,  # here it says to use ElasticNetCV
+    fun=LarsCV,  # here it says to use RidgeCV
     outcome_name="AGE_AT_SCAN",
     num_rep=30)
-np.save(r"./ABIDE_age_MI_ElasticNetCV", output)
+np.save(r"./ABIDE_age_Pearson_LarsCV", output)

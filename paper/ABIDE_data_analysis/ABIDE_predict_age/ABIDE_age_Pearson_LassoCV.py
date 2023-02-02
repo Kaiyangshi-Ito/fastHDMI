@@ -8,6 +8,7 @@ import fastHDMI as mi
 from sklearn.linear_model import LassoCV
 from sklearn.linear_model import ElasticNetCV
 from sklearn.linear_model import RidgeCV
+from sklearn.linear_model import LarsCV
 from sklearn.metrics import r2_score
 import multiprocess as mp
 from tqdm import tqdm
@@ -38,8 +39,11 @@ def testing_error(num_covariates=20,
                                                                0]
         if fun in [ElasticNetCV, LassoCV]:
             fit = fun(cv=5, random_state=seed, n_jobs=-1).fit(X_train, y_train)
-        elif fun in [RidgeCV]:  # RidgeCV doesn't have seed setting
+        elif fun in [RidgeCV]:  # RidgeCV doesn't have seed setting and n_jobs
             fit = fun(cv=5).fit(X_train, y_train)
+        elif fun in [LarsCV
+                     ]:  # LarsCV doesn't have seed setting but have n_jobs
+            fit = fun(cv=5, n_jobs=-1).fit(X_train, y_train)
         y_pred = fit.predict(X_test)
         out = r2_score(y_test, y_pred)
     else:
