@@ -38,12 +38,12 @@ def testing_error(num_covariates=20,
         X_test, y_test = df.iloc[train_test_div:, 1:], df.iloc[train_test_div:,
                                                                0]
         if fun in [ElasticNetCV, LassoCV]:
-            fit = fun(cv=5, random_state=seed).fit(X_train, y_train)
+            fit = fun(cv=5, random_state=seed, n_jobs=-1).fit(X_train, y_train)
         elif fun in [RidgeCV]:  # RidgeCV doesn't have seed setting and n_jobs
             fit = fun(cv=5).fit(X_train, y_train)
         elif fun in [LarsCV
                      ]:  # LarsCV doesn't have seed setting but have n_jobs
-            fit = fun(cv=5).fit(X_train, y_train)
+            fit = fun(cv=5, n_jobs=-1).fit(X_train, y_train)
         y_pred = fit.predict(X_test)
         out = r2_score(y_test, y_pred)
     else:
@@ -56,8 +56,6 @@ def testing_error_rep(num_covariates=20,
                       fun=ElasticNetCV,
                       outcome_name="AGE_AT_SCAN",
                       num_rep=10):
-    core_num = mp.cpu_count()
-
     def _testing_error(seed):
         return testing_error(num_covariates=num_covariates,
                              training_proportion=training_proportion,
@@ -65,15 +63,8 @@ def testing_error_rep(num_covariates=20,
                              outcome_name=outcome_name,
                              seed=seed)
 
-    def _testing_error_slice(_slice):
-        return np.array(list(map(_testing_error, _slice)))
-
     seeds = np.arange(num_rep)
-    _iter = np.array_split(seeds, core_num)
-    with mp.Pool(core_num) as pl:
-        mp_output = pl.map(_testing_error_slice, _iter)
-    mp_output = np.hstack(mp_output)
-    return mp_output
+    return np.array(list(map(_testing_error, seeds)))
 
 
 def testing_error_num_attr(num_attr,
