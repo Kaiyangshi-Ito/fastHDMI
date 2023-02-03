@@ -101,5 +101,5 @@ output = testing_error_num_attr(
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=ElasticNetCV,  # here it says to use ElasticNetCV
     outcome_name="AGE_AT_SCAN",
-    num_rep=30)
+    num_rep=100)
 np.save(r"./ABIDE_age_Pearson_ElasticNetCV", output)
