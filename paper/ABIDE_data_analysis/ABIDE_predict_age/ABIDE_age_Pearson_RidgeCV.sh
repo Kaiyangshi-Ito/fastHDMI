@@ -2,7 +2,7 @@
 #SBATCH --account=def-masd
 #SBATCH --cpus-per-task=10
 #SBATCH --mem=50G
-#SBATCH --time=2-00:00:00
+#SBATCH --time=6-00:00:00
 #SBATCH --job-name=ABIDE_age
 
 module load gcc llvm rust arrow cuda nodejs python/3.8.10
