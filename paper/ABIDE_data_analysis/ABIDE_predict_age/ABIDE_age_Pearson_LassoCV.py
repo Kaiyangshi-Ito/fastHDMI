@@ -101,5 +101,5 @@ output = testing_error_num_attr(
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=LassoCV,  # here it says to use LassoCV
     outcome_name="AGE_AT_SCAN",
-    num_rep=100)
+    num_rep=30)
 np.save(r"./ABIDE_age_Pearson_LassoCV", output)
