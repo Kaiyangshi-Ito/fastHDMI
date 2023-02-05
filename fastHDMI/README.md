@@ -21,6 +21,8 @@ The available functions are:
   * `Pearson_screening_csv_parallel` calculate Pearson's correlation between only the outcome and the covariates in similiar manner -- since `pandas.DataFrame.corr` calculate pairwise Pearson's correlation for the entire dataframe.
   * `csv_engine` can use `dask` for low memory situations, or `pandas`'s `read_csv` `engine`s, or `fastparquet` engine for a created `parquet` file for faster speed. If `fastparquet` is chosen, declare `parquet_file` as the filepath to the parquet file; if `dask` is chosen to read very large CSV, it might need to specify a larger [`sample`](https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html).
 
+- `continuous_skMIscreening_csv_parallel` uses the MI calculation from [`sklearn.feature_selection.mutual_info_regression`](https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.mutual_info_regression.html) to carry out the screening process instead.
+
 - `clump_plink_parallel` and `clump_continuous_csv_parallel` carry out mutual information based clumping in parallel at a very fast speed.
 
 - `UAG_LM_SCAD_MCP`, `UAG_logistic_SCAD_MCP`: these functions find a local minizer for the SCAD/MCP penalized linear models/logistic models. The arguments are:

@@ -9,6 +9,7 @@ from sklearn.linear_model import LassoCV
 from sklearn.linear_model import ElasticNetCV
 from sklearn.linear_model import RidgeCV
 from sklearn.linear_model import LarsCV
+from sklearn.linear_model import LassoLarsCV
 from sklearn.metrics import r2_score
 import multiprocess as mp
 from tqdm import tqdm
@@ -16,8 +17,9 @@ from tqdm import tqdm
 csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
 original_df = pd.read_csv(csv_file, encoding='unicode_escape', engine='c')
 columns = np.load(r"./ABIDE_columns.npy")
-abide_dep = np.load(r"./ABIDE_age_MI_output.npy"
-                    )  # for Pearson, use ABIDE_age_Pearson_output.npy
+abide_dep = np.load(
+    r"./ABIDE_age_MI_output.npy"
+)  # for Pearson, use ABIDE_age_Pearson_output.npy; for skMI, use ABIDE_age_skMI_output.npy
 
 
 def testing_error(num_covariates=20,
@@ -41,7 +43,7 @@ def testing_error(num_covariates=20,
             fit = fun(cv=5, random_state=seed, n_jobs=-1).fit(X_train, y_train)
         elif fun in [RidgeCV]:  # RidgeCV doesn't have seed setting and n_jobs
             fit = fun(cv=5).fit(X_train, y_train)
-        elif fun in [LarsCV
+        elif fun in [LarsCV, LassoLarsCV
                      ]:  # LarsCV doesn't have seed setting but have n_jobs
             fit = fun(cv=5, n_jobs=-1).fit(X_train, y_train)
         y_pred = fit.predict(X_test)

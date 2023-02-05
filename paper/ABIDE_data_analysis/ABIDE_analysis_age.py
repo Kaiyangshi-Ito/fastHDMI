@@ -1,25 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
-import numpy as np
-import pandas as pd
-from dask import dataframe as dd
-import matplotlib.pyplot as plt
-from scipy.stats import kendalltau
-from scipy.stats import rankdata
-import fastHDMI as mi
-
-
-# # Calculate MI for ABIDE data
-# # Calculation for age
-# ## this block is only to be run on Compute Canada
-
-# In[ ]:
-
-
 csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
 # abide = pd.read_csv(csv_file, encoding='unicode_escape', engine="c")
 abide = dd.read_csv(csv_file, sample=1250000)
@@ -43,49 +21,16 @@ mi_output = mi.continuous_screening_csv_parallel(csv_file,
                                                  multp=10)
 np.save(r"./ABIDE_age_MI_output", mi_output)
 
+skmi_output = mi.continuous_skMI_screening_csv_parallel(csv_file,
+                                                        _usecols=abide_name,
+                                                        csv_engine="c",
+                                                        sample=1250000,
+                                                        multp=10)
+np.save(r"./ABIDE_age_skMI_output", skmi_output)
+
 pearson_output = mi.Pearson_screening_csv_parallel(csv_file,
                                                    _usecols=abide_name,
                                                    csv_engine="c",
                                                    sample=1250000,
                                                    multp=10)
 np.save(r"./ABIDE_age_Pearson_output", pearson_output)
-
-
-# # Plots
-
-# In[ ]:
-
-
-abide_mi = np.load(r"./ABIDE_age_MI_output.npy")
-plt.hist(np.log(abide_mi), 500)
-plt.show()
-
-
-# In[ ]:
-
-
-abide_pearson = np.load(r"./ABIDE_age_Pearson_output.npy")
-plt.hist(np.log(np.abs(abide_pearson)), 500)
-plt.show()
-
-
-# ## Comparing two ranking with Kendall's $\tau$
-#
-# The results show that the two ranking by mutual information and Pearson's correlation vary greatly by Kendall's tau -- I also tried the Pearson's correlation between two ranking (not that I should do this) and the correlation is also very small.
-#
-# **So in summary, the two ranking vary greatly.**
-
-# In[ ]:
-
-
-plt.plot(np.log(abide_mi), abide_pearson, 'o')
-plt.show()
-# keep this, add different selections
-# PREDICT AGE
-
-
-# In[ ]:
-
-
-print("Kendall's tau: \n",
-      kendalltau(rankdata(-abide_mi), rankdata(-np.abs(abide_pearson))))

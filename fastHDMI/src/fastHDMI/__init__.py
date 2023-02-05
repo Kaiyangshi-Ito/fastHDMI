@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import numpy as _np
-import pandas as _pd
-from dask import dataframe as _dd
-from bed_reader import open_bed as _open_bed
-from KDEpy import FFTKDE as _FFTKDE
 import multiprocess as _mp
-from numba import jit as _jit
-from numba import njit as _njit
 from sklearn.preprocessing import RobustScaler as _scaler
+from sklearn.feature_selection import mutual_info_regression as _mutual_info_regression
+from dask import dataframe as _dd
+import pandas as _pd
+from KDEpy import FFTKDE as _FFTKDE
+from bed_reader import open_bed as _open_bed
+from numba import jit as _jit
+import numpy as _np
 from tqdm import tqdm as _tqdm
 import warnings as _warnings
 
@@ -948,6 +948,70 @@ def continuous_screening_csv_parallel(csv_file="_",
 
 
 # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+def continuous_skMI_screening_csv_parallel(csv_file="_",
+                                           _usecols=[],
+                                           n_neighbors=3,
+                                           machine_err=1e-12,
+                                           core_num="NOT DECLARED",
+                                           multp=10,
+                                           csv_engine="c",
+                                           parquet_file="_",
+                                           sample=256000,
+                                           verbose=1):
+    """
+    (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    Both the outcome and the covariates should be continuous. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    """
+    # check some basic things
+    assert csv_file != "_" or parquet_file != "_", "CSV or parquet filepath should be declared"
+
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    # read csv
+    _csv, _usecols = _read_csv(csv_file=csv_file,
+                               _usecols=_usecols,
+                               csv_engine=csv_engine,
+                               parquet_file=parquet_file,
+                               sample=sample,
+                               verbose=verbose)
+
+    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+    def _continuous_skMI_csv_slice(_slice):
+        def _map_foo(j):
+            __ = [
+                _usecols[0], _usecols[j]
+            ]  # here using _usecol[j] because only input variables indices were splitted
+            _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
+            return _mutual_info_regression(y=_a.reshape(-1, 1),
+                                           X=_b.reshape(-1, 1),
+                                           n_neighbors=n_neighbors,
+                                           discrete_features=False)[0]
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(
+        1, len(_usecols)
+    )  # starting from 1 because the first left column should be the outcome
+
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_csv = pl.map(_continuous_skMI_csv_slice, _iter)
+    MI_csv = _np.hstack(MI_csv)
+    return MI_csv
+
+
+# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def Pearson_screening_csv_parallel(csv_file="_",
                                    _usecols=[],
                                    core_num="NOT DECLARED",
@@ -1074,6 +1138,289 @@ def clump_continuous_csv_parallel(
         else:
             break
     return current_var_ind, keep_cols
+# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+
+
+def binary_screening_array(X,
+                           y,
+                           drop_na=True,
+                           N=500,
+                           kernel="epa",
+                           bw="silverman",
+                           machine_err=1e-12,
+                           verbose=1):
+    """
+    Take a numpy file to calculate the mutual information between outcome and covariates.
+    The outcome should be binary and the covariates be continuous. 
+    If drop_na is set to be True, the NaN values will be dropped in a bivariate manner. 
+    """
+    def _map_foo(j):
+        _a, _b = y.copy(), X[:, j].copy()
+        if drop_na == True:
+            _keep = _np.logical_not(
+                _np.logical_or(_np.isnan(_a), _np.isnan(_b)))
+            _a, _b = _a[_keep], _b[_keep]
+        return MI_binary_continuous(a=_a,
+                                    b=_b,
+                                    N=N,
+                                    kernel=kernel,
+                                    bw=bw,
+                                    machine_err=machine_err)
+
+    _iter = _np.arange(X.shape[1])
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    MI_array = _np.array(list(map(_map_foo, _iter)))
+    return MI_array
+
+
+# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+def continuous_screening_array(X,
+                               y,
+                               drop_na=True,
+                               a_N=300,
+                               b_N=300,
+                               kernel="epa",
+                               bw="silverman",
+                               norm=2,
+                               machine_err=1e-12,
+                               verbose=1):
+    """
+    Take a numpy file to calculate the mutual information between outcome and covariates.
+    The outcome should be continuous and the covariates be continuous. 
+    If drop_na is set to be True, the NaN values will be dropped in a bivariate manner. 
+    """
+    def _map_foo(j):
+        _a, _b = y.copy(), X[:, j].copy()
+        if drop_na == True:
+            _keep = _np.logical_not(
+                _np.logical_or(_np.isnan(_a), _np.isnan(_b)))
+            _a, _b = _a[_keep], _b[_keep]
+        return MI_continuous_continuous(a=_a,
+                                        b=_b,
+                                        a_N=a_N,
+                                        b_N=b_N,
+                                        kernel=kernel,
+                                        bw=bw,
+                                        norm=norm,
+                                        machine_err=machine_err)
+
+    _iter = _np.arange(X.shape[1])
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    MI_array = _np.array(list(map(_map_foo, _iter)))
+    return MI_array
+
+
+# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+def binary_screening_array_parallel(X,
+                                    y,
+                                    drop_na=True,
+                                    N=500,
+                                    kernel="epa",
+                                    bw="silverman",
+                                    machine_err=1e-12,
+                                    core_num="NOT DECLARED",
+                                    multp=10,
+                                    verbose=1):
+    """
+    (Multiprocessing version) Calculate the mutual information between outcome and covariates.
+    The outcome should be binary and the covariates be continuous. 
+    If drop_na is set to be True, the NaN values will be dropped in a bivariate manner. 
+    """
+    # check some basic things
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+    def _binary_screening_array_slice(_slice):
+        def _map_foo(j):
+            _a, _b = y.copy(), X[:, j].copy()
+            if drop_na == True:
+                _keep = _np.logical_not(
+                    _np.logical_or(_np.isnan(_a), _np.isnan(_b)))
+                _a, _b = _a[_keep], _b[_keep]
+            return MI_binary_continuous(a=_a,
+                                        b=_b,
+                                        N=N,
+                                        kernel=kernel,
+                                        bw=bw,
+                                        machine_err=machine_err)
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(
+        X.shape[1]
+    )  # starting from 1 because the first left column should be the outcome
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_array = pl.map(_binary_screening_csv_slice, _iter)
+    MI_array = _np.hstack(MI_array)
+    return MI_array
+
+
+# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+def continuous_screening_array_parallel(X,
+                                        y,
+                                        drop_na=True,
+                                        a_N=300,
+                                        b_N=300,
+                                        kernel="epa",
+                                        bw="silverman",
+                                        norm=2,
+                                        machine_err=1e-12,
+                                        core_num="NOT DECLARED",
+                                        multp=10,
+                                        verbose=1):
+    """
+    (Multiprocessing version) Calculate the mutual information between outcome and covariates.
+    The outcome should be continuous and the covariates be continuous. 
+    If drop_na is set to be True, the NaN values will be dropped in a bivariate manner. 
+    """
+    # check some basic things
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+    def _continuous_screening_array_slice(_slice):
+        def _map_foo(j):
+            _a, _b = y.copy(), X[:, j].copy()
+            if drop_na == True:
+                _keep = _np.logical_not(
+                    _np.logical_or(_np.isnan(_a), _np.isnan(_b)))
+                _a, _b = _a[_keep], _b[_keep]
+            return MI_continuous_continuous(a=_a,
+                                            b=_b,
+                                            a_N=a_N,
+                                            b_N=b_N,
+                                            kernel=kernel,
+                                            bw=bw,
+                                            norm=norm,
+                                            machine_err=machine_err)
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(X.shape[1])
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_array = pl.map(_continuous_screening_array_slice, _iter)
+    MI_array = _np.hstack(MI_array)
+    return MI_array
+
+
+# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+def continuous_skMI_array_parallel(X,
+                                   y,
+                                   drop_na=True,
+                                   n_neighbors=3,
+                                   machine_err=1e-12,
+                                   core_num="NOT DECLARED",
+                                   multp=10,
+                                   verbose=1):
+    """
+    (Multiprocessing version) Calculate the mutual information using sklearn implementation between outcome and covariates.
+    The outcome should be binary and the covariates be continuous. 
+    If drop_na is set to be True, the NaN values will be dropped in a bivariate manner. 
+    """
+    # check some basic things
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+    def _continuous_skMI_array_slice(_slice):
+        def _map_foo(j):
+            _a, _b = y.copy(), X[:, j].copy()
+            if drop_na == True:
+                _keep = _np.logical_not(
+                    _np.logical_or(_np.isnan(_a), _np.isnan(_b)))
+                _a, _b = _a[_keep], _b[_keep]
+            return _mutual_info_regression(y=_a.reshape(-1, 1),
+                                           X=_b.reshape(-1, 1),
+                                           n_neighbors=n_neighbors,
+                                           discrete_features=False)[0]
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(X.shape[1])
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_array = pl.map(_continuous_skMI_array_slice, _iter)
+    MI_array = _np.hstack(MI_array)
+    return MI_array
+
+
+# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+def continuous_Pearson_array_parallel(X,
+                                      y,
+                                      drop_na=True,
+                                      n_neighbors=3,
+                                      machine_err=1e-12,
+                                      core_num="NOT DECLARED",
+                                      multp=10,
+                                      verbose=1):
+    """
+    (Multiprocessing version) Calculate the mutual information using sklearn implementation between outcome and covariates.
+    The outcome should be binary and the covariates be continuous. 
+    If drop_na is set to be True, the NaN values will be dropped in a bivariate manner. 
+    """
+    # check some basic things
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
+    def _continuous_Pearson_array_slice(_slice):
+        def _map_foo(j):
+            _a, _b = y.copy(), X[:, j].copy()
+            if drop_na == True:
+                _keep = _np.logical_not(
+                    _np.logical_or(_np.isnan(_a), _np.isnan(_b)))
+                _a, _b = _a[_keep], _b[_keep]
+            _a -= _np.mean(_a)
+            _a /= _np.std(_a)
+            _b -= _np.mean(_b)
+            _b /= _np.std(_b)
+            return _a @ _b / len(_a)
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(X.shape[1])
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_array = pl.map(_continuous_Pearson_array_slice, _iter)
+    MI_array = _np.hstack(MI_array)
+    return MI_array
 
 
 ##################################################################
@@ -1503,7 +1850,7 @@ def UAG_LM_SCAD_MCP(design_matrix,
             if old_speed_norm > speed_norm and k - restart_k >= 3:  # in this case, restart
                 opt_alpha = 1.  # restarting
                 restart_k = k  # restarting
-            else:  # restarting
+            else:  # restartings
                 opt_alpha = 2 / (
                     1 + (1 + 4. / opt_alpha**2)**.5
                 )  # parameter settings based on minimizing Ghadimi and Lan's rate of convergence error upper bound
