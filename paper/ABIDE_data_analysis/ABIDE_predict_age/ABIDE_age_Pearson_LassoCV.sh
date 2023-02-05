@@ -1,9 +1,10 @@
+
 #!/bin/bash
 #SBATCH --account=def-masd
 #SBATCH --cpus-per-task=10
-#SBATCH --mem=50G
+#SBATCH --mem=80G
 #SBATCH --time=6-00:00:00
-#SBATCH --job-name=ABIDE_age
+#SBATCH --job-name=Pearson_LassoCV
 
 module load gcc llvm rust arrow cuda nodejs python/3.8.10
 
@@ -14,3 +15,4 @@ nvidia-smi
 lscpu
 
 python3 ABIDE_age_Pearson_LassoCV.py
+    

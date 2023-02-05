@@ -18,7 +18,7 @@ from tqdm import tqdm
 csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
 original_df = pd.read_csv(csv_file, encoding='unicode_escape', engine='c')
 columns = np.load(r"../ABIDE_columns.npy")
-abide_dep = np.load(r"../ABIDE_age_Pearson_output.npy")  # dep_measure
+abide_dep = np.load(r"../ABIDE_age_skMI_output.npy")  # dep_measure
 
 
 def testing_error(num_covariates=20,
@@ -83,7 +83,7 @@ def testing_error_num_attr(num_attr,
     return np.array(list(map(_testing_error_rep, tqdm(num_attr))))
 
 
-print(r"ABIDE_age_Pearson_LarsCV")  # dep_measure, fun_name
+print(r"ABIDE_age_skMI_LarsCV")  # dep_measure, fun_name
 output = testing_error_num_attr(
     num_attr=list(
         map(int,
@@ -92,4 +92,4 @@ output = testing_error_num_attr(
     fun=LarsCV,  # fun_name
     outcome_name="AGE_AT_SCAN",
     num_rep=30)
-np.save(r"./ABIDE_age_Pearson_LarsCV", output)  # dep_measure, fun_name
+np.save(r"./ABIDE_age_skMI_LarsCV", output)  # dep_measure, fun_name

@@ -4,7 +4,7 @@
 #SBATCH --cpus-per-task=10
 #SBATCH --mem=80G
 #SBATCH --time=6-00:00:00
-#SBATCH --job-name=MI_ElasticNetCV
+#SBATCH --job-name=skMI_LarsCV
 
 module load gcc llvm rust arrow cuda nodejs python/3.8.10
 
@@ -14,5 +14,5 @@ source $HOME/jupyter_py3/bin/activate
 nvidia-smi
 lscpu
 
-python3 ABIDE_age_MI_ElasticNetCV.py
+python3 ABIDE_age_skMI_LarsCV.py
     
