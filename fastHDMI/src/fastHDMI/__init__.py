@@ -8,6 +8,7 @@ from dask import dataframe as _dd
 import pandas as _pd
 from KDEpy import FFTKDE as _FFTKDE
 from bed_reader import open_bed as _open_bed
+from numba import njit as _njit
 from numba import jit as _jit
 import numpy as _np
 from tqdm import tqdm as _tqdm
@@ -18,15 +19,41 @@ _warnings.filterwarnings('ignore')
 #############################################################################
 ############# clumping and screening using mutual information ###############
 #############################################################################
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 
 
-def MI_continuous_012(a,
-                      b,
-                      N=500,
-                      kernel="epa",
-                      bw="silverman",
-                      machine_err=1e-12):
+@_njit
+def _nan_inf_to_0(x):
+    """
+    To convert NaN to 0 in nopython mode.
+    """
+    return _np.where(_np.isfinite(x), x, 0.)
+
+
+@_njit
+def _joint_to_mi(joint, forward_euler_a=1., forward_euler_b=1.):
+    # assume that joint likelihood is of shape (len(a), len(b))
+    # forward_euler step being 1. means discrete r.v.
+    # to scale the cdf to 1.
+    joint /= _np.sum(joint) * forward_euler_a * forward_euler_b
+    log_a_marginal = _np.log(_np.sum(joint, 1)) + _np.log(forward_euler_b)
+    log_a_marginal = _nan_inf_to_0(log_a_marginal)
+    log_b_marginal = _np.log(_np.sum(joint, 0)) + _np.log(forward_euler_a)
+    log_b_marginal = _nan_inf_to_0(log_b_marginal)
+    log_joint = _np.log(joint)
+    log_joint = _nan_inf_to_0(log_joint)
+    mi_temp = _np.sum(
+        joint *
+        (log_joint - log_a_marginal.reshape(-1, 1) -
+         log_b_marginal.reshape(1, -1))) * forward_euler_a * forward_euler_b
+
+    # this is to ensure that estimated MI is positive, to solve an numerical issue
+    if mi_temp < 0.:
+        mi_temp = 0.
+
+    return mi_temp
+
+
+def MI_continuous_012(a, b, N=500, kernel="epa", bw="silverman"):
     """
     calculate mutual information between continuous outcome and an SNP variable of 0,1,2
     assume no missing data
@@ -44,76 +71,39 @@ def MI_continuous_012(a,
     if _np.sum(_b0) > 2:
         # here proceed to kde only if there are more than 5 data points
         y_cond_p0 = _FFTKDE(kernel=kernel, bw=bw).fit(data=_a[_b0])
-#         y_cond_p0 = gaussian_kde(_a[_b0])
     else:
         y_cond_p0 = _np.zeros_like
     _b1 = (b == 1)
     if _np.sum(_b1) > 2:
         y_cond_p1 = _FFTKDE(kernel=kernel, bw=bw).fit(data=_a[_b1])
-#         y_cond_p1 = gaussian_kde(_a[_b1]) # this thing uses Scott's rule instead of Silverman defaulted by FFTKDE and R density
     else:
         y_cond_p1 = _np.zeros_like
     _b2 = (b == 2)
     if _np.sum(_b2) > 2:
         y_cond_p2 = _FFTKDE(kernel=kernel, bw=bw).fit(data=_a[_b2])
-
-
-#         y_cond_p2 = gaussian_kde(_a[_b2])
     else:
         y_cond_p2 = _np.zeros_like
-    joint = _np.empty((N, 3))
+    joint = _np.zeros((N, 3))
     joint[:, 0] = y_cond_p0(a_temp) * p0
     joint[:, 1] = y_cond_p1(a_temp) * p1
     joint[:, 2] = y_cond_p2(a_temp) * p2
-    mask = joint < machine_err
     forward_euler_step = a_temp[1] - a_temp[0]
+    mask = joint < 0.
     joint[mask] = 0.
-    # to scale the cdf to 1.
-    joint /= _np.sum(joint) * forward_euler_step
-    #     print("total measure:",  _np.sum(joint)*forward_euler_step)
-    temp_log = _np.log(joint)
-    temp_log = _np.nan_to_num(temp_log, nan=0.)
-    temp1 = _np.log(_np.sum(joint, 1))
-    temp1 = _np.nan_to_num(temp1, nan=0.)
-    temp_log = temp_log - temp1.reshape(-1, 1)
-    temp2 = _np.log(_np.sum(joint, 0)) + _np.log(forward_euler_step)
-    temp2 = _np.nan_to_num(temp2, nan=0.)
-    temp_log = temp_log - temp2.reshape(1, -1)
-    # print(fhat_mat * temp_log)
-    temp_mat = joint * temp_log
-    #     temp_mat =  _np.nan_to_num(temp_mat, nan=0.) # numerical fix
-    mi_temp = _np.sum(temp_mat) * forward_euler_step
 
-    # this is to ensure that estimated MI is positive, to solve an numerical issue
-    if mi_temp < machine_err:
-        mi_temp = machine_err
+    mi_temp = _joint_to_mi(joint=joint, forward_euler_a=forward_euler_step)
+
+    del p0, p1, p2, _a, a_temp, _, _b0, y_cond_p0, _b1, y_cond_p1, _b2, y_cond_p2, joint, mask, forward_euler_step
 
     return mi_temp
 
 
-@_jit(nopython=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def _nan_to_0(x):
-    """
-    To convert NaN to 0 in nopython mode.
-    """
-    return _np.where(_np.isnan(x), 0., x)
-
-
-@_jit(nopython=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def MI_binary_012(a, b, machine_err=1e-12):
+@_njit
+def MI_binary_012(a, b):
     """
     calculate mutual information between binary outcome and an SNP variable of 0,1,2
     assume no missing data
     """
-    # first estimate the pmf of SNP
-    p0 = _np.sum(b == 0) / len(b)
-    p1 = _np.sum(b == 1) / len(b)
-    p2 = 1. - p0 - p1
-    b_marginal = _np.array([p0, p1, p2])
-    # estimate pmf of the binary outcome
-    a_p0 = _np.sum(a == 0) / len(a)
-    a_p1 = 1. - a_p0
-    a_marginal = _np.array([a_p0, a_p1]).reshape(-1, 1)
     # estimate the cond pmf
     joint = _np.zeros((2, 3))
     _b0 = (b == 0)
@@ -126,37 +116,18 @@ def MI_binary_012(a, b, machine_err=1e-12):
     joint[0, 2] = _np.sum(a[_b2] == 0) / len(a)
     joint[1, 2] = _np.sum(a[_b2] == 1) / len(a)
 
-    _temp = a_marginal * b_marginal
-    _temp = joint / _temp
-    _temp = joint * _np.log(_temp)
-    _temp = _nan_to_0(_temp)  # for possible nuemrical issues
-
-    mi_temp = _np.sum(_temp)
-
-    # this is to ensure that estimated MI is positive, to solve an numerical issue
-    if mi_temp < machine_err:
-        mi_temp = machine_err
+    mi_temp = _joint_to_mi(joint=joint)
 
     return mi_temp
 
 
-@_jit(nopython=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def MI_012_012(a, b, machine_err=1e-12):
+@_njit
+def MI_012_012(a, b):
     """
     calculate mutual information between two SNPs
     assume no missing data
     could be very useful for a MI-based clumping
     """
-    # first estimate the pmf of SNP
-    p0 = _np.sum(b == 0) / len(b)
-    p1 = _np.sum(b == 1) / len(b)
-    p2 = 1. - p0 - p1
-    b_marginal = _np.array([p0, p1, p2])
-    # estimate pmf of the binary outcome
-    a_p0 = _np.sum(a == 0) / len(a)
-    a_p1 = _np.sum(a == 1) / len(a)
-    a_p2 = 1. - a_p0 - a_p1
-    a_marginal = _np.array([a_p0, a_p1, a_p2]).reshape(-1, 1)
     # estimate the cond pmf
     joint = _np.zeros((3, 3))
     _b0 = (b == 0)
@@ -172,30 +143,19 @@ def MI_012_012(a, b, machine_err=1e-12):
     joint[1, 2] = _np.sum(a[_b2] == 1) / len(a)
     joint[2, 2] = _np.sum(a[_b2] == 2) / len(a)
 
-    _temp = a_marginal * b_marginal
-    _temp = joint / _temp
-    _temp = joint * _np.log(_temp)
-    _temp = _nan_to_0(_temp)  # for possible nuemrical issues
-
-    mi_temp = _np.sum(_temp)
-
-    # this is to ensure that estimated MI is positive, to solve an numerical issue
-    if mi_temp < machine_err:
-        mi_temp = machine_err
+    mi_temp = _joint_to_mi(joint=joint)
 
     return mi_temp
 
 
 # make this function available
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def MI_continuous_continuous(a,
                              b,
                              a_N=300,
                              b_N=300,
                              kernel="epa",
                              bw="silverman",
-                             norm=2,
-                             machine_err=1e-12):
+                             norm=2):
     """
     (Single Core version) calculate mutual information on bivariate continuous r.v..
     """
@@ -208,45 +168,23 @@ def MI_continuous_continuous(a,
     # this gives joint as a (a_N, b_N) array, following example: https://kdepy.readthedocs.io/en/latest/examples.html#the-effect-of-norms-in-2d
     a_forward_euler_step = grid[b_N, 0] - grid[0, 0]
     b_forward_euler_step = grid[1, 1] - grid[0, 1]
-    mask = joint < machine_err
+    mask = joint < 0.
     joint[mask] = 0.
-    # to scale the cdf to 1.
-    joint /= _np.sum(joint) * a_forward_euler_step * b_forward_euler_step
-    log_a_marginal = _np.log(_np.sum(joint, 1)) + _np.log(b_forward_euler_step)
-    log_a_marginal = _np.nan_to_num(log_a_marginal, nan=0.)
-    log_b_marginal = _np.log(_np.sum(joint, 0)) + _np.log(a_forward_euler_step)
-    log_b_marginal = _np.nan_to_num(log_b_marginal, nan=0.)
-    log_joint = _np.log(joint)
-    log_joint = _np.nan_to_num(log_joint, nan=0.)
-    mi_temp = _np.sum(
-        joint *
-        (log_joint - log_a_marginal.reshape(-1, 1) - log_b_marginal.reshape(
-            1, -1))) * a_forward_euler_step * b_forward_euler_step
+    mi_temp = _joint_to_mi(joint=joint,
+                           forward_euler_a=a_forward_euler_step,
+                           forward_euler_b=b_forward_euler_step)
 
-    # this is to ensure that estimated MI is positive, to solve an numerical issue
-    if mi_temp < machine_err:
-        mi_temp = machine_err
+    del _temp, data, _data, grid, joint, mask, a_forward_euler_step, b_forward_euler_step
 
     return mi_temp
 
 
 # make this function available
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def MI_binary_continuous(a,
-                         b,
-                         N=500,
-                         kernel="epa",
-                         bw="silverman",
-                         machine_err=1e-12):
-    return MI_continuous_012(a=b,
-                             b=a,
-                             N=N,
-                             kernel=kernel,
-                             bw=bw,
-                             machine_err=machine_err)
+def MI_binary_continuous(a, b, N=500, kernel="epa", bw="silverman"):
+    return MI_continuous_012(a=b, b=a, N=N, kernel=kernel, bw=bw)
 
 
-@_jit(nopython=True, nogil=True, cache=True, parallel=True, fastmath=True)
+@_njit
 def Pearson_to_MI_Gaussian(corr):
     """
     Assuming the input variables are bivariate Gaussian, convert their Pearson correlatin to mutual information.
@@ -254,16 +192,15 @@ def Pearson_to_MI_Gaussian(corr):
     return -.5 * (_np.log(1 + corr) + _np.log(1 - corr))
 
 
-@_jit(nopython=True, nogil=True, cache=True, parallel=True, fastmath=True)
+@_njit
 def MI_to_Linfoot(mi):
     """
     Convert calcualted mutual information estimator to Linfoot's measure of association.
     """
     return (1. - _np.exp(-2. * mi))**.5
+
+
 # outcome_iid should be a  list of strings for identifiers
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
-
-
 def continuous_screening_plink(bed_file,
                                bim_file,
                                fam_file,
@@ -272,7 +209,6 @@ def continuous_screening_plink(bed_file,
                                N=500,
                                kernel="epa",
                                bw="silverman",
-                               machine_err=1e-12,
                                verbose=1):
     """
     (Single Core version) take plink files to calculate the mutual information between the continuous outcome and many SNP variables.
@@ -293,30 +229,12 @@ def continuous_screening_plink(bed_file,
                                assume_unique=True,
                                return_indices=True)[1]
 
-    #     MI_UKBB = _np.zeros(len(bed1_sid))
-    #     for j in range(len(MI_UKBB)):
-    #         _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
-    #         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
-    #         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
-    #         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-    #         MI_UKBB[j] = MI_continuous_012(a=_outcome,
-    #                                        b=_SNP,
-    #                                        N=N,
-    #                                        kernel=kernel,
-    #                                        bw=bw,
-    #                                        machine_err=machine_err)
-
     def _map_foo(j):
         _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        return MI_continuous_012(a=_outcome,
-                                 b=_SNP,
-                                 N=N,
-                                 kernel=kernel,
-                                 bw=bw,
-                                 machine_err=machine_err)
+        return MI_continuous_012(a=_outcome, b=_SNP, N=N, kernel=kernel, bw=bw)
 
     _iter = range(len(bed1_sid))
     if verbose > 1:
@@ -325,13 +243,11 @@ def continuous_screening_plink(bed_file,
     return MI_UKBB
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def binary_screening_plink(bed_file,
                            bim_file,
                            fam_file,
                            outcome,
                            outcome_iid,
-                           machine_err=1e-12,
                            verbose=1):
     """
     (Single Core version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
@@ -351,20 +267,12 @@ def binary_screening_plink(bed_file,
                                assume_unique=True,
                                return_indices=True)[1]
 
-    #     MI_UKBB = _np.zeros(len(bed1_sid))
-    #     for j in range(len(MI_UKBB)):
-    #         _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
-    #         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
-    #         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
-    #         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-    #         MI_UKBB[j] = MI_binary_012(a=_outcome, b=_SNP, machine_err=machine_err)
-
     def _map_foo(j):
         _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        return MI_binary_012(a=_outcome, b=_SNP, machine_err=machine_err)
+        return MI_binary_012(a=_outcome, b=_SNP)
 
     _iter = range(len(bed1_sid))
     if verbose >= 1:
@@ -373,7 +281,6 @@ def binary_screening_plink(bed_file,
     return MI_UKBB
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def continuous_screening_plink_parallel(bed_file,
                                         bim_file,
                                         fam_file,
@@ -382,7 +289,6 @@ def continuous_screening_plink_parallel(bed_file,
                                         N=500,
                                         kernel="epa",
                                         bw="silverman",
-                                        machine_err=1e-12,
                                         core_num="NOT DECLARED",
                                         multp=10,
                                         verbose=1):
@@ -413,22 +319,7 @@ def continuous_screening_plink_parallel(bed_file,
                                assume_unique=True,
                                return_indices=True)[1]
 
-    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _continuous_screening_plink_slice(_slice):
-        #         _MI_slice = _np.zeros(len(_slice))
-        #         k = 0
-        #         for j in _slice:
-        #             _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
-        #             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
-        #             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
-        #             _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        #             _MI_slice[k] = MI_continuous_012(a=_outcome,
-        #                                              b=_SNP,
-        #                                              N=N,
-        #                                              kernel=kernel,
-        #                                              bw=bw,
-        #                                              machine_err=machine_err)
-        #             k += 1
         def _map_foo(j):
             _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
@@ -438,8 +329,7 @@ def continuous_screening_plink_parallel(bed_file,
                                      b=_SNP,
                                      N=N,
                                      kernel=kernel,
-                                     bw=bw,
-                                     machine_err=machine_err)
+                                     bw=bw)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -455,7 +345,6 @@ def continuous_screening_plink_parallel(bed_file,
     return MI_UKBB
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def binary_screening_plink_parallel(bed_file,
                                     bim_file,
                                     fam_file,
@@ -463,7 +352,6 @@ def binary_screening_plink_parallel(bed_file,
                                     outcome_iid,
                                     core_num="NOT DECLARED",
                                     multp=10,
-                                    machine_err=1e-12,
                                     verbose=1):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
@@ -492,25 +380,13 @@ def binary_screening_plink_parallel(bed_file,
                                assume_unique=True,
                                return_indices=True)[1]
 
-    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _binary_screening_plink_slice(_slice):
-        #         _MI_slice = _np.zeros(len(_slice))
-        #         k = 0
-        #         for j in _slice:
-        #             _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
-        #             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
-        #             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
-        #             _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        #             _MI_slice[k] = MI_binary_012(a=_outcome,
-        #                                          b=_SNP,
-        #                                          machine_err=machine_err)
-        #             k += 1
         def _map_foo(j):
             _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
             _SNP = _SNP[_SNP != -127]  # remove missing SNP
-            return MI_binary_012(a=_outcome, b=_SNP, machine_err=machine_err)
+            return MI_binary_012(a=_outcome, b=_SNP)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -526,7 +402,6 @@ def binary_screening_plink_parallel(bed_file,
     return MI_UKBB
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def clump_plink_parallel(bed_file,
                          bim_file,
                          fam_file,
@@ -534,7 +409,6 @@ def clump_plink_parallel(bed_file,
                          num_SNPS_exam=_np.infty,
                          core_num="NOT DECLARED",
                          multp=10,
-                         machine_err=1e-12,
                          verbose=1):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
@@ -566,7 +440,6 @@ def clump_plink_parallel(bed_file,
             gene_ind = _np.where(outcome != -127)
             outcome = outcome[gene_ind]
 
-            # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
             def _012_012_plink_slice(_slice):
                 def _map_foo(j):
                     _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
@@ -574,9 +447,7 @@ def clump_plink_parallel(bed_file,
                     _outcome = outcome[_SNP !=
                                        -127]  # remove missing SNP in outcome
                     _SNP = _SNP[_SNP != -127]  # remove missing SNP
-                    return MI_012_012(a=_outcome,
-                                      b=_SNP,
-                                      machine_err=machine_err)
+                    return MI_012_012(a=_outcome, b=_SNP)
 
                 _MI_slice = _np.array(list(map(_map_foo, _slice)))
                 return _MI_slice
@@ -594,7 +465,6 @@ def clump_plink_parallel(bed_file,
         else:
             break
     return current_var_ind, bed1_sid[keep_cols]
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 
 
 def _read_csv(csv_file, _usecols, csv_engine, parquet_file, sample, verbose=1):
@@ -638,7 +508,6 @@ def _read_csv(csv_file, _usecols, csv_engine, parquet_file, sample, verbose=1):
     return _csv, _usecols
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def _read_two_columns(_csv, __, csv_engine):
     """
     Read two columns from a dataframe object, remove NaN. Use dask to read csv if low in memory.
@@ -654,13 +523,11 @@ def _read_two_columns(_csv, __, csv_engine):
     return _a, _b
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def binary_screening_csv(csv_file="_",
                          _usecols=[],
                          N=500,
                          kernel="epa",
                          bw="silverman",
-                         machine_err=1e-12,
                          csv_engine="c",
                          parquet_file="_",
                          sample=256000,
@@ -681,30 +548,12 @@ def binary_screening_csv(csv_file="_",
                                sample=sample,
                                verbose=verbose)
 
-    #     MI_csv = _np.empty(len(_usecols) - 1)
-    #     for j in _np.arange(len(_usecols) - 1):
-    #         __ = [
-    #             _usecols[0], _usecols[j + 1]
-    #         ]  # here using _usecol[j + 1] because the left first column is the outcome
-    #         _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-    #         MI_csv[j] = MI_binary_continuous(a=_a,
-    #                                          b=_b,
-    #                                          N=N,
-    #                                          kernel=kernel,
-    #                                          bw=bw,
-    #                                          machine_err=machine_err)
-
     def _map_foo(j):
         __ = [
             _usecols[0], _usecols[j + 1]
         ]  # here using _usecol[j + 1] because the left first column is the outcome
         _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-        return MI_binary_continuous(a=_a,
-                                    b=_b,
-                                    N=N,
-                                    kernel=kernel,
-                                    bw=bw,
-                                    machine_err=machine_err)
+        return MI_binary_continuous(a=_a, b=_b, N=N, kernel=kernel, bw=bw)
 
     _iter = _np.arange(len(_usecols) - 1)
     if verbose >= 1:
@@ -713,7 +562,6 @@ def binary_screening_csv(csv_file="_",
     return MI_csv
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def continuous_screening_csv(csv_file="_",
                              _usecols=[],
                              a_N=300,
@@ -721,7 +569,6 @@ def continuous_screening_csv(csv_file="_",
                              kernel="epa",
                              bw="silverman",
                              norm=2,
-                             machine_err=1e-12,
                              csv_engine="c",
                              parquet_file="_",
                              sample=256000,
@@ -741,20 +588,6 @@ def continuous_screening_csv(csv_file="_",
                                sample=sample,
                                verbose=verbose)
 
-    #     MI_csv = _np.empty(len(_usecols) - 1)
-    #     for j in _np.arange(len(_usecols) - 1):
-    #         __ = [
-    #             _usecols[0], _usecols[j + 1]
-    #         ]  # here using _usecol[j + 1] because the left first column is the outcome
-    #         _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-    #         MI_csv[j] = MI_continuous_continuous(a=_a,
-    #                                             b=_b,
-    #                                             a_N=a_N,
-    #                                             b_N=b_N,
-    #                                             kernel=kernel,
-    #                                             bw=bw,
-    #                                             norm=norm,
-    #                                             machine_err=machine_err)
     def _map_foo(j):
         __ = [
             _usecols[0], _usecols[j + 1]
@@ -766,8 +599,7 @@ def continuous_screening_csv(csv_file="_",
                                         b_N=b_N,
                                         kernel=kernel,
                                         bw=bw,
-                                        norm=norm,
-                                        machine_err=machine_err)
+                                        norm=norm)
 
     _iter = _np.arange(len(_usecols) - 1)
     if verbose >= 1:
@@ -776,13 +608,11 @@ def continuous_screening_csv(csv_file="_",
     return MI_csv
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def binary_screening_csv_parallel(csv_file="_",
                                   _usecols=[],
                                   N=500,
                                   kernel="epa",
                                   bw="silverman",
-                                  machine_err=1e-12,
                                   core_num="NOT DECLARED",
                                   multp=10,
                                   csv_engine="c",
@@ -813,34 +643,13 @@ def binary_screening_csv_parallel(csv_file="_",
                                sample=sample,
                                verbose=verbose)
 
-    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _binary_screening_csv_slice(_slice):
-        #         _MI_slice = _np.zeros(
-        #             len(_slice))  # returned MI should be of the same length as slice
-        #         k = 0
-        #         for j in _slice:
-        #             __ = [
-        #                 _usecols[0], _usecols[j]
-        #             ]  # here using _usecol[j] because only input variables indices were splitted
-        #             _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-        #             _MI_slice[k] = MI_binary_continuous(a=_a,
-        #                                                 b=_b,
-        #                                                 N=N,
-        #                                                 kernel=kernel,
-        #                                                 bw=bw,
-        #                                                 machine_err=machine_err)
-        #             k += 1
         def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
             ]  # here using _usecol[j] because only input variables indices were splitted
             _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-            return MI_binary_continuous(a=_a,
-                                        b=_b,
-                                        N=N,
-                                        kernel=kernel,
-                                        bw=bw,
-                                        machine_err=machine_err)
+            return MI_binary_continuous(a=_a, b=_b, N=N, kernel=kernel, bw=bw)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -858,7 +667,6 @@ def binary_screening_csv_parallel(csv_file="_",
     return MI_csv
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def continuous_screening_csv_parallel(csv_file="_",
                                       _usecols=[],
                                       a_N=300,
@@ -866,7 +674,6 @@ def continuous_screening_csv_parallel(csv_file="_",
                                       kernel="epa",
                                       bw="silverman",
                                       norm=2,
-                                      machine_err=1e-12,
                                       core_num="NOT DECLARED",
                                       multp=10,
                                       csv_engine="c",
@@ -897,25 +704,7 @@ def continuous_screening_csv_parallel(csv_file="_",
                                sample=sample,
                                verbose=verbose)
 
-    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _continuous_screening_csv_slice(_slice):
-        #         _MI_slice = _np.zeros(
-        #             len(_slice))  # returned MI should be of the same length as slice
-        #         k = 0
-        #         for j in _slice:
-        #             __ = [
-        #                 _usecols[0], _usecols[j]
-        #             ]  # here using _usecol[j] because only input variables indices were splitted
-        #             _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-        #             _MI_slice[k] = MI_continuous_continuous(a=_a,
-        #                                                    b=_b,
-        #                                                    a_N=a_N,
-        #                                                    b_N=b_N,
-        #                                                    kernel=kernel,
-        #                                                    bw=bw,
-        #                                                    norm=norm,
-        #                                                    machine_err=machine_err)
-        #             k += 1
         def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
@@ -927,8 +716,7 @@ def continuous_screening_csv_parallel(csv_file="_",
                                             b_N=b_N,
                                             kernel=kernel,
                                             bw=bw,
-                                            norm=norm,
-                                            machine_err=machine_err)
+                                            norm=norm)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -947,11 +735,9 @@ def continuous_screening_csv_parallel(csv_file="_",
     return MI_csv
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def continuous_skMI_screening_csv_parallel(csv_file="_",
                                            _usecols=[],
                                            n_neighbors=3,
-                                           machine_err=1e-12,
                                            core_num="NOT DECLARED",
                                            multp=10,
                                            csv_engine="c",
@@ -982,7 +768,6 @@ def continuous_skMI_screening_csv_parallel(csv_file="_",
                                sample=sample,
                                verbose=verbose)
 
-    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _continuous_skMI_csv_slice(_slice):
         def _map_foo(j):
             __ = [
@@ -1011,7 +796,6 @@ def continuous_skMI_screening_csv_parallel(csv_file="_",
     return MI_csv
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def Pearson_screening_csv_parallel(csv_file="_",
                                    _usecols=[],
                                    core_num="NOT DECLARED",
@@ -1044,19 +828,7 @@ def Pearson_screening_csv_parallel(csv_file="_",
                                sample=sample,
                                verbose=verbose)
 
-    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _Pearson_screening_csv_slice(_slice):
-        #         _pearson_slice = _np.zeros(
-        #             len(_slice))  # returned MI should be of the same length as slice
-        #         k = 0
-        #         for j in _slice:
-        #             __ = [
-        #                 _usecols[0], _usecols[j]
-        #             ]  # here using _usecol[j] because only input variables indices were splitted
-        #             _a, _b = _read_two_columns(_csv=_csv, __=__, csv_engine=csv_engine)
-        #             # returned Pearson correlation is a symmetric matrix
-        #             _pearson_slice[k] = _np.corrcoef(_a, _b)[0, 1]
-        #             k += 1
         def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
@@ -1097,7 +869,6 @@ def clump_continuous_csv_parallel(
         norm=2,
         clumping_threshold=Pearson_to_MI_Gaussian(.6),
         num_vars_exam=_np.infty,
-        machine_err=1e-12,
         core_num="NOT DECLARED",
         multp=10,
         csv_engine="c",
@@ -1138,7 +909,6 @@ def clump_continuous_csv_parallel(
         else:
             break
     return current_var_ind, keep_cols
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 
 
 def binary_screening_array(X,
@@ -1147,7 +917,6 @@ def binary_screening_array(X,
                            N=500,
                            kernel="epa",
                            bw="silverman",
-                           machine_err=1e-12,
                            verbose=1):
     """
     Take a numpy file to calculate the mutual information between outcome and covariates.
@@ -1160,12 +929,7 @@ def binary_screening_array(X,
             _keep = _np.logical_not(
                 _np.logical_or(_np.isnan(_a), _np.isnan(_b)))
             _a, _b = _a[_keep], _b[_keep]
-        return MI_binary_continuous(a=_a,
-                                    b=_b,
-                                    N=N,
-                                    kernel=kernel,
-                                    bw=bw,
-                                    machine_err=machine_err)
+        return MI_binary_continuous(a=_a, b=_b, N=N, kernel=kernel, bw=bw)
 
     _iter = _np.arange(X.shape[1])
     if verbose >= 1:
@@ -1174,7 +938,6 @@ def binary_screening_array(X,
     return MI_array
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def continuous_screening_array(X,
                                y,
                                drop_na=True,
@@ -1183,7 +946,6 @@ def continuous_screening_array(X,
                                kernel="epa",
                                bw="silverman",
                                norm=2,
-                               machine_err=1e-12,
                                verbose=1):
     """
     Take a numpy file to calculate the mutual information between outcome and covariates.
@@ -1202,8 +964,7 @@ def continuous_screening_array(X,
                                         b_N=b_N,
                                         kernel=kernel,
                                         bw=bw,
-                                        norm=norm,
-                                        machine_err=machine_err)
+                                        norm=norm)
 
     _iter = _np.arange(X.shape[1])
     if verbose >= 1:
@@ -1212,14 +973,12 @@ def continuous_screening_array(X,
     return MI_array
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def binary_screening_array_parallel(X,
                                     y,
                                     drop_na=True,
                                     N=500,
                                     kernel="epa",
                                     bw="silverman",
-                                    machine_err=1e-12,
                                     core_num="NOT DECLARED",
                                     multp=10,
                                     verbose=1):
@@ -1236,7 +995,6 @@ def binary_screening_array_parallel(X,
         ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
-    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _binary_screening_array_slice(_slice):
         def _map_foo(j):
             _a, _b = y.copy(), X[:, j].copy()
@@ -1244,12 +1002,7 @@ def binary_screening_array_parallel(X,
                 _keep = _np.logical_not(
                     _np.logical_or(_np.isnan(_a), _np.isnan(_b)))
                 _a, _b = _a[_keep], _b[_keep]
-            return MI_binary_continuous(a=_a,
-                                        b=_b,
-                                        N=N,
-                                        kernel=kernel,
-                                        bw=bw,
-                                        machine_err=machine_err)
+            return MI_binary_continuous(a=_a, b=_b, N=N, kernel=kernel, bw=bw)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -1267,7 +1020,6 @@ def binary_screening_array_parallel(X,
     return MI_array
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def continuous_screening_array_parallel(X,
                                         y,
                                         drop_na=True,
@@ -1276,7 +1028,6 @@ def continuous_screening_array_parallel(X,
                                         kernel="epa",
                                         bw="silverman",
                                         norm=2,
-                                        machine_err=1e-12,
                                         core_num="NOT DECLARED",
                                         multp=10,
                                         verbose=1):
@@ -1293,7 +1044,6 @@ def continuous_screening_array_parallel(X,
         ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
-    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _continuous_screening_array_slice(_slice):
         def _map_foo(j):
             _a, _b = y.copy(), X[:, j].copy()
@@ -1307,8 +1057,7 @@ def continuous_screening_array_parallel(X,
                                             b_N=b_N,
                                             kernel=kernel,
                                             bw=bw,
-                                            norm=norm,
-                                            machine_err=machine_err)
+                                            norm=norm)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -1324,12 +1073,10 @@ def continuous_screening_array_parallel(X,
     return MI_array
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def continuous_skMI_array_parallel(X,
                                    y,
                                    drop_na=True,
                                    n_neighbors=3,
-                                   machine_err=1e-12,
                                    core_num="NOT DECLARED",
                                    multp=10,
                                    verbose=1):
@@ -1346,7 +1093,6 @@ def continuous_skMI_array_parallel(X,
         ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
-    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _continuous_skMI_array_slice(_slice):
         def _map_foo(j):
             _a, _b = y.copy(), X[:, j].copy()
@@ -1373,12 +1119,10 @@ def continuous_skMI_array_parallel(X,
     return MI_array
 
 
-# @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
 def continuous_Pearson_array_parallel(X,
                                       y,
                                       drop_na=True,
                                       n_neighbors=3,
-                                      machine_err=1e-12,
                                       core_num="NOT DECLARED",
                                       multp=10,
                                       verbose=1):
@@ -1395,7 +1139,6 @@ def continuous_Pearson_array_parallel(X,
         ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
-    # @_jit(forceobj=True, nogil=True, cache=True, parallel=True, fastmath=True)
     def _continuous_Pearson_array_slice(_slice):
         def _map_foo(j):
             _a, _b = y.copy(), X[:, j].copy()
