@@ -34,8 +34,7 @@ MI_continuous = continuous_screening_plink_parallel(bed_file=bed_file,
                                                     bim_file=bim_file,
                                                     fam_file=fam_file,
                                                     outcome=outcome,
-                                                    outcome_iid=outcome_iid,
-                                                    machine_err=1e-8)
+                                                    outcome_iid=outcome_iid)
 
 assert np.all(MI_continuous >= 0.)
 

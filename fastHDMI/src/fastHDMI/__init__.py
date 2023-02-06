@@ -19,9 +19,9 @@ _warnings.filterwarnings('ignore')
 #############################################################################
 ############# clumping and screening using mutual information ###############
 #############################################################################
+# @_njit(cache=True)
 
 
-@_njit
 def _nan_inf_to_0(x):
     """
     To convert NaN to 0 in nopython mode.
@@ -29,7 +29,7 @@ def _nan_inf_to_0(x):
     return _np.where(_np.isfinite(x), x, 0.)
 
 
-@_njit
+# @_njit(cache=True)
 def _joint_to_mi(joint, forward_euler_a=1., forward_euler_b=1.):
     # assume that joint likelihood is of shape (len(a), len(b))
     # forward_euler step being 1. means discrete r.v.
@@ -98,7 +98,7 @@ def MI_continuous_012(a, b, N=500, kernel="epa", bw="silverman"):
     return mi_temp
 
 
-@_njit
+# @_njit(cache=True)
 def MI_binary_012(a, b):
     """
     calculate mutual information between binary outcome and an SNP variable of 0,1,2
@@ -121,7 +121,7 @@ def MI_binary_012(a, b):
     return mi_temp
 
 
-@_njit
+# @_njit(cache=True)
 def MI_012_012(a, b):
     """
     calculate mutual information between two SNPs
@@ -148,7 +148,6 @@ def MI_012_012(a, b):
     return mi_temp
 
 
-# make this function available
 def MI_continuous_continuous(a,
                              b,
                              a_N=300,
@@ -179,12 +178,11 @@ def MI_continuous_continuous(a,
     return mi_temp
 
 
-# make this function available
 def MI_binary_continuous(a, b, N=500, kernel="epa", bw="silverman"):
     return MI_continuous_012(a=b, b=a, N=N, kernel=kernel, bw=bw)
 
 
-@_njit
+@_njit(cache=True)
 def Pearson_to_MI_Gaussian(corr):
     """
     Assuming the input variables are bivariate Gaussian, convert their Pearson correlatin to mutual information.
@@ -192,7 +190,7 @@ def Pearson_to_MI_Gaussian(corr):
     return -.5 * (_np.log(1 + corr) + _np.log(1 - corr))
 
 
-@_njit
+@_njit(cache=True)
 def MI_to_Linfoot(mi):
     """
     Convert calcualted mutual information estimator to Linfoot's measure of association.
