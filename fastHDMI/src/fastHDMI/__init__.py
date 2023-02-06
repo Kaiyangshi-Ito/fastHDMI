@@ -50,6 +50,8 @@ def _joint_to_mi(joint, forward_euler_a=1., forward_euler_b=1.):
     if mi_temp < 0.:
         mi_temp = 0.
 
+    del log_a_marginal, log_b_marginal, log_joint
+
     return mi_temp
 
 
@@ -118,6 +120,8 @@ def MI_binary_012(a, b):
 
     mi_temp = _joint_to_mi(joint=joint)
 
+    del joint
+
     return mi_temp
 
 
@@ -144,6 +148,8 @@ def MI_012_012(a, b):
     joint[2, 2] = _np.sum(a[_b2] == 2) / len(a)
 
     mi_temp = _joint_to_mi(joint=joint)
+
+    del joint
 
     return mi_temp
 
