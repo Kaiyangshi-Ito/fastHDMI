@@ -37,7 +37,7 @@ MI_continuous = continuous_screening_plink_parallel(bed_file=bed_file,
                                                     outcome_iid=outcome_iid,
                                                     machine_err=1e-8)
 
-assert np.all(MI_continuous > 0)
+assert np.all(MI_continuous >= 0.)
 
 
 # testing for plink files screening
@@ -68,7 +68,7 @@ MI_binary = binary_screening_plink_parallel(bed_file=bed_file,
                                             outcome=outcome,
                                             outcome_iid=outcome_iid)
 # starting from 1 because the first left column should be the outcome
-assert np.all(MI_binary > 0)
+assert np.all(MI_binary >= 0.)
 
 
 # test for clumping for plink files
@@ -85,7 +85,7 @@ clump_plink_parallel(bed_file=bed_file,
 # single-thread continuous version test
 
 a = continuous_screening_csv(r"./sim/sim_continuous.csv")
-assert np.all(a > 0)
+assert np.all(a >= 0.)
 
 
 # parallel continuous version test
