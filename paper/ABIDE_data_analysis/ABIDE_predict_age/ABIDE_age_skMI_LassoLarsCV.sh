@@ -2,7 +2,7 @@
 #!/bin/bash
 #SBATCH --account=def-cgreenwo_cpu
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=10
+#SBATCH --cpus-per-task=10
 #SBATCH --mem=80G
 #SBATCH --time=6-00:00:00
 #SBATCH --job-name=skMI_LassoLarsCV

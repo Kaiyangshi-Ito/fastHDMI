@@ -32,12 +32,14 @@ mi_output = mi.binary_screening_csv_parallel(csv_file,
                                              _usecols=abide_name,
                                              csv_engine="c",
                                              sample=1250000,
-                                             multp=10)
+                                             multp=10,
+                                             core_num=10)
 np.save(r"./ABIDE_diagnosis_MI_output", mi_output)
 
 pearson_output = mi.Pearson_screening_csv_parallel(csv_file,
                                                    _usecols=abide_name,
                                                    csv_engine="c",
                                                    sample=1250000,
-                                                   multp=10)
+                                                   multp=10,
+                                                   core_num=10)
 np.save(r"./ABIDE_diagnosis_Pearson_output", pearson_output)

@@ -36,7 +36,8 @@ mi_output = mi.continuous_screening_csv_parallel(csv_file,
                                                  _usecols=abide_name,
                                                  csv_engine="c",
                                                  sample=1250000,
-                                                 multp=10)
+                                                 multp=10,
+                                                 core_num=10)
 np.save(r"./ABIDE_age_MI_output", mi_output)
 
 print("sklearn MI calculation:")
@@ -45,7 +46,8 @@ skmi_output = mi.continuous_skMI_screening_csv_parallel(csv_file,
                                                         _usecols=abide_name,
                                                         csv_engine="c",
                                                         sample=1250000,
-                                                        multp=10)
+                                                        multp=10,
+                                                        core_num=10)
 np.save(r"./ABIDE_age_skMI_output", skmi_output)
 
 print("Pearson's correlation calculation:")
@@ -54,5 +56,6 @@ pearson_output = mi.Pearson_screening_csv_parallel(csv_file,
                                                    _usecols=abide_name,
                                                    csv_engine="c",
                                                    sample=1250000,
-                                                   multp=10)
+                                                   multp=10,
+                                                   core_num=10)
 np.save(r"./ABIDE_age_Pearson_output", pearson_output)
