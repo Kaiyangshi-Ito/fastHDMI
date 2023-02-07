@@ -1,4 +1,3 @@
-
 #!/bin/bash
 #SBATCH --account=def-cgreenwo_cpu
 #SBATCH --nodes=1
