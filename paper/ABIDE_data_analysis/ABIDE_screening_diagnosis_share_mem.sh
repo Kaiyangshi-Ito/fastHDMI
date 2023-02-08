@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --account=def-cgreenwo_cpu
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=10
-#SBATCH --mem=80G
-#SBATCH --time=3:00:00
-#SBATCH --job-name=ABIDE_age
+# SBATCH --account=def-cgreenwo_cpu
+# SBATCH --nodes=1
+# SBATCH --cpus-per-task=10
+# SBATCH --mem=80G
+# SBATCH --time=18:00:00
+# SBATCH --job-name=ABIDE_age
 
 module load gcc llvm rust arrow cuda nodejs python/3.8.10 r/4.0.2 python-build-bundle
 
@@ -32,4 +32,6 @@ pip install --no-index /home/kyang/fastHDMI-1.18.3+computecanada-py3-none-any.wh
 nvidia-smi
 lscpu
 
-python3 ABIDE_analysis_age_high_mem.py
+cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv $SLURM_TMPDIR/
+
+python3 ABIDE_screening_diagnosis_share_mem.py

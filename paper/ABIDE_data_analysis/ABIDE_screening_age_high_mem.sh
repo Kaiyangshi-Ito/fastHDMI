@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --account=def-cgreenwo_cpu
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=10
-#SBATCH --mem=80G
-#SBATCH --time=18:00:00
-#SBATCH --job-name=ABIDE_diagnosis
+# SBATCH --account=def-cgreenwo_cpu
+# SBATCH --nodes=1
+# SBATCH --cpus-per-task=10
+# SBATCH --mem=80G
+# SBATCH --time=18:00:00
+# SBATCH --job-name=ABIDE_age
 
 module load gcc llvm rust arrow cuda nodejs python/3.8.10 r/4.0.2 python-build-bundle
 
@@ -34,4 +34,4 @@ lscpu
 
 cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv $SLURM_TMPDIR/
 
-python3 ABIDE_analysis_diagnosis_dask.py
+python3 ABIDE_screening_age_high_mem.py

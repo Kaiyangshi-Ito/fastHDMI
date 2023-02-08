@@ -16,7 +16,8 @@ import multiprocess as mp
 from tqdm import tqdm as tqdm
 import os
 
-csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
+csv_file = os.environ["SLURM_TMPDIR"] + \
+    r"/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
 # abide = pd.read_csv(csv_file, encoding='unicode_escape', engine="c")
 abide = dd.read_csv(csv_file, sample=1250000)
 
@@ -25,18 +26,20 @@ _abide_name = list(abide.columns)[1:]
 
 # print(_abide_name)
 
-# we don't inlcude age and sex in the screening since they should always be included in the model
+# we don't inlcude age and sex in the screening since we choose to always include them in the model
+
 abide_name = [_abide_name[-3]] + _abide_name[1:-3]
 
 np.save(r"./ABIDE_columns", _abide_name[1:-3])
 # so that the left first column is the outcome and the rest columns are areas
 
-print("Now running using pandas c engine with share_memory.")
+print("The outcome is age.")
+print("Now running using c CSV engine with share_memory=True.")
 print("Our developed FFT-based MI calculation:")
 
 mi_output = mi.continuous_screening_csv_parallel(csv_file,
                                                  _usecols=abide_name,
-                                                 csv_engine="c",
+                                                 csv_engine=c,
                                                  sample=1250000,
                                                  multp=10,
                                                  core_num=10,
@@ -47,7 +50,7 @@ print("sklearn MI calculation:")
 
 skmi_output = mi.continuous_skMI_screening_csv_parallel(csv_file,
                                                         _usecols=abide_name,
-                                                        csv_engine="c",
+                                                        csv_engine=c,
                                                         sample=1250000,
                                                         multp=10,
                                                         core_num=10,
@@ -58,7 +61,7 @@ print("Pearson's correlation calculation:")
 
 pearson_output = mi.Pearson_screening_csv_parallel(csv_file,
                                                    _usecols=abide_name,
-                                                   csv_engine="c",
+                                                   csv_engine=c,
                                                    sample=1250000,
                                                    multp=10,
                                                    core_num=10,
