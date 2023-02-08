@@ -39,7 +39,7 @@ print("Our developed FFT-based MI calculation:")
 
 mi_output = mi.continuous_screening_csv_parallel(csv_file,
                                                  _usecols=abide_name,
-                                                 csv_engine=c,
+                                                 csv_engine="c",
                                                  sample=1250000,
                                                  multp=10,
                                                  core_num=10,
@@ -50,7 +50,7 @@ print("sklearn MI calculation:")
 
 skmi_output = mi.continuous_skMI_screening_csv_parallel(csv_file,
                                                         _usecols=abide_name,
-                                                        csv_engine=c,
+                                                        csv_engine="c",
                                                         sample=1250000,
                                                         multp=10,
                                                         core_num=10,
@@ -61,7 +61,7 @@ print("Pearson's correlation calculation:")
 
 pearson_output = mi.Pearson_screening_csv_parallel(csv_file,
                                                    _usecols=abide_name,
-                                                   csv_engine=c,
+                                                   csv_engine="c",
                                                    sample=1250000,
                                                    multp=10,
                                                    core_num=10,
