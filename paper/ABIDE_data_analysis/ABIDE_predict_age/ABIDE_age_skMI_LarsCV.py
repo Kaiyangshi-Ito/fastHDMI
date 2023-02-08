@@ -4,6 +4,7 @@ from dask import dataframe as dd
 import matplotlib.pyplot as plt
 from scipy.stats import kendalltau
 from scipy.stats import rankdata
+from scipy.stats import norm
 import fastHDMI as mi
 from sklearn.linear_model import LassoCV
 from sklearn.linear_model import ElasticNetCV
@@ -12,7 +13,8 @@ from sklearn.linear_model import LarsCV
 from sklearn.linear_model import LassoLarsCV
 from sklearn.metrics import r2_score
 import multiprocess as mp
-from tqdm import tqdm
+from tqdm import tqdm as tqdm
+import os
 
 csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
 original_df = pd.read_csv(csv_file, encoding='unicode_escape', engine='c')

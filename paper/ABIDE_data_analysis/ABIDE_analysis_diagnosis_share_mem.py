@@ -14,6 +14,7 @@ from sklearn.linear_model import LassoLarsCV
 from sklearn.metrics import r2_score
 import multiprocess as mp
 from tqdm import tqdm as tqdm
+import os
 
 csv_file = r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
 # abide = pd.read_csv(csv_file, encoding='unicode_escape', engine="c")
