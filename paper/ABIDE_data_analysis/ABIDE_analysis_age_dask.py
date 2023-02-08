@@ -17,7 +17,7 @@ from tqdm import tqdm as tqdm
 import os
 
 csv_file = os.environ["SLURM_TMPDIR"] + \
-    r"abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
+    r"/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
 # abide = pd.read_csv(csv_file, encoding='unicode_escape', engine="c")
 abide = dd.read_csv(csv_file, sample=1250000)
 
