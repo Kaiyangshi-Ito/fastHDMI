@@ -1352,6 +1352,7 @@ def MCP_concave_grad(x, lambda_, gamma):
     temp[0] = 0.  # this is to NOT penalize intercept beta later
     return temp
 
+
 ##################################################################
 ######## some fudamentals things for the PCA versions ############
 ##################################################################
@@ -2633,6 +2634,7 @@ def SNP_solution_path_LM_PCA(bed_file,
                                                      gamma=gamma)[1]
     return beta_mat[1:, :]
 
+
 ###################################################################################
 ########### LM AG SNP version using bed-reader, multiprocess ######################
 ###################################################################################
@@ -2999,7 +3001,6 @@ def SNP_solution_path_LM_parallel(bed_file,
         _X = _X[gene_ind, :]  # get gene iid also in outcome iid
         _X -= _np.mean(_X, 0).reshape(1, -1)
         return _y @ _X / N
-
 
 #         k = 0
 #         __ = _np.zeros(len(_ind))
@@ -4184,6 +4185,7 @@ def SNP_solution_path_logistic_PCA(bed_file,
             a=a,
             gamma=gamma)[1]
     return beta_mat[1:, :]
+
 
 ##############################################################################################
 ################ logsitic AG SNP bed-reader version with multiprocess ########################

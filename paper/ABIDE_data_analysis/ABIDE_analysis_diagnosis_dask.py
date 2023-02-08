@@ -28,18 +28,25 @@ _abide_name = list(abide.columns)[1:]
 abide_name = [_abide_name[-1]] + _abide_name[1:-3]
 # so that the left first column is the outcome and the rest columns are areas
 
+print("Now running using dask CSV engine.")
+print("Our developed FFT-based MI calculation:")
+
 mi_output = mi.binary_screening_csv_parallel(csv_file,
                                              _usecols=abide_name,
                                              csv_engine="dask",
                                              sample=1250000,
                                              multp=10,
-                                             core_num=10, share_memory=False)
+                                             core_num=10,
+                                             share_memory=False)
 np.save(r"./ABIDE_diagnosis_MI_output", mi_output)
+
+print("Pearson's correlation calculation:")
 
 pearson_output = mi.Pearson_screening_csv_parallel(csv_file,
                                                    _usecols=abide_name,
                                                    csv_engine="dask",
                                                    sample=1250000,
                                                    multp=10,
-                                                   core_num=10, share_memory=False)
+                                                   core_num=10,
+                                                   share_memory=False)
 np.save(r"./ABIDE_diagnosis_Pearson_output", pearson_output)

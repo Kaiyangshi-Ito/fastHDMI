@@ -28,8 +28,9 @@ _abide_name = list(abide.columns)[1:]
 abide_name = [_abide_name[-3]] + _abide_name[1:-3]
 
 np.save(r"./ABIDE_columns", _abide_name[1:-3])
-
 # so that the left first column is the outcome and the rest columns are areas
+
+print("Now running using pandas c engine with share_memory.")
 print("Our developed FFT-based MI calculation:")
 
 mi_output = mi.continuous_screening_csv_parallel(csv_file,
@@ -37,7 +38,8 @@ mi_output = mi.continuous_screening_csv_parallel(csv_file,
                                                  csv_engine="c",
                                                  sample=1250000,
                                                  multp=10,
-                                                 core_num=10)
+                                                 core_num=10,
+                                                 share_memory=True)
 np.save(r"./ABIDE_age_MI_output", mi_output)
 
 print("sklearn MI calculation:")
@@ -47,7 +49,8 @@ skmi_output = mi.continuous_skMI_screening_csv_parallel(csv_file,
                                                         csv_engine="c",
                                                         sample=1250000,
                                                         multp=10,
-                                                        core_num=10)
+                                                        core_num=10,
+                                                        share_memory=True)
 np.save(r"./ABIDE_age_skMI_output", skmi_output)
 
 print("Pearson's correlation calculation:")
@@ -57,5 +60,6 @@ pearson_output = mi.Pearson_screening_csv_parallel(csv_file,
                                                    csv_engine="c",
                                                    sample=1250000,
                                                    multp=10,
-                                                   core_num=10)
+                                                   core_num=10,
+                                                   share_memory=True)
 np.save(r"./ABIDE_age_Pearson_output", pearson_output)
