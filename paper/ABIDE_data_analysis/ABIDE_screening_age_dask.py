@@ -29,9 +29,11 @@ _abide_name = list(abide.columns)[1:]
 # we don't inlcude age and sex in the screening since we choose to always include them in the model
 
 abide_name = [_abide_name[-3]] + _abide_name[1:-3]
+# so that the left first column is the outcome and the rest columns are areas
 
 np.save(r"./ABIDE_columns", _abide_name[1:-3])
-# so that the left first column is the outcome and the rest columns are areas
+
+del _abide_name
 
 print("The outcome is age.")
 print("Now running using dask CSV engine with share_memory=False.")
@@ -47,6 +49,8 @@ mi_output = mi.continuous_screening_csv_parallel(csv_file,
 if "dask" == "high_mem":
     np.save(r"./ABIDE_age_MI_output", mi_output)
 
+del mi_output
+
 print("sklearn MI calculation:")
 
 skmi_output = mi.continuous_skMI_screening_csv_parallel(csv_file,
@@ -59,6 +63,8 @@ skmi_output = mi.continuous_skMI_screening_csv_parallel(csv_file,
 if "dask" == "high_mem":
     np.save(r"./ABIDE_age_skMI_output", skmi_output)
 
+del skmi_output
+
 print("Pearson's correlation calculation:")
 
 pearson_output = mi.Pearson_screening_csv_parallel(csv_file,
@@ -70,3 +76,5 @@ pearson_output = mi.Pearson_screening_csv_parallel(csv_file,
                                                    share_memory=False)
 if "dask" == "high_mem":
     np.save(r"./ABIDE_age_Pearson_output", pearson_output)
+
+del pearson_output
