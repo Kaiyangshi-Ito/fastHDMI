@@ -44,7 +44,8 @@ mi_output = mi.continuous_screening_csv_parallel(csv_file,
                                                  multp=10,
                                                  core_num=10,
                                                  share_memory=False)
-np.save(r"./ABIDE_age_MI_output", mi_output)
+if "high_mem" == "high_mem":
+    np.save(r"./ABIDE_age_MI_output", mi_output)
 
 print("sklearn MI calculation:")
 
@@ -55,7 +56,8 @@ skmi_output = mi.continuous_skMI_screening_csv_parallel(csv_file,
                                                         multp=10,
                                                         core_num=10,
                                                         share_memory=False)
-np.save(r"./ABIDE_age_skMI_output", skmi_output)
+if "high_mem" == "high_mem":
+    np.save(r"./ABIDE_age_skMI_output", skmi_output)
 
 print("Pearson's correlation calculation:")
 
@@ -66,4 +68,5 @@ pearson_output = mi.Pearson_screening_csv_parallel(csv_file,
                                                    multp=10,
                                                    core_num=10,
                                                    share_memory=False)
-np.save(r"./ABIDE_age_Pearson_output", pearson_output)
+if "high_mem" == "high_mem":
+    np.save(r"./ABIDE_age_Pearson_output", pearson_output)
