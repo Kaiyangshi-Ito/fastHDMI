@@ -40,7 +40,7 @@ print("Now running using dask CSV engine with share_memory=False.")
 print("Our developed FFT-based MI calculation:")
 
 mi_output = mi.continuous_screening_csv_parallel(csv_file,
-                                                 _usecols=abide_name,
+                                                 _usecols=abide_name.copy(),
                                                  csv_engine="dask",
                                                  sample=1250000,
                                                  multp=10,
@@ -53,13 +53,14 @@ del mi_output
 
 print("sklearn MI calculation:")
 
-skmi_output = mi.continuous_skMI_screening_csv_parallel(csv_file,
-                                                        _usecols=abide_name,
-                                                        csv_engine="dask",
-                                                        sample=1250000,
-                                                        multp=10,
-                                                        core_num=10,
-                                                        share_memory=False)
+skmi_output = mi.continuous_skMI_screening_csv_parallel(
+    csv_file,
+    _usecols=abide_name.copy(),
+    csv_engine="dask",
+    sample=1250000,
+    multp=10,
+    core_num=10,
+    share_memory=False)
 if "dask" == "high_mem":
     np.save(r"./ABIDE_age_skMI_output", skmi_output)
 
@@ -68,7 +69,7 @@ del skmi_output
 print("Pearson's correlation calculation:")
 
 pearson_output = mi.Pearson_screening_csv_parallel(csv_file,
-                                                   _usecols=abide_name,
+                                                   _usecols=abide_name.copy(),
                                                    csv_engine="dask",
                                                    sample=1250000,
                                                    multp=10,

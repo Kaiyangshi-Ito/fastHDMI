@@ -32,5 +32,8 @@ pip install --no-index /home/kyang/fastHDMI-1.18.5+computecanada-py3-none-any.wh
 nvidia-smi
 lscpu
 
+cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv $SLURM_TMPDIR/
+cp ../*.npy $SLURM_TMPDIR/
+
 python3 ABIDE_age_MI_LarsCV.py
     
