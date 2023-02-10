@@ -20,9 +20,9 @@ csv_file = os.environ["SLURM_TMPDIR"] + \
     r"/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
 original_df = pd.read_csv(csv_file, encoding='unicode_escape', engine='c')
 
-columns = np.load(os.environ["SLURM_TMPDIR"] + r"../ABIDE_columns.npy")
+columns = np.load(os.environ["SLURM_TMPDIR"] + r"/ABIDE_columns.npy")
 abide_dep = np.load(os.environ["SLURM_TMPDIR"] +
-                    r"../ABIDE_age_Pearson_output.npy")  # dep_measure
+                    r"/ABIDE_age_Pearson_output.npy")  # dep_measure
 
 
 def testing_error(num_covariates=20,
