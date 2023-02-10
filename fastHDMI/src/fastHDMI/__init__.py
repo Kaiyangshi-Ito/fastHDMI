@@ -547,6 +547,9 @@ def binary_screening_csv(csv_file="_",
     if verbose >= 1:
         _iter = _tqdm(_iter)
     MI_df = _np.array(list(map(_map_foo, _iter)))
+
+    del _df
+
     return MI_df
 
 
@@ -593,6 +596,9 @@ def continuous_screening_csv(csv_file="_",
     if verbose >= 1:
         _iter = _tqdm(_iter)
     MI_df = _np.array(list(map(_map_foo, _iter)))
+
+    del _df
+
     return MI_df
 
 
@@ -667,6 +673,9 @@ def binary_screening_csv_parallel(csv_file="_",
     with _mp.Pool(core_num) as pl:
         MI_df = pl.map(_binary_screening_csv_slice, _iter)
     MI_df = _np.hstack(MI_df)
+
+    del _df
+
     return MI_df
 
 
@@ -749,6 +758,9 @@ def continuous_screening_csv_parallel(csv_file="_",
     with _mp.Pool(core_num) as pl:
         MI_df = pl.map(_continuous_screening_csv_slice, _iter)
     MI_df = _np.hstack(MI_df)
+
+    del _df
+
     return MI_df
 
 
@@ -824,6 +836,9 @@ def continuous_skMI_screening_csv_parallel(csv_file="_",
     with _mp.Pool(core_num) as pl:
         MI_df = pl.map(_continuous_skMI_df_slice, _iter)
     MI_df = _np.hstack(MI_df)
+
+    del _df
+
     return MI_df
 
 
@@ -900,6 +915,9 @@ def Pearson_screening_csv_parallel(csv_file="_",
     with _mp.Pool(core_num) as pl:
         Pearson_df = pl.map(_Pearson_screening_df_slice, _iter)
     Pearson_df = _np.hstack(Pearson_df)
+
+    del _df
+
     return Pearson_df
 
 
@@ -933,6 +951,9 @@ def clump_continuous_csv_parallel(
                              parquet_file=parquet_file,
                              sample=sample,
                              verbose=verbose)
+
+    del _
+
     if num_vars_exam == _np.infty:
         num_vars_exam = len(keep_cols) - 1
     _iter = _np.arange(num_vars_exam)
