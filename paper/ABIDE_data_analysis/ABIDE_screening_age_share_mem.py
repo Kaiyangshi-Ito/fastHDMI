@@ -6,12 +6,17 @@ from scipy.stats import kendalltau
 from scipy.stats import rankdata
 from scipy.stats import norm
 import fastHDMI as mi
+from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LassoCV
 from sklearn.linear_model import ElasticNetCV
 from sklearn.linear_model import RidgeCV
 from sklearn.linear_model import LarsCV
 from sklearn.linear_model import LassoLarsCV
+from sklearn.neural_network import MLPRegressor
+from sklearn.neural_network import MLPClassifier
+from sklearn.linear_model import LogisticRegressionCV
 from sklearn.metrics import r2_score
+from sklearn.metrics import roc_curve
 import multiprocess as mp
 from tqdm import tqdm as tqdm
 import os

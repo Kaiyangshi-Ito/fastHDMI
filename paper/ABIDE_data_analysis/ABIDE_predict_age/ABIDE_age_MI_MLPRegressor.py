@@ -27,7 +27,7 @@ original_df = pd.read_csv(csv_file, encoding='unicode_escape', engine='c')
 
 columns = np.load(os.environ["SLURM_TMPDIR"] + r"/ABIDE_columns.npy")
 abide_dep = np.load(os.environ["SLURM_TMPDIR"] +
-                    r"/ABIDE_age_skMI_output.npy")  # dep_measure
+                    r"/ABIDE_age_MI_output.npy")  # dep_measure
 
 
 def LogisticRegressionCV_l1(**arg):
@@ -139,13 +139,13 @@ def testing_error_num_attr(num_attr,
     return np.array(list(map(_testing_error_rep, tqdm(num_attr))))
 
 
-print(r"ABIDE_age_skMI_RidgeCV")  # dep_measure, fun_name
+print(r"ABIDE_age_MI_MLPRegressor")  # dep_measure, fun_name
 output = testing_error_num_attr(
     num_attr=list(
         map(int,
             np.around(np.linspace(0, len(columns), 50 + 1)[1:]).tolist())),
     training_proportion=.8,  # 80/20 training+validation/testing division
-    fun=RidgeCV,  # fun_name
+    fun=MLPRegressor,  # fun_name
     outcome_name="AGE_AT_SCAN",
     num_rep=10)
-np.save(r"./ABIDE_age_skMI_RidgeCV", output)  # dep_measure, fun_name
+np.save(r"./ABIDE_age_MI_MLPRegressor", output)  # dep_measure, fun_name

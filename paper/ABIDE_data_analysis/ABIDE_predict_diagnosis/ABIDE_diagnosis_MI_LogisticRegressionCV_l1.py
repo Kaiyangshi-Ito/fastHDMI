@@ -27,7 +27,7 @@ original_df = pd.read_csv(csv_file, encoding='unicode_escape', engine='c')
 
 columns = np.load(os.environ["SLURM_TMPDIR"] + r"/ABIDE_columns.npy")
 abide_dep = np.load(os.environ["SLURM_TMPDIR"] +
-                    r"/ABIDE_age_skMI_output.npy")  # dep_measure
+                    r"/ABIDE_diagnosis_MI_output.npy")  # dep_measure
 
 
 def LogisticRegressionCV_l1(**arg):
@@ -58,7 +58,7 @@ def testing_error(num_covariates=20,
                   outcome_name="AGE_AT_SCAN",
                   seed=1):
     np.random.seed(seed)
-    _usecols = np.hstack((outcome_name, "SEX", "DX_GROUP",
+    _usecols = np.hstack((outcome_name, "SEX", "AGE_AT_SCAN",
                           columns[np.argsort(-abide_dep)][:num_covariates]))
     df = original_df[_usecols].dropna(inplace=False).sample(
         frac=1, random_state=seed, replace=False).reset_index(drop=True,
@@ -139,13 +139,14 @@ def testing_error_num_attr(num_attr,
     return np.array(list(map(_testing_error_rep, tqdm(num_attr))))
 
 
-print(r"ABIDE_age_skMI_RidgeCV")  # dep_measure, fun_name
+print(r"ABIDE_age_MI_LogisticRegressionCV_l1")  # dep_measure, fun_name
 output = testing_error_num_attr(
     num_attr=list(
         map(int,
             np.around(np.linspace(0, len(columns), 50 + 1)[1:]).tolist())),
     training_proportion=.8,  # 80/20 training+validation/testing division
-    fun=RidgeCV,  # fun_name
-    outcome_name="AGE_AT_SCAN",
+    fun=LogisticRegressionCV_l1,  # fun_name
+    outcome_name="DX_GROUP",
     num_rep=10)
-np.save(r"./ABIDE_age_skMI_RidgeCV", output)  # dep_measure, fun_name
+np.save(r"./ABIDE_diagnosis_MI_LogisticRegressionCV_l1",
+        output)  # dep_measure, fun_name
