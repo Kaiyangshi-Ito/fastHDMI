@@ -93,7 +93,7 @@ def testing_error(num_covariates=20,
                       max_iter=500,
                       hidden_layer_sizes=(300, 300)).fit(X_train, y_train)
             y_pred = fit.predict_proba(
-                X_test)[:, 0]  # predict probability to calculate ROC
+                X_test)[:, 1]  # predict probability to calculate ROC
             out = roc_auc_score(y_test, y_pred)
         elif fun in [
                 LogisticRegressionCV_l1, LogisticRegressionCV_l2,
@@ -101,7 +101,7 @@ def testing_error(num_covariates=20,
         ]:
             fit = fun(cv=5, random_state=seed, n_jobs=10).fit(X_train, y_train)
             y_pred = fit.predict_proba(
-                X_test)[:, 0]  # predict probability to calculate ROC
+                X_test)[:, 1]  # predict probability to calculate ROC
             out = roc_auc_score(y_test, y_pred)
     else:
         out = np.nan

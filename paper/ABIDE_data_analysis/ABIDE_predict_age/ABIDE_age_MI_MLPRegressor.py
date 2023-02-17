@@ -16,7 +16,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.metrics import r2_score
-from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_auc_score
 import multiprocess as mp
 from tqdm import tqdm as tqdm
 import os
@@ -93,16 +93,16 @@ def testing_error(num_covariates=20,
                       max_iter=500,
                       hidden_layer_sizes=(300, 300)).fit(X_train, y_train)
             y_pred = fit.predict_proba(
-                X_test)[:, 0]  # predict probability to calculate ROC
-            out = roc_curve(y_test, y_pred)
+                X_test)[:, 1]  # predict probability to calculate ROC
+            out = roc_auc_score(y_test, y_pred)
         elif fun in [
                 LogisticRegressionCV_l1, LogisticRegressionCV_l2,
                 LogisticRegressionCV_ElasticNet
         ]:
             fit = fun(cv=5, random_state=seed, n_jobs=10).fit(X_train, y_train)
             y_pred = fit.predict_proba(
-                X_test)[:, 0]  # predict probability to calculate ROC
-            out = roc_curve(y_test, y_pred)
+                X_test)[:, 1]  # predict probability to calculate ROC
+            out = roc_auc_score(y_test, y_pred)
     else:
         out = np.nan
     return out

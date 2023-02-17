@@ -4,7 +4,7 @@
 #SBATCH --cpus-per-task=10
 #SBATCH --mem=80G
 #SBATCH --time=6-00:00:00
-#SBATCH --job-name=skMI_ElasticNetCV
+#SBATCH --job-name=age_skMI_ElasticNetCV
 
 module load gcc llvm rust arrow cuda nodejs python/3.8.10 r/4.0.2 python-build-bundle
 
