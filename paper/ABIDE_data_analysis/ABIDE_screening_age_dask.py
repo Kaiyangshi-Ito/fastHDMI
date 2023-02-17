@@ -16,7 +16,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.metrics import r2_score
-from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_auc_score
 import multiprocess as mp
 from tqdm import tqdm as tqdm
 import os
