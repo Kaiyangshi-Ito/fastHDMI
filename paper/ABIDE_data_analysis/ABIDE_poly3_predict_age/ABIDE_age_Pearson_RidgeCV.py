@@ -69,11 +69,11 @@ def testing_error(num_covariates=20,
     if df.shape[0] > 20:
         X, y = df.iloc[:, 1:].to_numpy(copy=False), df.iloc[:, 0].to_numpy(
             copy=False)
-        X = StandardScaler(copy=False).fit_transform(X)
         X = SplineTransformer(n_knots=2,
                               degree=3,
                               extrapolation="continue",
                               include_bias=False).fit_transform(X)
+        X = StandardScaler(copy=False).fit_transform(X)
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, train_size=training_proportion, random_state=seed)
         if fun in [ElasticNetCV, LassoCV]:
