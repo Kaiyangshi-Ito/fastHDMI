@@ -7,7 +7,8 @@ from scipy.stats import rankdata
 from scipy.stats import norm
 import fastHDMI as mi
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import PolynomialFeatures
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import SplineTransformer
 from sklearn.linear_model import LassoCV
 from sklearn.linear_model import ElasticNetCV
 from sklearn.linear_model import RidgeCV
@@ -66,7 +67,13 @@ def testing_error(num_covariates=20,
         frac=1, random_state=seed, replace=False).reset_index(drop=True,
                                                               inplace=False)
     if df.shape[0] > 20:
-        X, y = df.iloc[:, 1:], df.iloc[:, 0]
+        X, y = df.iloc[:, 1:].to_numpy(copy=False), df.iloc[:, 0].to_numpy(
+            copy=False)
+        X = StandardScaler(copy=False).fit_transform(X)
+        X = SplineTransformer(n_knots=2,
+                              degree=3,
+                              extrapolation="continue",
+                              include_bias=False).fit_transform(X)
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, train_size=training_proportion, random_state=seed)
         if fun in [ElasticNetCV, LassoCV]:
@@ -148,6 +155,6 @@ output = testing_error_num_attr(
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=LogisticRegressionCV_ElasticNet,  # fun_name
     outcome_name="DX_GROUP",
-    num_rep=10)
+    num_rep=2)
 np.save(r"./ABIDE_diagnosis_Pearson_LogisticRegressionCV_ElasticNet",
         output)  # dep_measure, fun_name
