@@ -118,4 +118,3 @@ b = Pearson_screening_csv_parallel(r"./sim/sim_binary.csv")
 
 c = binary_skMI_screening_csv_parallel(r"./sim/sim_binary.csv")
 assert np.all(c >= 0)
-

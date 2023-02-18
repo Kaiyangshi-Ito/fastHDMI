@@ -1406,6 +1406,145 @@ def continuous_Pearson_array_parallel(X,
 
 
 ##################################################################
+################### some fudamentals things ######################
+##################################################################
+######################################  some SCAD and MCP things  #######################################
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def soft_thresholding(x, lambda_):
+    '''
+    To calculate soft-thresholding mapping of a given ONE-DIMENSIONAL tensor, BESIDES THE FIRST TERM (so beta_0 will not be penalized). 
+    This function is to be used for calculation involving L1 penalty term later. 
+    '''
+    return _np.hstack((_np.array([x[0]]),
+                       _np.where(
+                           _np.abs(x[1:]) > lambda_,
+                           x[1:] - _np.sign(x[1:]) * lambda_, 0)))
+
+
+soft_thresholding(_np.random.rand(20), 3.1)
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def SCAD(x, lambda_, a=3.7):
+    '''
+    To calculate SCAD penalty value;
+    #x can be a multi-dimensional tensor;
+    lambda_, a are scalars;
+    Fan and Li suggests to take a as 3.7 
+    '''
+    # here I notice the function is de facto a function of absolute value of x, therefore take absolute value first to simplify calculation
+    x = _np.abs(x)
+    temp = _np.where(
+        x <= lambda_, lambda_ * x,
+        _np.where(x < a * lambda_,
+                  (2 * a * lambda_ * x - x**2 - lambda_**2) / (2 * (a - 1)),
+                  lambda_**2 * (a + 1) / 2))
+    temp[0] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def SCAD_grad(x, lambda_, a=3.7):
+    '''
+    To calculate the gradient of SCAD wrt. input x; 
+    #x can be a multi-dimensional tensor. 
+    '''
+    # here decompose x to sign and its absolute value for easier calculation
+    sgn = _np.sign(x)
+    x = _np.abs(x)
+    temp = _np.where(
+        x <= lambda_, lambda_ * sgn,
+        _np.where(x < a * lambda_, (a * lambda_ * sgn - sgn * x) / (a - 1), 0))
+    temp[0] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def MCP(x, lambda_, gamma):
+    '''
+    To calculate MCP penalty value; 
+    #x can be a multi-dimensional tensor. 
+    '''
+    # the function is a function of absolute value of x
+    x = _np.abs(x)
+    temp = _np.where(x <= gamma * lambda_, lambda_ * x - x**2 / (2 * gamma),
+                     .5 * gamma * lambda_**2)
+    temp[0] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def MCP_grad(x, lambda_, gamma):
+    '''
+    To calculate MCP gradient wrt. input x; 
+    #x can be a multi-dimensional tensor. 
+    '''
+    temp = _np.where(
+        _np.abs(x) < gamma * lambda_,
+        lambda_ * _np.sign(x) - x / gamma, _np.zeros_like(x))
+    temp[0] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def SCAD_concave(x, lambda_, a=3.7):
+    '''
+    The value of concave part of SCAD penalty; 
+    #x can be a multi-dimensional tensor. 
+    '''
+    x = _np.abs(x)
+    temp = _np.where(
+        x <= lambda_, 0.,
+        _np.where(x < a * lambda_,
+                  (lambda_ * x - (x**2 + lambda_**2) / 2) / (a - 1),
+                  (a + 1) / 2 * lambda_**2 - lambda_ * x))
+    temp[0] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def SCAD_concave_grad(x, lambda_, a=3.7):
+    '''
+    The gradient of concave part of SCAD penalty wrt. input x; 
+    #x can be a multi-dimensional tensor. 
+    '''
+    sgn = _np.sign(x)
+    x = _np.abs(x)
+    temp = _np.where(
+        x <= lambda_, 0.,
+        _np.where(x < a * lambda_, (lambda_ * sgn - sgn * x) / (a - 1),
+                  -lambda_ * sgn))
+    temp[0] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def MCP_concave(x, lambda_, gamma):
+    '''
+    The value of concave part of MCP penalty; 
+    #x can be a multi-dimensional tensor. 
+    '''
+    # similiar as in MCP
+    x = _np.abs(x)
+    temp = _np.where(x <= gamma * lambda_, -(x**2) / (2 * gamma),
+                     (gamma * lambda_**2) / 2 - lambda_ * x)
+    temp[0] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
+def MCP_concave_grad(x, lambda_, gamma):
+    '''
+    The gradient of concave part of MCP penalty wrt. input x; 
+    #x can be a multi-dimensional tensor. 
+    '''
+    temp = _np.where(
+        _np.abs(x) < gamma * lambda_, -x / gamma, -lambda_ * _np.sign(x))
+    temp[0] = 0.  # this is to NOT penalize intercept beta later
+    return temp
+
+
+##################################################################
 ######## some fudamentals things for the PCA versions ############
 ##################################################################
 ######################################  some SCAD and MCP things  #######################################
