@@ -146,7 +146,7 @@ def testing_error_num_attr(num_attr,
     return np.array(list(map(_testing_error_rep, tqdm(num_attr))))
 
 
-print(r"ABIDE_age_MI_ElasticNetCV")  # dep_measure, fun_name
+print(r"ABIDE_poly3_age_MI_ElasticNetCV")  # dep_measure, fun_name
 output = testing_error_num_attr(
     num_attr=list(
         map(int,
@@ -155,4 +155,4 @@ output = testing_error_num_attr(
     fun=ElasticNetCV,  # fun_name
     outcome_name="AGE_AT_SCAN",
     num_rep=10)
-np.save(r"./ABIDE_age_MI_ElasticNetCV", output)  # dep_measure, fun_name
+np.save(r"./ABIDE_poly3_age_MI_ElasticNetCV", output)  # dep_measure, fun_name
