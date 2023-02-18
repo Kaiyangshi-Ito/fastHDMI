@@ -67,8 +67,9 @@ def testing_error(num_covariates=20,
         frac=1, random_state=seed, replace=False).reset_index(drop=True,
                                                               inplace=False)
     if df.shape[0] > 20:
-        X, y = df.iloc[:, 1:].to_numpy(copy=False), df.iloc[:, 0].to_numpy(
-            copy=False)
+        X, y = df.iloc[:,
+                       1:].to_numpy(copy=True), df.iloc[:,
+                                                        0].to_numpy(copy=True)
         X = StandardScaler(copy=False).fit_transform(X)
         X = SplineTransformer(n_knots=2,
                               degree=3,
