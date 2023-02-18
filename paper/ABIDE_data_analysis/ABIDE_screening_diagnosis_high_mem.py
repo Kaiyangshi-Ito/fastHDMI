@@ -7,6 +7,7 @@ from scipy.stats import rankdata
 from scipy.stats import norm
 import fastHDMI as mi
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LassoCV
 from sklearn.linear_model import ElasticNetCV
 from sklearn.linear_model import RidgeCV

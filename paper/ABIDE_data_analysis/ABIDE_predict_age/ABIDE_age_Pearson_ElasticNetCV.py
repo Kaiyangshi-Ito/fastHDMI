@@ -7,6 +7,7 @@ from scipy.stats import rankdata
 from scipy.stats import norm
 import fastHDMI as mi
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LassoCV
 from sklearn.linear_model import ElasticNetCV
 from sklearn.linear_model import RidgeCV
@@ -65,11 +66,9 @@ def testing_error(num_covariates=20,
         frac=1, random_state=seed, replace=False).reset_index(drop=True,
                                                               inplace=False)
     if df.shape[0] > 20:
+        X, y = df.iloc[:, 1:], df.iloc[:, 0]
         X_train, X_test, y_train, y_test = train_test_split(
-            df.iloc[:, 1:],
-            df.iloc[:, 0],
-            train_size=training_proportion,
-            random_state=seed)
+            X, y, train_size=training_proportion, random_state=seed)
         if fun in [ElasticNetCV, LassoCV]:
             fit = fun(cv=5, random_state=seed, n_jobs=10).fit(X_train, y_train)
             y_pred = fit.predict(X_test)
