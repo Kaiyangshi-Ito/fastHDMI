@@ -54,6 +54,20 @@ if "share_mem" == "high_mem":
 
 del mi_output
 
+print("sklearn MI calculation:")
+
+skmi_output = mi.binary_skMI_screening_csv_parallel(csv_file,
+                                                    _usecols=abide_name.copy(),
+                                                    csv_engine="c",
+                                                    sample=1250000,
+                                                    multp=10,
+                                                    core_num=10,
+                                                    share_memory=True)
+if "share_mem" == "high_mem":
+    np.save(r"./ABIDE_diagnosis_skMI_output", skmi_output)
+
+del skmi_output
+
 print("Pearson's correlation calculation:")
 
 pearson_output = mi.Pearson_screening_csv_parallel(csv_file,

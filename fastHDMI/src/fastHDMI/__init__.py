@@ -5,6 +5,7 @@ import multiprocess as _mp
 import ctypes as _ctypes
 from sklearn.preprocessing import RobustScaler as _scaler
 from sklearn.feature_selection import mutual_info_regression as _mutual_info_regression
+from sklearn.feature_selection import mutual_info_classif as _mutual_info_classif
 from dask import dataframe as _dd
 import pandas as _pd
 from KDEpy import FFTKDE as _FFTKDE
@@ -17,12 +18,11 @@ import warnings as _warnings
 
 _warnings.filterwarnings('ignore')
 
+
 #############################################################################
 ############# clumping and screening using mutual information ###############
 #############################################################################
 # @_njit(cache=True)
-
-
 def _nan_inf_to_0(x):
     """
     To convert NaN to 0 in nopython mode.
@@ -764,6 +764,84 @@ def continuous_screening_csv_parallel(csv_file="_",
     return MI_df
 
 
+def binary_skMI_screening_csv_parallel(csv_file="_",
+                                       _usecols=[],
+                                       n_neighbors=3,
+                                       core_num="NOT DECLARED",
+                                       multp=10,
+                                       csv_engine="c",
+                                       parquet_file="_",
+                                       sample=256000,
+                                       verbose=1,
+                                       share_memory=True):
+    """
+    (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    Both the outcome and the covariates should be binary. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    share_memory is to indicate whether to share the dataframe in memory to 
+    multiple processes -- if set to False, each process will copy the entire dataframe respectively. However, 
+    to read very large dataframe using dask, this option should usually be turned off.
+    """
+    # check some basic things
+    assert csv_file != "_" or parquet_file != "_", "CSV or parquet filepath should be declared"
+
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    # read csv
+    _df, _usecols = _read_csv(csv_file=csv_file,
+                              _usecols=_usecols,
+                              csv_engine=csv_engine,
+                              parquet_file=parquet_file,
+                              sample=sample,
+                              verbose=verbose)
+
+    # share_memory for multiprocess
+    if share_memory == True:
+        # the origingal dataframe is df, store the columns/dtypes pairs
+        df_dtypes_dict = dict(list(zip(_df.columns, _df.dtypes)))
+        # declare a shared Array with data from df
+        mparr = _mp.Array(_ctypes.c_double, _df.values.reshape(-1))
+        # create a new df based on the shared array
+        _df = _pd.DataFrame(_np.frombuffer(mparr.get_obj()).reshape(_df.shape),
+                            columns=_df.columns).astype(df_dtypes_dict)
+
+    def _binary_skMI_df_slice(_slice):
+        def _map_foo(j):
+            __ = [
+                _usecols[0], _usecols[j]
+            ]  # here using _usecol[j] because only input variables indices were splitted
+            _a, _b = _read_two_columns(_df=_df, __=__, csv_engine=csv_engine)
+            return _mutual_info_classif(y=_a.reshape(-1, 1),
+                                        X=_b.reshape(-1, 1),
+                                        n_neighbors=n_neighbors,
+                                        discrete_features=False)[0]
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(
+        1, len(_usecols)
+    )  # starting from 1 because the first left column should be the outcome
+
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_df = pl.map(_binary_skMI_df_slice, _iter)
+    MI_df = _np.hstack(MI_df)
+
+    del _df
+
+    return MI_df
+
+
 def continuous_skMI_screening_csv_parallel(csv_file="_",
                                            _usecols=[],
                                            n_neighbors=3,
@@ -980,6 +1058,52 @@ def clump_continuous_csv_parallel(
     return current_var_ind, keep_cols
 
 
+def continuous_skMI_array_parallel(X,
+                                   y,
+                                   drop_na=True,
+                                   n_neighbors=3,
+                                   core_num="NOT DECLARED",
+                                   multp=10,
+                                   verbose=1):
+    """
+    (Multiprocessing version) Calculate the mutual information using sklearn implementation between outcome and covariates.
+    The outcome should be binary and the covariates be continuous. 
+    If drop_na is set to be True, the NaN values will be dropped in a bivariate manner. 
+    """
+    # check some basic things
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    def _continuous_skMI_array_slice(_slice):
+        def _map_foo(j):
+            _a, _b = y.copy(), X[:, j].copy()
+            if drop_na == True:
+                _keep = _np.logical_not(
+                    _np.logical_or(_np.isnan(_a), _np.isnan(_b)))
+                _a, _b = _a[_keep], _b[_keep]
+            return _mutual_info_regression(y=_a.reshape(-1, 1),
+                                           X=_b.reshape(-1, 1),
+                                           n_neighbors=n_neighbors,
+                                           discrete_features=False)[0]
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(X.shape[1])
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_array = pl.map(_continuous_skMI_array_slice, _iter)
+    MI_array = _np.hstack(MI_array)
+    return MI_array
+
+
 def binary_screening_array(X,
                            y,
                            drop_na=True,
@@ -1142,6 +1266,52 @@ def continuous_screening_array_parallel(X,
     return MI_array
 
 
+def binary_skMI_array_parallel(X,
+                               y,
+                               drop_na=True,
+                               n_neighbors=3,
+                               core_num="NOT DECLARED",
+                               multp=10,
+                               verbose=1):
+    """
+    (Multiprocessing version) Calculate the mutual information using sklearn implementation between outcome and covariates.
+    The outcome should be binary and the covariates be binary. 
+    If drop_na is set to be True, the NaN values will be dropped in a bivariate manner. 
+    """
+    # check some basic things
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    def _binary_skMI_array_slice(_slice):
+        def _map_foo(j):
+            _a, _b = y.copy(), X[:, j].copy()
+            if drop_na == True:
+                _keep = _np.logical_not(
+                    _np.logical_or(_np.isnan(_a), _np.isnan(_b)))
+                _a, _b = _a[_keep], _b[_keep]
+            return _mutual_info_classif(y=_a.reshape(-1, 1),
+                                        X=_b.reshape(-1, 1),
+                                        n_neighbors=n_neighbors,
+                                        discrete_features=False)[0]
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(X.shape[1])
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_array = pl.map(_binary_skMI_array_slice, _iter)
+    MI_array = _np.hstack(MI_array)
+    return MI_array
+
+
 def continuous_skMI_array_parallel(X,
                                    y,
                                    drop_na=True,
@@ -1233,145 +1403,6 @@ def continuous_Pearson_array_parallel(X,
         MI_array = pl.map(_continuous_Pearson_array_slice, _iter)
     MI_array = _np.hstack(MI_array)
     return MI_array
-
-
-##################################################################
-################ some fudamentals things #########################
-##################################################################
-######################################  some SCAD and MCP things  #######################################
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def soft_thresholding(x, lambda_):
-    '''
-    To calculate soft-thresholding mapping of a given ONE-DIMENSIONAL tensor, BESIDES THE FIRST TERM (so beta_0 will not be penalized).
-    This function is to be used for calculation involving L1 penalty term later.
-    '''
-    return _np.hstack((_np.array([x[0]]),
-                       _np.where(
-                           _np.abs(x[1:]) > lambda_,
-                           x[1:] - _np.sign(x[1:]) * lambda_, 0)))
-
-
-soft_thresholding(_np.random.rand(20), 3.1)
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def SCAD(x, lambda_, a=3.7):
-    '''
-    To calculate SCAD penalty value;
-    #x can be a multi-dimensional tensor;
-    lambda_, a are scalars;
-    Fan and Li suggests to take a as 3.7
-    '''
-    # here I notice the function is de facto a function of absolute value of x, therefore take absolute value first to simplify calculation
-    x = _np.abs(x)
-    temp = _np.where(
-        x <= lambda_, lambda_ * x,
-        _np.where(x < a * lambda_,
-                  (2 * a * lambda_ * x - x**2 - lambda_**2) / (2 * (a - 1)),
-                  lambda_**2 * (a + 1) / 2))
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def SCAD_grad(x, lambda_, a=3.7):
-    '''
-    To calculate the gradient of SCAD wrt. input x;
-    #x can be a multi-dimensional tensor.
-    '''
-    # here decompose x to sign and its absolute value for easier calculation
-    sgn = _np.sign(x)
-    x = _np.abs(x)
-    temp = _np.where(
-        x <= lambda_, lambda_ * sgn,
-        _np.where(x < a * lambda_, (a * lambda_ * sgn - sgn * x) / (a - 1), 0))
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def MCP(x, lambda_, gamma):
-    '''
-    To calculate MCP penalty value;
-    #x can be a multi-dimensional tensor.
-    '''
-    # the function is a function of absolute value of x
-    x = _np.abs(x)
-    temp = _np.where(x <= gamma * lambda_, lambda_ * x - x**2 / (2 * gamma),
-                     .5 * gamma * lambda_**2)
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def MCP_grad(x, lambda_, gamma):
-    '''
-    To calculate MCP gradient wrt. input x;
-    #x can be a multi-dimensional tensor.
-    '''
-    temp = _np.where(
-        _np.abs(x) < gamma * lambda_,
-        lambda_ * _np.sign(x) - x / gamma, _np.zeros_like(x))
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def SCAD_concave(x, lambda_, a=3.7):
-    '''
-    The value of concave part of SCAD penalty;
-    #x can be a multi-dimensional tensor.
-    '''
-    x = _np.abs(x)
-    temp = _np.where(
-        x <= lambda_, 0.,
-        _np.where(x < a * lambda_,
-                  (lambda_ * x - (x**2 + lambda_**2) / 2) / (a - 1),
-                  (a + 1) / 2 * lambda_**2 - lambda_ * x))
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def SCAD_concave_grad(x, lambda_, a=3.7):
-    '''
-    The gradient of concave part of SCAD penalty wrt. input x;
-    #x can be a multi-dimensional tensor.
-    '''
-    sgn = _np.sign(x)
-    x = _np.abs(x)
-    temp = _np.where(
-        x <= lambda_, 0.,
-        _np.where(x < a * lambda_, (lambda_ * sgn - sgn * x) / (a - 1),
-                  -lambda_ * sgn))
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def MCP_concave(x, lambda_, gamma):
-    '''
-    The value of concave part of MCP penalty;
-    #x can be a multi-dimensional tensor.
-    '''
-    # similiar as in MCP
-    x = _np.abs(x)
-    temp = _np.where(x <= gamma * lambda_, -(x**2) / (2 * gamma),
-                     (gamma * lambda_**2) / 2 - lambda_ * x)
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def MCP_concave_grad(x, lambda_, gamma):
-    '''
-    The gradient of concave part of MCP penalty wrt. input x;
-    #x can be a multi-dimensional tensor.
-    '''
-    temp = _np.where(
-        _np.abs(x) < gamma * lambda_, -x / gamma, -lambda_ * _np.sign(x))
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
 
 
 ##################################################################

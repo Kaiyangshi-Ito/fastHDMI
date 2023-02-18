@@ -4,7 +4,7 @@
 #SBATCH --cpus-per-task=10
 #SBATCH --mem=80G
 #SBATCH --time=6-00:00:00
-#SBATCH --job-name=age_MI_RidgeCV
+#SBATCH --job-name=diagnosis_skMI_LogisticRegressionCV_l2
 
 module load gcc llvm rust arrow cuda nodejs python/3.8.10 r/4.0.2 python-build-bundle
 
@@ -35,5 +35,5 @@ lscpu
 cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv $SLURM_TMPDIR/
 cp ../*.npy $SLURM_TMPDIR/
 
-python3 ABIDE_age_MI_RidgeCV.py
+python3 ABIDE_diagnosis_skMI_LogisticRegressionCV_l2.py
     
