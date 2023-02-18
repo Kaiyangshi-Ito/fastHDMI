@@ -80,7 +80,6 @@ pearson_output = mi.Pearson_screening_csv_parallel(csv_file,
                                                    multp=10,
                                                    core_num=10,
                                                    share_memory=False)
-pearson_output = np.absolute(pearson_output)
 if "high_mem" == "high_mem":
     np.save(r"./ABIDE_age_Pearson_output", pearson_output)
 

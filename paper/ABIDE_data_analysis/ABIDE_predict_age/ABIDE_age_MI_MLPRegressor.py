@@ -28,6 +28,7 @@ original_df = pd.read_csv(csv_file, encoding='unicode_escape', engine='c')
 columns = np.load(os.environ["SLURM_TMPDIR"] + r"/ABIDE_columns.npy")
 abide_dep = np.load(os.environ["SLURM_TMPDIR"] +
                     r"/ABIDE_age_MI_output.npy")  # dep_measure
+abide_dep = np.absolute(abide_dep)
 
 
 def LogisticRegressionCV_l1(**arg):
