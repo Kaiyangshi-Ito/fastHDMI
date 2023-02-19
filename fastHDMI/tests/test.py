@@ -87,7 +87,8 @@ assert np.all(a >= 0.)
 a = continuous_screening_csv_parallel(r"./sim/sim_continuous.csv")
 assert np.all(a >= 0)
 b = Pearson_screening_csv_parallel(r"./sim/sim_continuous.csv")
-c = continuous_skMI_screening_csv_parallel(r"./sim/sim_continuous.csv")
+c = continuous_skMI_screening_csv_parallel(r"./sim/sim_continuous.csv",
+                                           random_state=0)
 assert np.all(c >= 0)
 
 # parallel continuous version but using numpy array
@@ -99,7 +100,7 @@ X, y = csv.iloc[:, 2:].to_numpy(), csv.iloc[:, 1].to_numpy()
 
 MI = continuous_screening_array_parallel(X, y)
 assert np.all(MI >= 0)
-skMI = continuous_skMI_array_parallel(X, y, n_neighbors=3)
+skMI = continuous_skMI_array_parallel(X, y, n_neighbors=3, random_state=0)
 assert np.all(MI >= 0)
 
 # test for clumping for CSV files
@@ -116,5 +117,5 @@ assert np.all(a >= 0)
 
 b = Pearson_screening_csv_parallel(r"./sim/sim_binary.csv")
 
-c = binary_skMI_screening_csv_parallel(r"./sim/sim_binary.csv")
+c = binary_skMI_screening_csv_parallel(r"./sim/sim_binary.csv", random_state=0)
 assert np.all(c >= 0)

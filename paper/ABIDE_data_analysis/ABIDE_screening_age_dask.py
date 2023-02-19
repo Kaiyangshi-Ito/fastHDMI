@@ -67,6 +67,7 @@ skmi_output = mi.continuous_skMI_screening_csv_parallel(
     sample=1250000,
     multp=10,
     core_num=10,
+    random_state=0,
     share_memory=False)
 if "dask" == "high_mem":
     np.save(r"./ABIDE_age_skMI_output", skmi_output)

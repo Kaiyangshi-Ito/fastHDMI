@@ -64,6 +64,7 @@ skmi_output = mi.binary_skMI_screening_csv_parallel(csv_file,
                                                     sample=1250000,
                                                     multp=10,
                                                     core_num=10,
+                                                    random_state=0,
                                                     share_memory=True)
 if "share_mem" == "high_mem":
     np.save(r"./ABIDE_diagnosis_skMI_output", skmi_output)

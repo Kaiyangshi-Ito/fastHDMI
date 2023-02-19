@@ -55,7 +55,7 @@ def _joint_to_mi(joint, forward_euler_a=1., forward_euler_b=1.):
     return mi_temp
 
 
-def MI_continuous_012(a, b, N=500, kernel="epa", bw="silverman"):
+def MI_continuous_012(a, b, N=500, kernel="epa", bw="silverman", **kwarg):
     """
     calculate mutual information between continuous outcome and an SNP variable of 0,1,2
     assume no missing data
@@ -67,22 +67,22 @@ def MI_continuous_012(a, b, N=500, kernel="epa", bw="silverman"):
     _a = _scaler().fit_transform(a.reshape(-1, 1)).flatten()
     # this step is just to get the boundary width for the joint density grid
     # the three conditional density estimates need to be evaluated on the joint density grid
-    a_temp, _ = _FFTKDE(kernel=kernel, bw=bw).fit(data=_a).evaluate(N)
+    a_temp, _ = _FFTKDE(kernel=kernel, bw=bw, **kwarg).fit(data=_a).evaluate(N)
     # estimate cond density
     _b0 = (b == 0)
     if _np.count_nonzero(_b0) > 2:
         # here proceed to kde only if there are more than 5 data points
-        y_cond_p0 = _FFTKDE(kernel=kernel, bw=bw).fit(data=_a[_b0])
+        y_cond_p0 = _FFTKDE(kernel=kernel, bw=bw, **kwarg).fit(data=_a[_b0])
     else:
         y_cond_p0 = _np.zeros_like
     _b1 = (b == 1)
     if _np.count_nonzero(_b1) > 2:
-        y_cond_p1 = _FFTKDE(kernel=kernel, bw=bw).fit(data=_a[_b1])
+        y_cond_p1 = _FFTKDE(kernel=kernel, bw=bw, **kwarg).fit(data=_a[_b1])
     else:
         y_cond_p1 = _np.zeros_like
     _b2 = (b == 2)
     if _np.count_nonzero(_b2) > 2:
-        y_cond_p2 = _FFTKDE(kernel=kernel, bw=bw).fit(data=_a[_b2])
+        y_cond_p2 = _FFTKDE(kernel=kernel, bw=bw, **kwarg).fit(data=_a[_b2])
     else:
         y_cond_p2 = _np.zeros_like
     joint = _np.zeros((N, 3))
@@ -144,15 +144,16 @@ def MI_continuous_continuous(a,
                              b_N=300,
                              kernel="epa",
                              bw="silverman",
-                             norm=2):
+                             norm=2,
+                             **kwarg):
     """
     (Single Core version) calculate mutual information on bivariate continuous r.v..
     """
     _temp = _np.argsort(a)
     data = _np.hstack((a[_temp].reshape(-1, 1), b[_temp].reshape(-1, 1)))
     _data = _scaler().fit_transform(data)
-    grid, joint = _FFTKDE(kernel=kernel, norm=norm).fit(_data).evaluate(
-        (a_N, b_N))
+    grid, joint = _FFTKDE(kernel=kernel, norm=norm,
+                          **kwarg).fit(_data).evaluate((a_N, b_N))
     joint = joint.reshape(b_N, -1).T
     # this gives joint as a (a_N, b_N) array, following example: https://kdepy.readthedocs.io/en/latest/examples.html#the-effect-of-norms-in-2d
     a_forward_euler_step = grid[b_N, 0] - grid[0, 0]
@@ -168,8 +169,8 @@ def MI_continuous_continuous(a,
     return mi_temp
 
 
-def MI_binary_continuous(a, b, N=500, kernel="epa", bw="silverman"):
-    return MI_continuous_012(a=b, b=a, N=N, kernel=kernel, bw=bw)
+def MI_binary_continuous(a, b, N=500, kernel="epa", bw="silverman", **kwarg):
+    return MI_continuous_012(a=b, b=a, N=N, kernel=kernel, bw=bw, **kwarg)
 
 
 @_njit(cache=True)
@@ -197,7 +198,8 @@ def continuous_screening_plink(bed_file,
                                N=500,
                                kernel="epa",
                                bw="silverman",
-                               verbose=1):
+                               verbose=1,
+                               **kwarg):
     """
     (Single Core version) take plink files to calculate the mutual information between the continuous outcome and many SNP variables.
     """
@@ -222,7 +224,12 @@ def continuous_screening_plink(bed_file,
         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        return MI_continuous_012(a=_outcome, b=_SNP, N=N, kernel=kernel, bw=bw)
+        return MI_continuous_012(a=_outcome,
+                                 b=_SNP,
+                                 N=N,
+                                 kernel=kernel,
+                                 bw=bw,
+                                 **kwarg)
 
     _iter = range(len(bed1_sid))
     if verbose > 1:
@@ -236,7 +243,8 @@ def binary_screening_plink(bed_file,
                            fam_file,
                            outcome,
                            outcome_iid,
-                           verbose=1):
+                           verbose=1,
+                           **kwarg):
     """
     (Single Core version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
@@ -260,7 +268,7 @@ def binary_screening_plink(bed_file,
         _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
         _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
         _SNP = _SNP[_SNP != -127]  # remove missing SNP
-        return MI_binary_012(a=_outcome, b=_SNP)
+        return MI_binary_012(a=_outcome, b=_SNP, **kwarg)
 
     _iter = range(len(bed1_sid))
     if verbose >= 1:
@@ -279,7 +287,8 @@ def continuous_screening_plink_parallel(bed_file,
                                         bw="silverman",
                                         core_num="NOT DECLARED",
                                         multp=10,
-                                        verbose=1):
+                                        verbose=1,
+                                        **kwarg):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the continuous outcome and many SNP variables.
     """
@@ -317,7 +326,8 @@ def continuous_screening_plink_parallel(bed_file,
                                      b=_SNP,
                                      N=N,
                                      kernel=kernel,
-                                     bw=bw)
+                                     bw=bw,
+                                     **kwarg)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -340,7 +350,8 @@ def binary_screening_plink_parallel(bed_file,
                                     outcome_iid,
                                     core_num="NOT DECLARED",
                                     multp=10,
-                                    verbose=1):
+                                    verbose=1,
+                                    **kwarg):
     """
     (Multiprocessing version) take plink files to calculate the mutual information between the binary outcome and many SNP variables.
     """
@@ -374,7 +385,7 @@ def binary_screening_plink_parallel(bed_file,
             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
             _outcome = outcome[_SNP != -127]  # remove missing SNP in outcome
             _SNP = _SNP[_SNP != -127]  # remove missing SNP
-            return MI_binary_012(a=_outcome, b=_SNP)
+            return MI_binary_012(a=_outcome, b=_SNP, **kwarg)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -519,7 +530,8 @@ def binary_screening_csv(csv_file="_",
                          csv_engine="c",
                          parquet_file="_",
                          sample=256000,
-                         verbose=1):
+                         verbose=1,
+                         **kwarg):
     """
     Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     The outcome should be binary and the covariates be continuous. 
@@ -541,7 +553,12 @@ def binary_screening_csv(csv_file="_",
             _usecols[0], _usecols[j + 1]
         ]  # here using _usecol[j + 1] because the left first column is the outcome
         _a, _b = _read_two_columns(_df=_df, __=__, csv_engine=csv_engine)
-        return MI_binary_continuous(a=_a, b=_b, N=N, kernel=kernel, bw=bw)
+        return MI_binary_continuous(a=_a,
+                                    b=_b,
+                                    N=N,
+                                    kernel=kernel,
+                                    bw=bw,
+                                    **kwarg)
 
     _iter = _np.arange(len(_usecols) - 1)
     if verbose >= 1:
@@ -563,7 +580,8 @@ def continuous_screening_csv(csv_file="_",
                              csv_engine="c",
                              parquet_file="_",
                              sample=256000,
-                             verbose=1):
+                             verbose=1,
+                             **kwarg):
     """
     Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     Both the outcome and the covariates should be continuous. 
@@ -590,7 +608,8 @@ def continuous_screening_csv(csv_file="_",
                                         b_N=b_N,
                                         kernel=kernel,
                                         bw=bw,
-                                        norm=norm)
+                                        norm=norm,
+                                        **kwarg)
 
     _iter = _np.arange(len(_usecols) - 1)
     if verbose >= 1:
@@ -613,7 +632,8 @@ def binary_screening_csv_parallel(csv_file="_",
                                   parquet_file="_",
                                   sample=256000,
                                   verbose=1,
-                                  share_memory=True):
+                                  share_memory=True,
+                                  **kwarg):
     """
     (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     The outcome should be binary and the covariates be continuous. 
@@ -657,7 +677,12 @@ def binary_screening_csv_parallel(csv_file="_",
                 _usecols[0], _usecols[j]
             ]  # here using _usecol[j] because only input variables indices were splitted
             _a, _b = _read_two_columns(_df=_df, __=__, csv_engine=csv_engine)
-            return MI_binary_continuous(a=_a, b=_b, N=N, kernel=kernel, bw=bw)
+            return MI_binary_continuous(a=_a,
+                                        b=_b,
+                                        N=N,
+                                        kernel=kernel,
+                                        bw=bw,
+                                        **kwarg)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -692,7 +717,8 @@ def continuous_screening_csv_parallel(csv_file="_",
                                       parquet_file="_",
                                       sample=256000,
                                       verbose=1,
-                                      share_memory=True):
+                                      share_memory=True,
+                                      **kwarg):
     """
     (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     Both the outcome and the covariates should be continuous. 
@@ -742,7 +768,8 @@ def continuous_screening_csv_parallel(csv_file="_",
                                             b_N=b_N,
                                             kernel=kernel,
                                             bw=bw,
-                                            norm=norm)
+                                            norm=norm,
+                                            **kwarg)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -773,7 +800,8 @@ def binary_skMI_screening_csv_parallel(csv_file="_",
                                        parquet_file="_",
                                        sample=256000,
                                        verbose=1,
-                                       share_memory=True):
+                                       share_memory=True,
+                                       **kwarg):
     """
     (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     Both the outcome and the covariates should be binary. 
@@ -820,7 +848,8 @@ def binary_skMI_screening_csv_parallel(csv_file="_",
             return _mutual_info_classif(y=_a.reshape(-1, 1),
                                         X=_b.reshape(-1, 1),
                                         n_neighbors=n_neighbors,
-                                        discrete_features=False)[0]
+                                        discrete_features=False,
+                                        **kwarg)[0]
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -851,7 +880,8 @@ def continuous_skMI_screening_csv_parallel(csv_file="_",
                                            parquet_file="_",
                                            sample=256000,
                                            verbose=1,
-                                           share_memory=True):
+                                           share_memory=True,
+                                           **kwarg):
     """
     (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
     Both the outcome and the covariates should be continuous. 
@@ -898,7 +928,8 @@ def continuous_skMI_screening_csv_parallel(csv_file="_",
             return _mutual_info_regression(y=_a.reshape(-1, 1),
                                            X=_b.reshape(-1, 1),
                                            n_neighbors=n_neighbors,
-                                           discrete_features=False)[0]
+                                           discrete_features=False,
+                                           **kwarg)[0]
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -1015,7 +1046,8 @@ def clump_continuous_csv_parallel(
         parquet_file="_",
         sample=256000,
         verbose=1,
-        share_memory=True):
+        share_memory=True,
+        **kwarg):
     """
     Perform clumping based on mutual information thresholding
     The clumping process starts from the left to right, preserve input variables under the clumping threshold
@@ -1048,7 +1080,8 @@ def clump_continuous_csv_parallel(
                 parquet_file=parquet_file,
                 sample=sample,
                 verbose=0,
-                share_memory=share_memory)
+                share_memory=share_memory,
+                **kwarg)
             # current_var_ind + 1 since the current variable will be included anyway
             keep_cols = _np.hstack(
                 (keep_cols[:current_var_ind + 1],
@@ -1064,7 +1097,8 @@ def continuous_skMI_array_parallel(X,
                                    n_neighbors=3,
                                    core_num="NOT DECLARED",
                                    multp=10,
-                                   verbose=1):
+                                   verbose=1,
+                                   **kwarg):
     """
     (Multiprocessing version) Calculate the mutual information using sklearn implementation between outcome and covariates.
     The outcome should be binary and the covariates be continuous. 
@@ -1088,7 +1122,8 @@ def continuous_skMI_array_parallel(X,
             return _mutual_info_regression(y=_a.reshape(-1, 1),
                                            X=_b.reshape(-1, 1),
                                            n_neighbors=n_neighbors,
-                                           discrete_features=False)[0]
+                                           discrete_features=False,
+                                           **kwarg)[0]
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -1110,7 +1145,8 @@ def binary_screening_array(X,
                            N=500,
                            kernel="epa",
                            bw="silverman",
-                           verbose=1):
+                           verbose=1,
+                           **kwarg):
     """
     Take a numpy file to calculate the mutual information between outcome and covariates.
     The outcome should be binary and the covariates be continuous. 
@@ -1122,7 +1158,12 @@ def binary_screening_array(X,
             _keep = _np.logical_not(
                 _np.logical_or(_np.isnan(_a), _np.isnan(_b)))
             _a, _b = _a[_keep], _b[_keep]
-        return MI_binary_continuous(a=_a, b=_b, N=N, kernel=kernel, bw=bw)
+        return MI_binary_continuous(a=_a,
+                                    b=_b,
+                                    N=N,
+                                    kernel=kernel,
+                                    bw=bw,
+                                    **kwarg)
 
     _iter = _np.arange(X.shape[1])
     if verbose >= 1:
@@ -1139,7 +1180,8 @@ def continuous_screening_array(X,
                                kernel="epa",
                                bw="silverman",
                                norm=2,
-                               verbose=1):
+                               verbose=1,
+                               **kwarg):
     """
     Take a numpy file to calculate the mutual information between outcome and covariates.
     The outcome should be continuous and the covariates be continuous. 
@@ -1157,7 +1199,8 @@ def continuous_screening_array(X,
                                         b_N=b_N,
                                         kernel=kernel,
                                         bw=bw,
-                                        norm=norm)
+                                        norm=norm,
+                                        **kwarg)
 
     _iter = _np.arange(X.shape[1])
     if verbose >= 1:
@@ -1174,7 +1217,8 @@ def binary_screening_array_parallel(X,
                                     bw="silverman",
                                     core_num="NOT DECLARED",
                                     multp=10,
-                                    verbose=1):
+                                    verbose=1,
+                                    **kwarg):
     """
     (Multiprocessing version) Calculate the mutual information between outcome and covariates.
     The outcome should be binary and the covariates be continuous. 
@@ -1195,7 +1239,12 @@ def binary_screening_array_parallel(X,
                 _keep = _np.logical_not(
                     _np.logical_or(_np.isnan(_a), _np.isnan(_b)))
                 _a, _b = _a[_keep], _b[_keep]
-            return MI_binary_continuous(a=_a, b=_b, N=N, kernel=kernel, bw=bw)
+            return MI_binary_continuous(a=_a,
+                                        b=_b,
+                                        N=N,
+                                        kernel=kernel,
+                                        bw=bw,
+                                        **kwarg)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -1223,7 +1272,8 @@ def continuous_screening_array_parallel(X,
                                         norm=2,
                                         core_num="NOT DECLARED",
                                         multp=10,
-                                        verbose=1):
+                                        verbose=1,
+                                        **kwarg):
     """
     (Multiprocessing version) Calculate the mutual information between outcome and covariates.
     The outcome should be continuous and the covariates be continuous. 
@@ -1250,7 +1300,8 @@ def continuous_screening_array_parallel(X,
                                             b_N=b_N,
                                             kernel=kernel,
                                             bw=bw,
-                                            norm=norm)
+                                            norm=norm,
+                                            **kwarg)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -1272,7 +1323,8 @@ def binary_skMI_array_parallel(X,
                                n_neighbors=3,
                                core_num="NOT DECLARED",
                                multp=10,
-                               verbose=1):
+                               verbose=1,
+                               **kwarg):
     """
     (Multiprocessing version) Calculate the mutual information using sklearn implementation between outcome and covariates.
     The outcome should be binary and the covariates be binary. 
@@ -1296,7 +1348,8 @@ def binary_skMI_array_parallel(X,
             return _mutual_info_classif(y=_a.reshape(-1, 1),
                                         X=_b.reshape(-1, 1),
                                         n_neighbors=n_neighbors,
-                                        discrete_features=False)[0]
+                                        discrete_features=False,
+                                        **kwarg)[0]
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
@@ -1318,7 +1371,8 @@ def continuous_skMI_array_parallel(X,
                                    n_neighbors=3,
                                    core_num="NOT DECLARED",
                                    multp=10,
-                                   verbose=1):
+                                   verbose=1,
+                                   **kwarg):
     """
     (Multiprocessing version) Calculate the mutual information using sklearn implementation between outcome and covariates.
     The outcome should be binary and the covariates be continuous. 
@@ -1342,7 +1396,8 @@ def continuous_skMI_array_parallel(X,
             return _mutual_info_regression(y=_a.reshape(-1, 1),
                                            X=_b.reshape(-1, 1),
                                            n_neighbors=n_neighbors,
-                                           discrete_features=False)[0]
+                                           discrete_features=False,
+                                           **kwarg)[0]
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice
