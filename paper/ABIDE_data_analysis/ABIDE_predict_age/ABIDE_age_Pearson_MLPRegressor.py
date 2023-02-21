@@ -2,30 +2,20 @@ import numpy as np
 import pandas as pd
 from dask import dataframe as dd
 import matplotlib.pyplot as plt
-from scipy.stats import kendalltau
-from scipy.stats import rankdata
-from scipy.stats import norm
+from scipy.stats import kendalltau, rankdata, norm
 import fastHDMI as mi
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import SplineTransformer
-from sklearn.linear_model import LassoCV
-from sklearn.linear_model import ElasticNetCV
-from sklearn.linear_model import RidgeCV
-from sklearn.linear_model import LarsCV
-from sklearn.linear_model import LassoLarsCV
-from sklearn.neural_network import MLPRegressor
-from sklearn.neural_network import MLPClassifier
-from sklearn.linear_model import LogisticRegressionCV
-from sklearn.metrics import r2_score
-from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.preprocessing import StandardScaler, SplineTransformer
+from sklearn.linear_model import LassoCV, ElasticNetCV, RidgeCV, LarsCV, LassoLarsCV, LogisticRegressionCV
+from sklearn.neural_network import MLPRegressor, MLPClassifier
+from sklearn.metrics import r2_score, roc_auc_score
 import multiprocess as mp
-from tqdm import tqdm as tqdm
+from tqdm import tqdm
 import os
 
 csv_file = os.environ["SLURM_TMPDIR"] + \
     r"/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
-original_df = pd.read_csv(csv_file, encoding='unicode_escape', engine='c')
+original_df = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
 
 columns = np.load(os.environ["SLURM_TMPDIR"] + r"/ABIDE_columns.npy")
 abide_dep = np.load(os.environ["SLURM_TMPDIR"] +
@@ -77,26 +67,42 @@ def testing_error(num_covariates=20,
             fit = fun(cv=5, random_state=seed, n_jobs=10).fit(X_train, y_train)
             y_pred = fit.predict(X_test)
             out = r2_score(y_test, y_pred)
-        elif fun in [RidgeCV]:  # RidgeCV doesn't have seed setting and n_jobs
+        elif fun in [RidgeCV]:  # RidgeCV doesn"t have seed setting and n_jobs
             fit = fun(cv=5).fit(X_train, y_train)
             y_pred = fit.predict(X_test)
             out = r2_score(y_test, y_pred)
         elif fun in [LarsCV, LassoLarsCV
-                     ]:  # LarsCV doesn't have seed setting but have n_jobs
+                     ]:  # LarsCV doesn"t have seed setting but have n_jobs
             fit = fun(cv=5, n_jobs=10).fit(X_train, y_train)
             y_pred = fit.predict(X_test)
             out = r2_score(y_test, y_pred)
         elif fun in [MLPRegressor]:
-            fit = fun(random_state=seed,
-                      max_iter=500,
-                      hidden_layer_sizes=(300, 300)).fit(X_train, y_train)
-            y_pred = fit.predict(X_test)
+            mlp_gs = fun(random_state=seed, max_iter=500)
+            parameter_space = {
+                "hidden_layer_sizes": [(15, 15, 15, 15, 15, 15), (30, 20, 20),
+                                       (500, )],
+                "activation": ["tanh", "relu"],
+                "solver": ["sgd", "adam"],
+                "alpha": [0.0001, 0.05],
+                "learning_rate": ["constant", "adaptive"]
+            }
+            clf = GridSearchCV(mlp_gs, parameter_space, n_jobs=10, cv=5)
+            clf.fit(X_train, y_train)
+            y_pred = clf.predict(X_test)
             out = r2_score(y_test, y_pred)
         elif fun in [MLPClassifier]:
-            fit = fun(random_state=seed,
-                      max_iter=500,
-                      hidden_layer_sizes=(300, 300)).fit(X_train, y_train)
-            y_pred = fit.predict_proba(
+            mlp_gs = fun(random_state=seed, max_iter=500)
+            parameter_space = {
+                "hidden_layer_sizes": [(15, 15, 15, 15, 15, 15), (30, 20, 20),
+                                       (500, )],
+                "activation": ["tanh", "relu"],
+                "solver": ["sgd", "adam"],
+                "alpha": [0.0001, 0.05],
+                "learning_rate": ["constant", "adaptive"]
+            }
+            clf = GridSearchCV(mlp_gs, parameter_space, n_jobs=10, cv=5)
+            clf.fit(X_train, y_train)
+            y_pred = clf.predict_proba(
                 X_test)[:, 1]  # predict probability to calculate ROC
             out = roc_auc_score(y_test, y_pred)
         elif fun in [
@@ -147,7 +153,7 @@ print(r"ABIDE_age_Pearson_MLPRegressor")  # dep_measure, fun_name
 output = testing_error_num_attr(
     num_attr=list(
         map(int,
-            np.around(np.linspace(0, len(columns), 50 + 1)[1:]).tolist())),
+            np.around(np.linspace(0, len(columns), 10 + 1)[1:]).tolist())),
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=MLPRegressor,  # fun_name
     outcome_name="AGE_AT_SCAN",
