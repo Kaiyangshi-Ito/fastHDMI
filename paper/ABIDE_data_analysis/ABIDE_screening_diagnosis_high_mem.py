@@ -41,7 +41,7 @@ mi_output = mi.binary_screening_csv_parallel(csv_file,
                                              multp=10,
                                              core_num=10,
                                              share_memory=False,
-                                             kernel="epa",
+                                             kernel="gaussian",
                                              bw="ISJ")
 if "high_mem" == "high_mem":
     np.save(r"./ABIDE_diagnosis_MI_output", mi_output)

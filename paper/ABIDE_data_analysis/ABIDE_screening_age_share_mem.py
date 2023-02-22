@@ -43,8 +43,9 @@ mi_output = mi.continuous_screening_csv_parallel(csv_file,
                                                  multp=10,
                                                  core_num=10,
                                                  share_memory=True,
-                                                 kernel="epa",
-                                                 bw="ISJ")
+                                                 kernel="gaussian",
+                                                 bw="ISJ",
+                                                 norm=2)
 if "share_mem" == "high_mem":
     np.save(r"./ABIDE_age_MI_output", mi_output)
 
