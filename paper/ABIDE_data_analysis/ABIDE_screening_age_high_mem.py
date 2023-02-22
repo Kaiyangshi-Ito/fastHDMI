@@ -23,7 +23,7 @@ _abide_name = list(abide.columns)[1:]
 
 # print(_abide_name)
 
-# we don"t inlcude age and sex in the screening since we choose to always include them in the model
+# we don't inlcude age and sex in the screening since we choose to always include them in the model
 
 abide_name = [_abide_name[-3]] + _abide_name[1:-3]
 # so that the left first column is the outcome and the rest columns are areas
@@ -42,7 +42,9 @@ mi_output = mi.continuous_screening_csv_parallel(csv_file,
                                                  sample=1250000,
                                                  multp=10,
                                                  core_num=10,
-                                                 share_memory=False)
+                                                 share_memory=False,
+                                                 kernel="epa",
+                                                 bw="ISJ")
 if "high_mem" == "high_mem":
     np.save(r"./ABIDE_age_MI_output", mi_output)
 

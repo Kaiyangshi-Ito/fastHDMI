@@ -67,12 +67,12 @@ def testing_error(num_covariates=20,
             fit = fun(cv=5, random_state=seed, n_jobs=10).fit(X_train, y_train)
             y_pred = fit.predict(X_test)
             out = r2_score(y_test, y_pred)
-        elif fun in [RidgeCV]:  # RidgeCV doesn"t have seed setting and n_jobs
+        elif fun in [RidgeCV]:  # RidgeCV doesn't have seed setting and n_jobs
             fit = fun(cv=5).fit(X_train, y_train)
             y_pred = fit.predict(X_test)
             out = r2_score(y_test, y_pred)
         elif fun in [LarsCV, LassoLarsCV
-                     ]:  # LarsCV doesn"t have seed setting but have n_jobs
+                     ]:  # LarsCV doesn't have seed setting but have n_jobs
             fit = fun(cv=5, n_jobs=10).fit(X_train, y_train)
             y_pred = fit.predict(X_test)
             out = r2_score(y_test, y_pred)
@@ -157,6 +157,6 @@ output = testing_error_num_attr(
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=LogisticRegressionCV_l2,  # fun_name
     outcome_name="DX_GROUP",
-    num_rep=10)
+    num_rep=1)
 np.save(r"./ABIDE_diagnosis_skMI_LogisticRegressionCV_l2",
         output)  # dep_measure, fun_name
