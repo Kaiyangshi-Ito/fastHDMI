@@ -36,20 +36,29 @@ print("The outcome is age.")
 print("Now running using c CSV engine with share_memory=True.")
 print("Our developed FFT-based MI calculation:")
 
-mi_output = mi.continuous_screening_csv_parallel(csv_file,
-                                                 _usecols=abide_name.copy(),
-                                                 csv_engine="c",
-                                                 sample=1250000,
-                                                 multp=10,
-                                                 core_num=10,
-                                                 share_memory=True,
-                                                 kernel="gaussian",
-                                                 bw="ISJ",
-                                                 norm=2)
-if "share_mem" == "high_mem":
-    np.save(r"./ABIDE_age_MI_output", mi_output)
+for _kernel in [
+        'gaussian', 'exponential', 'box', 'tri', 'epa', 'biweight',
+        'triweight', 'tricube', 'cosine'
+]:
+    for _bw in ['silverman', 'scott', 'ISJ']:
+        mi_output = mi.continuous_screening_csv_parallel(
+            csv_file,
+            _usecols=abide_name.copy(),
+            csv_engine="c",
+            sample=1250000,
+            multp=10,
+            core_num=10,
+            share_memory=True,
+            kernel=_kernel,
+            bw=_bw,
+            norm=2)
+        if "share_mem" == "high_mem":
+            np.save(
+                r"./ABIDE_age_MI_{kernel}_{bw}_output".format(kernel=_kernel,
+                                                              bw=_bw),
+                mi_output)
 
-del mi_output
+        del mi_output
 
 print("sklearn MI calculation:")
 

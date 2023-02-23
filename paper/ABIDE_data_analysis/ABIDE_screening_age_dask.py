@@ -36,20 +36,29 @@ print("The outcome is age.")
 print("Now running using dask CSV engine with share_memory=False.")
 print("Our developed FFT-based MI calculation:")
 
-mi_output = mi.continuous_screening_csv_parallel(csv_file,
-                                                 _usecols=abide_name.copy(),
-                                                 csv_engine="dask",
-                                                 sample=1250000,
-                                                 multp=10,
-                                                 core_num=10,
-                                                 share_memory=False,
-                                                 kernel="gaussian",
-                                                 bw="ISJ",
-                                                 norm=2)
-if "dask" == "high_mem":
-    np.save(r"./ABIDE_age_MI_output", mi_output)
+for _kernel in [
+        'gaussian', 'exponential', 'box', 'tri', 'epa', 'biweight',
+        'triweight', 'tricube', 'cosine'
+]:
+    for _bw in ['silverman', 'scott', 'ISJ']:
+        mi_output = mi.continuous_screening_csv_parallel(
+            csv_file,
+            _usecols=abide_name.copy(),
+            csv_engine="dask",
+            sample=1250000,
+            multp=10,
+            core_num=10,
+            share_memory=False,
+            kernel=_kernel,
+            bw=_bw,
+            norm=2)
+        if "dask" == "high_mem":
+            np.save(
+                r"./ABIDE_age_MI_{kernel}_{bw}_output".format(kernel=_kernel,
+                                                              bw=_bw),
+                mi_output)
 
-del mi_output
+        del mi_output
 
 print("sklearn MI calculation:")
 

@@ -34,19 +34,27 @@ print("The outcome is diagnosis.")
 print("Now running using c CSV engine with share_memory=False.")
 print("Our developed FFT-based MI calculation:")
 
-mi_output = mi.binary_screening_csv_parallel(csv_file,
-                                             _usecols=abide_name.copy(),
-                                             csv_engine="c",
-                                             sample=1250000,
-                                             multp=10,
-                                             core_num=10,
-                                             share_memory=False,
-                                             kernel="gaussian",
-                                             bw="ISJ")
-if "high_mem" == "high_mem":
-    np.save(r"./ABIDE_diagnosis_MI_output", mi_output)
+for _kernel in [
+        'gaussian', 'exponential', 'box', 'tri', 'epa', 'biweight',
+        'triweight', 'tricube', 'cosine'
+]:
+    for _bw in ['silverman', 'scott', 'ISJ']:
+        mi_output = mi.binary_screening_csv_parallel(
+            csv_file,
+            _usecols=abide_name.copy(),
+            csv_engine="c",
+            sample=1250000,
+            multp=10,
+            core_num=10,
+            share_memory=False,
+            kernel=_kernel,
+            bw=_bw)
+        if "high_mem" == "high_mem":
+            np.save(
+                r"./ABIDE_diagnosis_MI_{kernel}_{bw}_output".format(
+                    kernel=_kernel, bw=_bw), mi_output)
 
-del mi_output
+        del mi_output
 
 print("sklearn MI calculation:")
 
