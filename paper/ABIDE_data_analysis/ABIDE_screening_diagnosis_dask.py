@@ -39,22 +39,27 @@ for _kernel in [
         'triweight', 'tricube', 'cosine'
 ]:
     for _bw in ['silverman', 'scott', 'ISJ']:
-        mi_output = mi.binary_screening_csv_parallel(
-            csv_file,
-            _usecols=abide_name.copy(),
-            csv_engine="dask",
-            sample=1250000,
-            multp=10,
-            core_num=10,
-            share_memory=False,
-            kernel=_kernel,
-            bw=_bw)
-        if "dask" == "high_mem":
-            np.save(
-                r"./ABIDE_diagnosis_MI_{kernel}_{bw}_output".format(
-                    kernel=_kernel, bw=_bw), mi_output)
+        try:
+            mi_output = mi.binary_screening_csv_parallel(
+                csv_file,
+                _usecols=abide_name.copy(),
+                csv_engine="dask",
+                sample=1250000,
+                multp=10,
+                core_num=10,
+                share_memory=False,
+                kernel=_kernel,
+                bw=_bw)
+            if "dask" == "high_mem":
+                np.save(
+                    r"./ABIDE_diagnosis_MI_{kernel}_{bw}_output".format(
+                        kernel=_kernel, bw=_bw), mi_output)
 
-        del mi_output
+            del mi_output
+
+        except:
+            print("This kernel-bw combination reports an error: ", _kernel,
+                  _bw)
 
 print("sklearn MI calculation:")
 
