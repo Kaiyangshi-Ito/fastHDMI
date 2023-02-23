@@ -20,9 +20,21 @@ abide = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
 _abide_name = abide.columns.tolist()[1:]
 
 # Create correlation matrix
-corr_matrix = abide.corr().abs()
+corr_matrix = abide.iloc[:, 3:5000].corr().abs()
 
-np.save(r"./ABIDE_corr", corr_matrix)
+np.save(r"./ABIDE_corr3,5000", corr_matrix)
+
+del corr_matrix
+
+corr_matrix = abide.iloc[:, 50000:55000].corr().abs()
+
+np.save(r"./ABIDE_corr50000,55000", corr_matrix)
+
+del corr_matrix
+
+corr_matrix = abide.iloc[:, 90000:95000].corr().abs()
+
+np.save(r"./ABIDE_corr90000,95000", corr_matrix)
 
 # Select upper triangle of correlation matrix
 upper = corr_matrix.where(
