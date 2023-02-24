@@ -8,6 +8,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler, SplineTransformer
 from sklearn.linear_model import LassoCV, ElasticNetCV, RidgeCV, LarsCV, LassoLarsCV, LogisticRegressionCV
 from sklearn.neural_network import MLPRegressor, MLPClassifier
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.metrics import r2_score, roc_auc_score
 import multiprocess as mp
 from tqdm import tqdm
@@ -110,6 +111,15 @@ def testing_error(num_covariates=20,
                 LogisticRegressionCV_ElasticNet
         ]:
             fit = fun(cv=5, random_state=seed, n_jobs=10).fit(X_train, y_train)
+            y_pred = fit.predict_proba(
+                X_test)[:, 1]  # predict probability to calculate ROC
+            out = roc_auc_score(y_test, y_pred)
+        elif fun in [RandomForestRegressor]:
+            fit = fun(random_state=seed, n_jobs=10).fit(X_train, y_train)
+            y_pred = fit.predict(X_test)
+            out = r2_score(y_test, y_pred)
+        elif fun in [RandomForestClassifier]:
+            fit = fun(random_state=seed, n_jobs=10).fit(X_train, y_train)
             y_pred = fit.predict_proba(
                 X_test)[:, 1]  # predict probability to calculate ROC
             out = roc_auc_score(y_test, y_pred)
