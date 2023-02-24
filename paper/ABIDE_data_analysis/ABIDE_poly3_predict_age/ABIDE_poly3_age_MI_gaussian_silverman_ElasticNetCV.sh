@@ -35,7 +35,8 @@ lscpu
 echo "running ABIDE_poly3_age_MI_gaussian_silverman_ElasticNetCV.py"
 
 cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv $SLURM_TMPDIR/
-cp ../*.npy $SLURM_TMPDIR/
+cp ../ABIDE_columns.npy $SLURM_TMPDIR/
+cp ../ABIDE_age_MI_gaussian_silverman_output.npy $SLURM_TMPDIR/
 
 python3 ABIDE_poly3_age_MI_gaussian_silverman_ElasticNetCV.py
     

@@ -35,7 +35,8 @@ lscpu
 echo "running ABIDE_age_MI_tri_scott_LassoCV.py"
 
 cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv $SLURM_TMPDIR/
-cp ../*.npy $SLURM_TMPDIR/
+cp ../ABIDE_columns.npy $SLURM_TMPDIR/
+cp ../ABIDE_age_MI_tri_scott_output.npy $SLURM_TMPDIR/
 
 python3 ABIDE_age_MI_tri_scott_LassoCV.py
     

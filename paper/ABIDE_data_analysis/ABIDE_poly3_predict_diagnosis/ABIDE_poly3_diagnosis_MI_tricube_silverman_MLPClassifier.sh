@@ -35,7 +35,8 @@ lscpu
 echo "running ABIDE_poly3_diagnosis_MI_tricube_silverman_MLPClassifier.py"
 
 cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv $SLURM_TMPDIR/
-cp ../*.npy $SLURM_TMPDIR/
+cp ../ABIDE_columns.npy $SLURM_TMPDIR/
+cp ../ABIDE_diagnosis_MI_tricube_silverman_output.npy $SLURM_TMPDIR/
 
 python3 ABIDE_poly3_diagnosis_MI_tricube_silverman_MLPClassifier.py
     
