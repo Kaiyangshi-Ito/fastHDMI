@@ -1,0 +1,11 @@
+Job ID: 4001661
+Cluster: graham
+User/Group: kyang/kyang
+State: CANCELLED (exit code 0)
+Nodes: 1
+Cores per node: 10
+CPU Utilized: 3-09:26:58
+CPU Efficiency: 63.95% of 5-07:21:20 core-walltime
+Job Wall-clock time: 12:44:08
+Memory Utilized: 80.00 GB
+Memory Efficiency: 100.00% of 80.00 GB
