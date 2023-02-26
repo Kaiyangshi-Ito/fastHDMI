@@ -62,8 +62,22 @@ def testing_error(num_covariates=20,
                        1:].to_numpy(copy=True), df.iloc[:,
                                                         0].to_numpy(copy=True)
         X = StandardScaler(copy=False).fit_transform(X)
+        # if the outcome is continuous, we have to use binning
+        if fun in [
+                ElasticNetCV, LassoCV, RidgeCV, LarsCV, LassoLarsCV,
+                MLPRegressor, RandomForestRegressor
+        ]:
+            bins = np.linspace(np.min(y) - 1e-8,
+                               np.max(y) + 1e-8, 25)  # choose to use 25 bins
+            y_binned = np.digitize(y, bins)
+        else:
+            y_binned = y.copy()
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, train_size=training_proportion, random_state=seed)
+            X,
+            y,
+            train_size=training_proportion,
+            random_state=seed,
+            stratify=y_binned)
         if fun in [ElasticNetCV, LassoCV]:
             fit = fun(cv=5, random_state=seed, n_jobs=10).fit(X_train, y_train)
             y_pred = fit.predict(X_test)
