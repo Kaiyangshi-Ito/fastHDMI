@@ -74,8 +74,9 @@ def testing_error(num_covariates=20,
                 MLPRegressor, RandomForestRegressor
         ]:
             bins = np.linspace(np.min(y) - 1e-8,
-                               np.max(y) + 1e-8, 25)  # choose to use 25 bins
+                               np.max(y) + 1e-8, 30)  # choose to use 30 bins
             y_binned = np.digitize(y, bins)
+            y_binned[y_binned >= 20] = 20
         else:
             y_binned = y.copy()
         X_train, X_test, y_train, y_test = train_test_split(
