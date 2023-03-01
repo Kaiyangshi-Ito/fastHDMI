@@ -130,11 +130,13 @@ def testing_error(num_covariates=20,
                 X_test)[:, 1]  # predict probability to calculate ROC
             out = roc_auc_score(y_test, y_pred)
         elif fun in [RandomForestRegressor]:
-            fit = fun(random_state=seed, n_jobs=10).fit(X_train, y_train)
+            fit = fun(random_state=seed, n_jobs=10,
+                      n_estimators=500).fit(X_train, y_train)
             y_pred = fit.predict(X_test)
             out = r2_score(y_test, y_pred)
         elif fun in [RandomForestClassifier]:
-            fit = fun(random_state=seed, n_jobs=10).fit(X_train, y_train)
+            fit = fun(random_state=seed, n_jobs=10,
+                      n_estimators=500).fit(X_train, y_train)
             y_pred = fit.predict_proba(
                 X_test)[:, 1]  # predict probability to calculate ROC
             out = roc_auc_score(y_test, y_pred)
