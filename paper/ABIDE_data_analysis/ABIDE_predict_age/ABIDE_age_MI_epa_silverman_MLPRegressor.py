@@ -180,10 +180,10 @@ print(r"ABIDE_age_MI_epa_silverman_MLPRegressor")  # dep_measure, fun_name
 output = testing_error_num_attr(
     num_attr=list(
         map(int,
-            np.around(np.linspace(0, len(columns), 10 + 1)[1:]).tolist())),
+            np.around(np.linspace(0, 1000, 20 + 1)[1:]).tolist())),
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=MLPRegressor,  # fun_name
     outcome_name="AGE_AT_SCAN",
-    num_rep=1)
+    num_rep=30)
 np.save(r"./ABIDE_age_MI_epa_silverman_MLPRegressor",
         output)  # dep_measure, fun_name

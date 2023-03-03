@@ -185,10 +185,10 @@ print(r"ABIDE_poly3_age_skMI_RandomForestClassifier")  # dep_measure, fun_name
 output = testing_error_num_attr(
     num_attr=list(
         map(int,
-            np.around(np.linspace(0, len(columns), 10 + 1)[1:]).tolist())),
+            np.around(np.linspace(0, 1000, 20 + 1)[1:]).tolist())),
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=RandomForestClassifier,  # fun_name
     outcome_name="DX_GROUP",
-    num_rep=1)
+    num_rep=30)
 np.save(r"./ABIDE_poly3_diagnosis_skMI_RandomForestClassifier",
         output)  # dep_measure, fun_name

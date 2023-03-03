@@ -185,9 +185,9 @@ print(r"ABIDE_poly3_age_Pearson_LassoCV")  # dep_measure, fun_name
 output = testing_error_num_attr(
     num_attr=list(
         map(int,
-            np.around(np.linspace(0, len(columns), 10 + 1)[1:]).tolist())),
+            np.around(np.linspace(0, 1000, 20 + 1)[1:]).tolist())),
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=LassoCV,  # fun_name
     outcome_name="AGE_AT_SCAN",
-    num_rep=1)
+    num_rep=30)
 np.save(r"./ABIDE_poly3_age_Pearson_LassoCV", output)  # dep_measure, fun_name
