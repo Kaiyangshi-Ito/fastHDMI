@@ -185,10 +185,10 @@ print(r"ABIDE_poly3_age_MI_triweight_ISJ_RidgeCV")  # dep_measure, fun_name
 output = testing_error_num_attr(
     num_attr=list(
         map(int,
-            np.around(np.linspace(0, 1000, 20 + 1)[1:]).tolist())),
+            np.around(np.exp(np.linspace(0, log(100000), 20 + 1))[1:]).tolist())),
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=RidgeCV,  # fun_name
     outcome_name="AGE_AT_SCAN",
-    num_rep=30)
+    num_rep=20)
 np.save(r"./ABIDE_poly3_age_MI_triweight_ISJ_RidgeCV",
         output)  # dep_measure, fun_name

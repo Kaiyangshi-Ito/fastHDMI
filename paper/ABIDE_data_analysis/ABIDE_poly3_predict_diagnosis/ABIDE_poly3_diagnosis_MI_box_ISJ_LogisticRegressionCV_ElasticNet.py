@@ -19,8 +19,9 @@ csv_file = os.environ["SLURM_TMPDIR"] + \
 original_df = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
 
 columns = np.load(os.environ["SLURM_TMPDIR"] + r"/ABIDE_columns.npy")
-abide_dep = np.load(os.environ["SLURM_TMPDIR"] +
-                    r"/ABIDE_diagnosis_MI_box_ISJ_output.npy")  # dep_measure
+abide_dep = np.load(
+    os.environ["SLURM_TMPDIR"] +
+    r"/ABIDE_diagnosis_MI_box_ISJ_output.npy")  # dep_measure
 abide_dep = np.absolute(abide_dep)
 
 
@@ -181,15 +182,15 @@ def testing_error_num_attr(num_attr,
     return np.array(list(map(_testing_error_rep, tqdm(num_attr))))
 
 
-print(r"ABIDE_poly3_age_MI_box_ISJ_LogisticRegressionCV_ElasticNet"
-      )  # dep_measure, fun_name
+# dep_measure, fun_name
+print(r"ABIDE_poly3_age_MI_box_ISJ_LogisticRegressionCV_ElasticNet")
 output = testing_error_num_attr(
     num_attr=list(
         map(int,
-            np.around(np.linspace(0, 1000, 20 + 1)[1:]).tolist())),
+            np.around(np.exp(np.linspace(0, log(100000), 20 + 1))[1:]).tolist())),
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=LogisticRegressionCV_ElasticNet,  # fun_name
     outcome_name="DX_GROUP",
-    num_rep=30)
+    num_rep=20)
 np.save(r"./ABIDE_poly3_diagnosis_MI_box_ISJ_LogisticRegressionCV_ElasticNet",
         output)  # dep_measure, fun_name
