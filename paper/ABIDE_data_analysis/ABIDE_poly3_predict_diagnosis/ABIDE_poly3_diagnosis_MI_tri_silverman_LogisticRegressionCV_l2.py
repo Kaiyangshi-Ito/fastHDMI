@@ -182,12 +182,14 @@ def testing_error_num_attr(num_attr,
     return np.array(list(map(_testing_error_rep, tqdm(num_attr))))
 
 
-# dep_measure, fun_name
-print(r"ABIDE_poly3_age_MI_tri_silverman_LogisticRegressionCV_l2")
+print(r"ABIDE_poly3_age_MI_tri_silverman_LogisticRegressionCV_l2"
+      )  # dep_measure, fun_name
 output = testing_error_num_attr(
     num_attr=list(
-        map(int,
-            np.around(np.exp(np.linspace(0, log(100000), 20 + 1))[1:]).tolist())),
+        map(
+            int,
+            np.around(np.exp(np.linspace(0, log(100000),
+                                         20 + 1))[1:]).tolist())),
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=LogisticRegressionCV_l2,  # fun_name
     outcome_name="DX_GROUP",
