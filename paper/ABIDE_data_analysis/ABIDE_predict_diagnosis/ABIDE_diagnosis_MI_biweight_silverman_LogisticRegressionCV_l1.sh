@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=def-cgreenwo
+#SBATCH --account=def-masd
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=10
 #SBATCH --mem=80G
