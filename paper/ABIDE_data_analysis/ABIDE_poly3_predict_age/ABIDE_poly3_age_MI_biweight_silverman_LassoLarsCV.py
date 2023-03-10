@@ -188,7 +188,7 @@ output = testing_error_num_attr(
     num_attr=list(
         map(
             int,
-            np.around(np.exp(np.linspace(0, log(100000),
+            np.around(np.exp(np.linspace(0, np.log(100000),
                                          20 + 1))[1:]).tolist())),
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=LassoLarsCV,  # fun_name
