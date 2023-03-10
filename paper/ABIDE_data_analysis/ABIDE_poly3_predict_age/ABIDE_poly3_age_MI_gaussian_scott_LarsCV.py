@@ -52,8 +52,9 @@ def testing_error(num_covariates=20,
                   outcome_name="AGE_AT_SCAN",
                   seed=1):
     np.random.seed(seed)
-    _usecols = np.hstack((outcome_name, "SEX", "DX_GROUP",
-                          columns[np.argsort(-abide_dep)][:num_covariates]))
+    _usecols = np.hstack((
+        outcome_name,  # "SEX", "DX_GROUP",
+        columns[np.argsort(-abide_dep)][:num_covariates]))
     df = original_df[_usecols].dropna(inplace=False).sample(
         frac=1, random_state=seed, replace=False).reset_index(drop=True,
                                                               inplace=False)
@@ -183,11 +184,8 @@ def testing_error_num_attr(num_attr,
 
 print(r"ABIDE_poly3_age_MI_gaussian_scott_LarsCV")  # dep_measure, fun_name
 output = testing_error_num_attr(
-    num_attr=list(
-        map(
-            int,
-            np.around(np.exp(np.linspace(0, np.log(100000),
-                                         20 + 1))[1:]).tolist())),
+    num_attr=list(map(int,
+                      np.around(np.linspace(0, 50, 10 + 1)[1:]).tolist())),
     training_proportion=.8,  # 80/20 training+validation/testing division
     fun=LarsCV,  # fun_name
     outcome_name="AGE_AT_SCAN",
