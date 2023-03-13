@@ -6,7 +6,7 @@ from scipy.stats import kendalltau, rankdata, norm
 import fastHDMI as mi
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler, SplineTransformer
-from sklearn.linear_model import LassoCV, ElasticNetCV, RidgeCV, LarsCV, LassoLarsCV, LogisticRegressionCV
+from sklearn.linear_model import LassoCV, ElasticNetCV, RidgeCV, LarsCV, LassoLarsCV, LogisticRegressionCV, LinearRegression, LogisticRegression
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.metrics import r2_score, roc_auc_score
