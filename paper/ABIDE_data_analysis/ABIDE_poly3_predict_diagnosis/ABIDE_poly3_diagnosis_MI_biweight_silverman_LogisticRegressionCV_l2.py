@@ -25,6 +25,28 @@ abide_dep = np.load(
 abide_dep = np.absolute(abide_dep)
 
 
+def binning(var, num_bins, min_num=2):
+    bins = np.linspace(np.min(var) - 1e-8, np.max(var) + 1e-8, num_bins)
+    var_binned = np.digitize(var, bins)
+    category = np.sort(np.unique(var_binned))
+    while len([
+            x for x in category if np.count_nonzero(var_binned == x) < min_num
+    ]) != 0:
+        for j in range(len(category)):
+            if j < len(
+                    category
+            ):  # since category is always updated, we add this to avoid out of index error; alternatively, a while loop also works
+                if np.count_nonzero(
+                        var_binned == category[j]
+                ) < min_num:  # if the number of observations in a category is less than min_num
+                    if j == 0:  # if it's the first category, combine it with the second
+                        var_binned[var_binned == category[j]] = category[j + 1]
+                    else:  # if it's not the first category, combine it with the previous one
+                        var_binned[var_binned == category[j]] = category[j - 1]
+                    category = np.sort(np.unique(var_binned))
+    return var_binned
+
+
 def LogisticRegressionCV_l1(**arg):
     return LogisticRegressionCV(penalty="l1",
                                 solver="saga",
@@ -74,10 +96,7 @@ def testing_error(num_covariates=20,
                 ElasticNetCV, LassoCV, RidgeCV, LarsCV, LassoLarsCV,
                 MLPRegressor, RandomForestRegressor
         ]:
-            bins = np.linspace(np.min(y) - 1e-8,
-                               np.max(y) + 1e-8, 30)  # choose to use 30 bins
-            y_binned = np.digitize(y, bins)
-            y_binned[y_binned >= 20] = 20
+            y_binned = binning(y, 30)
         else:
             y_binned = y.copy()
         X_train, X_test, y_train, y_test = train_test_split(
