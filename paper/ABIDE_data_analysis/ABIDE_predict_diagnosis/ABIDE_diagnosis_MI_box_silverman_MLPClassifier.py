@@ -6,6 +6,7 @@ from scipy.stats import kendalltau, rankdata, norm
 import fastHDMI as mi
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler, SplineTransformer
+from sklearn.decomposition import PCA
 from sklearn.linear_model import LassoCV, ElasticNetCV, RidgeCV, LarsCV, LassoLarsCV, LogisticRegressionCV, LinearRegression, LogisticRegression
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
@@ -91,7 +92,7 @@ def testing_error(num_covariates=20,
                 ElasticNetCV, LassoCV, RidgeCV, LarsCV, LassoLarsCV,
                 MLPRegressor, RandomForestRegressor
         ]:
-            y_binned = binning(y, 30)
+            y_binned = binning(y, 30, min_num=5)
         else:
             y_binned = y.copy()
         X_train, X_test, y_train, y_test = train_test_split(
