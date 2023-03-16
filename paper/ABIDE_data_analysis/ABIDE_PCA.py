@@ -32,7 +32,7 @@ components = pca.fit(
 ).components_.T  # transpose because it's a ndarray of shape (n_components, n_features)
 pca_output = abide @ components
 cols = ["PC_" + str(j + 1) for j in range(pca_output.shape[1])]
-df = pd.dataframe(pca_output, columns=cols)
+df = pd.DataFrame(pca_output, columns=cols)
 df["SEX"] = _sex
 df["AGE_AT_SCAN"] = _age
 df["DX_GROUP"] = _diagnosis
