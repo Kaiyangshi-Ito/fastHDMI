@@ -19,11 +19,9 @@ import os
 
 csv_file = os.environ["SLURM_TMPDIR"] + \
     r"/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
-abide = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
-_abide_name = abide.columns.tolist()[1:]
-abide_name = _abide_name[1:-3]
-abide = abide[[abide_name]]
-abide = StandardScaler(copy=False).fit_transform(abide).to_numpy(copy=False)
+abide = pd.read_csv(csv_file, encoding="unicode_escape",
+                    engine="c").iloc[:, 2:-3].to_numpy(copy=False)
+abide = StandardScaler(copy=False).fit_transform(abide)
 
 pca = PCA(n_components=abide.shape[0])
 components = pca.fit(

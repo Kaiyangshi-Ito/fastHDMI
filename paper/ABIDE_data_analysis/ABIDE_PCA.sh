@@ -4,7 +4,7 @@
 #SBATCH --cpus-per-task=10
 #SBATCH --mem=80G
 #SBATCH --time=20:00:00
-#SBATCH --job-name=ABIDE_clump
+#SBATCH --job-name=ABIDE_PCA
 
 module load gcc llvm rust arrow cuda nodejs python/3.8.10 r/4.0.2 python-build-bundle
 
@@ -32,7 +32,7 @@ pip install --no-index /home/kyang/fastHDMI-1.18.20+computecanada-py3-none-any.w
 nvidia-smi
 lscpu
 
-echo "running ABIDE_clump.py"
+echo "running ABIDE_PCA.py"
 
 cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv $SLURM_TMPDIR/
 
