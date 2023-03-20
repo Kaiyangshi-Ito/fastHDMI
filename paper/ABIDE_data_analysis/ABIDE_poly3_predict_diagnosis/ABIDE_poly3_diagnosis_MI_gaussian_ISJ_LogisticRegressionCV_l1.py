@@ -95,9 +95,9 @@ def testing_error(num_covariates=20,
         # if the outcome is continuous, we have to use binning
         if fun in [
                 ElasticNetCV, LassoCV, RidgeCV, LarsCV, LassoLarsCV,
-                MLPRegressor, RandomForestRegressor
+                MLPRegressor, RandomForestRegressor, LinearRegression
         ]:
-            y_binned = binning(y, 30, min_num=5)
+            y_binned = binning(y, 30, min_num=2)
         else:
             y_binned = y.copy()
         X_train, X_test, y_train, y_test = train_test_split(

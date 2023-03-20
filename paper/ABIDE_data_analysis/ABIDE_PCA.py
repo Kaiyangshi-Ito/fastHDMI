@@ -36,4 +36,4 @@ df = pd.DataFrame(pca_output, columns=cols)
 df["SEX"] = _sex
 df["AGE_AT_SCAN"] = _age
 df["DX_GROUP"] = _diagnosis
-df.to_csv(r"./ABIDE_PCA")
+df.to_csv(r"./ABIDE_PCA.csv")
