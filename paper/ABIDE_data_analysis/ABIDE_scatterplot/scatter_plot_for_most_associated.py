@@ -34,7 +34,8 @@ for outcome in ["diagnosis", "age"]:
                             r"_" + dep_measure + r"_output.npy")
         abide_dep = np.absolute(abide_dep)
 
-        top_colnames += columns[np.argsort(-abide_dep)][:top_colnames_num]
+        top_colnames = np.hstack(
+            (top_colnames, columns[np.argsort(-abide_dep)][:top_colnames_num]))
 
     top_colnames = list(set(top_colnames))
     for colname in top_colnames:
