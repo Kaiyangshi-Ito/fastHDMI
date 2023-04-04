@@ -40,11 +40,17 @@ for outcome in ["diagnosis", "age"]:
     top_colnames = list(set(top_colnames))
     for colname in top_colnames:
         if outcome == "diagnosis":
-            plt.scatter(original_df["DX_GROUP"], original_df[colname])
+            plt.scatter(original_df["DX_GROUP"],
+                        original_df[colname],
+                        alpha=.2)
         if outcome == "age":
-            plt.scatter(original_df["AGE_AT_SCAN"], original_df[colname])
+            plt.scatter(original_df["AGE_AT_SCAN"],
+                        original_df[colname],
+                        alpha=.2)
         plt.ylabel(outcome)
         plt.xlabel(colname)
-        plt.title("scatter plot for top associated covariates")
-        plt.savefig(r"scatter_" + outcome + colname)
-        plt.show()
+        plt.title(r"scatter plot for outcome vs the top associated covariates: " + outcome +
+                  r" and " + colname)
+        plt.savefig(r"scatter_" + outcome + r"_" + colname)
+        plt.close()
+    
