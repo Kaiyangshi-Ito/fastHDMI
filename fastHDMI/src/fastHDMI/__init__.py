@@ -15,6 +15,7 @@ from numba import jit as _jit
 import numpy as _np
 from tqdm import tqdm as _tqdm
 import warnings as _warnings
+from fastHDMI.cython_fun import joint_to_mi_cython
 
 _warnings.filterwarnings('ignore')
 
@@ -93,7 +94,7 @@ def MI_continuous_012(a, b, N=500, kernel="epa", bw="silverman", **kwarg):
     mask = joint < 0.
     joint[mask] = 0.
 
-    mi_temp = _joint_to_mi(joint=joint, forward_euler_a=forward_euler_step)
+    mi_temp = joint_to_mi_cython(joint=joint, forward_euler_a=forward_euler_step)
 
     #     del p0, p1, p2, _a, a_temp, _, _b0, y_cond_p0, _b1, y_cond_p1, _b2, y_cond_p2, joint, mask, forward_euler_step
 
@@ -131,7 +132,7 @@ def MI_012_012(a, b):
     joint[1, 2] = _np.count_nonzero(_np.logical_and(a == 1, _b2)) / len(a)
     joint[2, 2] = _np.count_nonzero(_np.logical_and(a == 2, _b2)) / len(a)
 
-    mi_temp = _joint_to_mi(joint=joint)
+    mi_temp = joint_to_mi_cython(joint=joint)
 
     #     del joint
 
@@ -160,7 +161,7 @@ def MI_continuous_continuous(a,
     b_forward_euler_step = grid[1, 1] - grid[0, 1]
     mask = joint < 0.
     joint[mask] = 0.
-    mi_temp = _joint_to_mi(joint=joint,
+    mi_temp = joint_to_mi_cython(joint=joint,
                            forward_euler_a=a_forward_euler_step,
                            forward_euler_b=b_forward_euler_step)
 
