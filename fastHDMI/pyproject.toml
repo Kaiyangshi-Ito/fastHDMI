@@ -16,22 +16,37 @@ description = "Use FFT-based mutual information and accelerated gradient method 
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.7"
-dependencies = ["numpy>=1.14.2", "numba>=0.54.1", "KDEpy>=1.1.0", "scikit-learn>=1.0.2", "bed_reader", "multiprocess>=0.70.6",  "bed-reader", "pandas>=1.4.4", "pyarrow>=8.0.0", "dask", "tqdm>=4.64.1", "cython"]
+dependencies = [
+    "numpy>=1.14.2",
+    "numba>=0.54.1",
+    "KDEpy>=1.1.0",
+    "scikit-learn>=1.0.2",
+    "bed_reader",
+    "multiprocess>=0.70.6",
+    "bed-reader",
+    "pandas>=1.4.4",
+    "pyarrow>=8.0.0",
+    "dask",
+    "tqdm>=4.64.1",
+    "Cython",
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Operating System :: OS Independent",
 ]
 
-[tool.poetry.scripts]
-fastHDMI = "fastHDMI.__main__:main"
+[tool.setuptools.entry_points]
+console_scripts = [
+    "fastHDMI = fastHDMI.__main__:main",
+]
 
-[tool.poetry.build]
-requires = ["cython>=0.29.21"]
-
-[tools.setuptools]
-packages = ["src"]
+[tool.setuptools]
+package_dir = {"": "src"}
+extensions = [
+    "fastHDMI.cython_fun",
+]
 
 [project.urls]
-"Homepage" = "https://github.com/Kaiyangshi-Ito/fastHDMI"
-"Bug Tracker" = "https://github.com/Kaiyangshi-Ito/fastHDMI/issues"
+Homepage = "https://github.com/Kaiyangshi-Ito/fastHDMI"
+Bug Tracker = "https://github.com/Kaiyangshi-Ito/fastHDMI/issues"
