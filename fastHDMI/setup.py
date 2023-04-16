@@ -3,13 +3,13 @@ from setuptools.extension import Extension
 from Cython.Build import cythonize
 
 extensions = [
-    Extension("src/fastHDMI.cython_fun", ["src/fastHDMI/cython_fun.pyx"])
+    Extension("fastHDMI.cython_fun", ["src/fastHDMI/cython_fun.pyx"])
 ]
 
 setup(
     name="fastHDMI",
+    package_dir={"": "src"},
     version="0.1",
     packages=find_packages(),
     ext_modules=cythonize(extensions),
-    install_requires=["cython"],
 )
