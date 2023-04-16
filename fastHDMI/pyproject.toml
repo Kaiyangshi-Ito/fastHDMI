@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fastHDMI"
-version = "1.18.25"
+version = "1.18.26"
 authors = [
   { name="Kai Yang", email="kai.yang2@mail.mcgill.ca" },
 ]
@@ -36,17 +36,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-[tool.setuptools.entry_points]
-console_scripts = [
-    "fastHDMI = fastHDMI.__main__:main",
-]
-
-[tool.setuptools]
-package_dir = {"": "src"}
-extensions = [
-    "fastHDMI.cython_fun",
-]
 
 [project.urls]
-Homepage = "https://github.com/Kaiyangshi-Ito/fastHDMI"
-Bug Tracker = "https://github.com/Kaiyangshi-Ito/fastHDMI/issues"
+"Homepage" = "https://github.com/Kaiyangshi-Ito/fastHDMI"
+"Bug Tracker" = "https://github.com/Kaiyangshi-Ito/fastHDMI/issues"
