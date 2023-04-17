@@ -1,3 +1,4 @@
 recursive-include src/fastHDMI *.pyx
 include requirements*.txt
 include LICENSE.txt
+include MANIFEST.in

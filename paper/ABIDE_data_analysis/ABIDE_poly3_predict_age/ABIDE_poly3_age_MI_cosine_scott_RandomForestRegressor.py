@@ -211,8 +211,8 @@ def testing_error_num_attr(num_attr,
     return np.array(list(map(_testing_error_rep, tqdm(num_attr))))
 
 
-print(r"ABIDE_poly3_age_MI_cosine_scott_RandomForestRegressor"
-      )  # dep_measure, fun_name
+# dep_measure, fun_name
+print(r"ABIDE_poly3_age_MI_cosine_scott_RandomForestRegressor")
 output = testing_error_num_attr(
     num_attr=list(map(int,
                       np.around(np.linspace(0, 50, 10 + 1)[1:]).tolist())),

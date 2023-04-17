@@ -212,8 +212,8 @@ def testing_error_num_attr(num_attr,
     return np.array(list(map(_testing_error_rep, tqdm(num_attr))))
 
 
-print(r"ABIDE_poly3_age_MI_exponential_scott_LogisticRegressionCV_l2"
-      )  # dep_measure, fun_name
+# dep_measure, fun_name
+print(r"ABIDE_poly3_age_MI_exponential_scott_LogisticRegressionCV_l2")
 output = testing_error_num_attr(
     num_attr=list(map(int,
                       np.around(np.linspace(0, 50, 10 + 1)[1:]).tolist())),

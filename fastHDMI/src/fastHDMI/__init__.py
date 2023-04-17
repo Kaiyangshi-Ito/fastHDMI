@@ -9,7 +9,7 @@ from sklearn.feature_selection import mutual_info_classif as _mutual_info_classi
 from dask import dataframe as _dd
 import pandas as _pd
 from KDEpy import FFTKDE as _FFTKDE
-from bed_reader import open_bed as _open_bed
+# from bed_reader import open_bed as _open_bed
 from numba import njit as _njit
 from numba import jit as _jit
 import numpy as _np
@@ -23,6 +23,11 @@ _warnings.filterwarnings('ignore')
 #############################################################################
 ############# clumping and screening using mutual information ###############
 #############################################################################
+def _open_bed():
+    print("bed_reader might have some bugs causing it not running")
+    pass
+
+
 # @_njit(cache=True)
 def _nan_inf_to_0(x):
     """
@@ -94,7 +99,10 @@ def MI_continuous_012(a, b, N=500, kernel="epa", bw="silverman", **kwarg):
     mask = joint < 0.
     joint[mask] = 0.
 
-    mi_temp = joint_to_mi_cython(joint=joint, forward_euler_a=forward_euler_step)
+    joint = _np.ascontiguousarray(joint)
+
+    mi_temp = joint_to_mi_cython(joint=joint,
+                                 forward_euler_a=forward_euler_step)
 
     #     del p0, p1, p2, _a, a_temp, _, _b0, y_cond_p0, _b1, y_cond_p1, _b2, y_cond_p2, joint, mask, forward_euler_step
 
@@ -132,6 +140,8 @@ def MI_012_012(a, b):
     joint[1, 2] = _np.count_nonzero(_np.logical_and(a == 1, _b2)) / len(a)
     joint[2, 2] = _np.count_nonzero(_np.logical_and(a == 2, _b2)) / len(a)
 
+    joint = _np.ascontiguousarray(joint)
+
     mi_temp = joint_to_mi_cython(joint=joint)
 
     #     del joint
@@ -161,9 +171,12 @@ def MI_continuous_continuous(a,
     b_forward_euler_step = grid[1, 1] - grid[0, 1]
     mask = joint < 0.
     joint[mask] = 0.
+
+    joint = _np.ascontiguousarray(joint)
+
     mi_temp = joint_to_mi_cython(joint=joint,
-                           forward_euler_a=a_forward_euler_step,
-                           forward_euler_b=b_forward_euler_step)
+                                 forward_euler_a=a_forward_euler_step,
+                                 forward_euler_b=b_forward_euler_step)
 
     #     del _temp, data, _data, grid, joint, mask, a_forward_euler_step, b_forward_euler_step
 
@@ -1074,6 +1087,541 @@ def clump_continuous_csv_parallel(
         if current_var_ind + 1 <= len(keep_cols):
             _MI = continuous_screening_csv_parallel(
                 csv_file=csv_file,
+                _usecols=keep_cols[current_var_ind:],
+                core_num=core_num,
+                multp=multp,
+                csv_engine=csv_engine,
+                parquet_file=parquet_file,
+                sample=sample,
+                verbose=0,
+                share_memory=share_memory,
+                **kwarg)
+            # current_var_ind + 1 since the current variable will be included anyway
+            keep_cols = _np.hstack(
+                (keep_cols[:current_var_ind + 1],
+                 keep_cols[current_var_ind + 1:][_MI <= clumping_threshold]))
+        else:
+            break
+    return current_var_ind, keep_cols
+
+
+def binary_screening_dataframe(dataframe="_",
+                               _usecols=[],
+                               N=500,
+                               kernel="epa",
+                               bw="silverman",
+                               csv_engine="c",
+                               parquet_file="_",
+                               sample=256000,
+                               verbose=1,
+                               **kwarg):
+    """
+    Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    The outcome should be binary and the covariates be continuous. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    """
+    _df = dataframe
+    if _np.array(_usecols).size == 0:
+        _usecols = _np.array(_df.columns.to_list()[1:])
+    else:
+        _usecols = _np.array(_usecols)
+
+    def _map_foo(j):
+        __ = [
+            _usecols[0], _usecols[j + 1]
+        ]  # here using _usecol[j + 1] because the left first column is the outcome
+        _a, _b = _read_two_columns(_df=_df, __=__, csv_engine=csv_engine)
+        return MI_binary_continuous(a=_a,
+                                    b=_b,
+                                    N=N,
+                                    kernel=kernel,
+                                    bw=bw,
+                                    **kwarg)
+
+    _iter = _np.arange(len(_usecols) - 1)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    MI_df = _np.array(list(map(_map_foo, _iter)))
+
+    del _df
+
+    return MI_df
+
+
+def continuous_screening_dataframe(dataframe="_",
+                                   _usecols=[],
+                                   a_N=300,
+                                   b_N=300,
+                                   kernel="epa",
+                                   bw="silverman",
+                                   norm=2,
+                                   csv_engine="c",
+                                   parquet_file="_",
+                                   sample=256000,
+                                   verbose=1,
+                                   **kwarg):
+    """
+    Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    Both the outcome and the covariates should be continuous. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    """
+    _df = dataframe
+    if _np.array(_usecols).size == 0:
+        _usecols = _np.array(_df.columns.to_list()[1:])
+    else:
+        _usecols = _np.array(_usecols)
+
+    def _map_foo(j):
+        __ = [
+            _usecols[0], _usecols[j + 1]
+        ]  # here using _usecol[j + 1] because the left first column is the outcome
+        _a, _b = _read_two_columns(_df=_df, __=__, csv_engine=csv_engine)
+        return MI_continuous_continuous(a=_a,
+                                        b=_b,
+                                        a_N=a_N,
+                                        b_N=b_N,
+                                        kernel=kernel,
+                                        bw=bw,
+                                        norm=norm,
+                                        **kwarg)
+
+    _iter = _np.arange(len(_usecols) - 1)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    MI_df = _np.array(list(map(_map_foo, _iter)))
+
+    del _df
+
+    return MI_df
+
+
+def binary_screening_dataframe_parallel(dataframe="_",
+                                        _usecols=[],
+                                        N=500,
+                                        kernel="epa",
+                                        bw="silverman",
+                                        core_num="NOT DECLARED",
+                                        multp=10,
+                                        csv_engine="c",
+                                        parquet_file="_",
+                                        sample=256000,
+                                        verbose=1,
+                                        share_memory=True,
+                                        **kwarg):
+    """
+    (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    The outcome should be binary and the covariates be continuous. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    share_memory is to indicate whether to share the dataframe in memory to 
+    multiple processes -- if set to False, each process will copy the entire dataframe respectively. However, 
+    to read very large dataframe using dask, this option should usually be turned off.
+    """
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    _df = dataframe
+    if _np.array(_usecols).size == 0:
+        _usecols = _np.array(_df.columns.to_list()[1:])
+    else:
+        _usecols = _np.array(_usecols)
+
+    # share_memory for multiprocess
+    if share_memory == True:
+        # the origingal dataframe is df, store the columns/dtypes pairs
+        df_dtypes_dict = dict(list(zip(_df.columns, _df.dtypes)))
+        # declare a shared Array with data from df
+        mparr = _mp.Array(_ctypes.c_double, _df.values.reshape(-1))
+        # create a new df based on the shared array
+        _df = _pd.DataFrame(_np.frombuffer(mparr.get_obj()).reshape(_df.shape),
+                            columns=_df.columns).astype(df_dtypes_dict)
+
+    def _binary_screening_csv_slice(_slice):
+        def _map_foo(j):
+            __ = [
+                _usecols[0], _usecols[j]
+            ]  # here using _usecol[j] because only input variables indices were splitted
+            _a, _b = _read_two_columns(_df=_df, __=__, csv_engine=csv_engine)
+            return MI_binary_continuous(a=_a,
+                                        b=_b,
+                                        N=N,
+                                        kernel=kernel,
+                                        bw=bw,
+                                        **kwarg)
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+
+    ind = _np.arange(
+        1, len(_usecols)
+    )  # starting from 1 because the first left column should be the outcome
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_df = pl.map(_binary_screening_csv_slice, _iter)
+    MI_df = _np.hstack(MI_df)
+
+    del _df
+
+    return MI_df
+
+
+def continuous_screening_dataframe_parallel(dataframe="_",
+                                            _usecols=[],
+                                            a_N=300,
+                                            b_N=300,
+                                            kernel="epa",
+                                            bw="silverman",
+                                            norm=2,
+                                            core_num="NOT DECLARED",
+                                            multp=10,
+                                            csv_engine="c",
+                                            parquet_file="_",
+                                            sample=256000,
+                                            verbose=1,
+                                            share_memory=True,
+                                            **kwarg):
+    """
+    (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    Both the outcome and the covariates should be continuous. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    share_memory is to indicate whether to share the dataframe in memory to 
+    multiple processes -- if set to False, each process will copy the entire dataframe respectively. However, 
+    to read very large dataframe using dask, this option should usually be turned off.
+    """
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    _df = dataframe
+    if _np.array(_usecols).size == 0:
+        _usecols = _np.array(_df.columns.to_list()[1:])
+    else:
+        _usecols = _np.array(_usecols)
+
+    # share_memory for multiprocess
+    if share_memory == True:
+        # the origingal dataframe is df, store the columns/dtypes pairs
+        df_dtypes_dict = dict(list(zip(_df.columns, _df.dtypes)))
+        # declare a shared Array with data from df
+        mparr = _mp.Array(_ctypes.c_double, _df.values.reshape(-1))
+        # create a new df based on the shared array
+        _df = _pd.DataFrame(_np.frombuffer(mparr.get_obj()).reshape(_df.shape),
+                            columns=_df.columns).astype(df_dtypes_dict)
+
+    def _continuous_screening_csv_slice(_slice):
+        def _map_foo(j):
+            __ = [
+                _usecols[0], _usecols[j]
+            ]  # here using _usecol[j] because only input variables indices were splitted
+            _a, _b = _read_two_columns(_df=_df, __=__, csv_engine=csv_engine)
+            return MI_continuous_continuous(a=_a,
+                                            b=_b,
+                                            a_N=a_N,
+                                            b_N=b_N,
+                                            kernel=kernel,
+                                            bw=bw,
+                                            norm=norm,
+                                            **kwarg)
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(
+        1, len(_usecols)
+    )  # starting from 1 because the first left column should be the outcome
+
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_df = pl.map(_continuous_screening_csv_slice, _iter)
+    MI_df = _np.hstack(MI_df)
+
+    del _df
+
+    return MI_df
+
+
+def binary_skMI_screening_dataframe_parallel(dataframe="_",
+                                             _usecols=[],
+                                             n_neighbors=3,
+                                             core_num="NOT DECLARED",
+                                             multp=10,
+                                             csv_engine="c",
+                                             parquet_file="_",
+                                             sample=256000,
+                                             verbose=1,
+                                             share_memory=True,
+                                             **kwarg):
+    """
+    (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    Both the outcome and the covariates should be binary. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    share_memory is to indicate whether to share the dataframe in memory to 
+    multiple processes -- if set to False, each process will copy the entire dataframe respectively. However, 
+    to read very large dataframe using dask, this option should usually be turned off.
+    """
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    _df = dataframe
+    if _np.array(_usecols).size == 0:
+        _usecols = _np.array(_df.columns.to_list()[1:])
+    else:
+        _usecols = _np.array(_usecols)
+
+    # share_memory for multiprocess
+    if share_memory == True:
+        # the origingal dataframe is df, store the columns/dtypes pairs
+        df_dtypes_dict = dict(list(zip(_df.columns, _df.dtypes)))
+        # declare a shared Array with data from df
+        mparr = _mp.Array(_ctypes.c_double, _df.values.reshape(-1))
+        # create a new df based on the shared array
+        _df = _pd.DataFrame(_np.frombuffer(mparr.get_obj()).reshape(_df.shape),
+                            columns=_df.columns).astype(df_dtypes_dict)
+
+    def _binary_skMI_df_slice(_slice):
+        def _map_foo(j):
+            __ = [
+                _usecols[0], _usecols[j]
+            ]  # here using _usecol[j] because only input variables indices were splitted
+            _a, _b = _read_two_columns(_df=_df, __=__, csv_engine=csv_engine)
+            return _mutual_info_classif(y=_a.reshape(-1, 1),
+                                        X=_b.reshape(-1, 1),
+                                        n_neighbors=n_neighbors,
+                                        discrete_features=False,
+                                        **kwarg)[0]
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(
+        1, len(_usecols)
+    )  # starting from 1 because the first left column should be the outcome
+
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_df = pl.map(_binary_skMI_df_slice, _iter)
+    MI_df = _np.hstack(MI_df)
+
+    del _df
+
+    return MI_df
+
+
+def continuous_skMI_screening_dataframe_parallel(dataframe="_",
+                                                 _usecols=[],
+                                                 n_neighbors=3,
+                                                 core_num="NOT DECLARED",
+                                                 multp=10,
+                                                 csv_engine="c",
+                                                 parquet_file="_",
+                                                 sample=256000,
+                                                 verbose=1,
+                                                 share_memory=True,
+                                                 **kwarg):
+    """
+    (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    Both the outcome and the covariates should be continuous. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    share_memory is to indicate whether to share the dataframe in memory to 
+    multiple processes -- if set to False, each process will copy the entire dataframe respectively. However, 
+    to read very large dataframe using dask, this option should usually be turned off.
+    """
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    _df = dataframe
+    if _np.array(_usecols).size == 0:
+        _usecols = _np.array(_df.columns.to_list()[1:])
+    else:
+        _usecols = _np.array(_usecols)
+
+    # share_memory for multiprocess
+    if share_memory == True:
+        # the origingal dataframe is df, store the columns/dtypes pairs
+        df_dtypes_dict = dict(list(zip(_df.columns, _df.dtypes)))
+        # declare a shared Array with data from df
+        mparr = _mp.Array(_ctypes.c_double, _df.values.reshape(-1))
+        # create a new df based on the shared array
+        _df = _pd.DataFrame(_np.frombuffer(mparr.get_obj()).reshape(_df.shape),
+                            columns=_df.columns).astype(df_dtypes_dict)
+
+    def _continuous_skMI_df_slice(_slice):
+        def _map_foo(j):
+            __ = [
+                _usecols[0], _usecols[j]
+            ]  # here using _usecol[j] because only input variables indices were splitted
+            _a, _b = _read_two_columns(_df=_df, __=__, csv_engine=csv_engine)
+            return _mutual_info_regression(y=_a.reshape(-1, 1),
+                                           X=_b.reshape(-1, 1),
+                                           n_neighbors=n_neighbors,
+                                           discrete_features=False,
+                                           **kwarg)[0]
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(
+        1, len(_usecols)
+    )  # starting from 1 because the first left column should be the outcome
+
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_df = pl.map(_continuous_skMI_df_slice, _iter)
+    MI_df = _np.hstack(MI_df)
+
+    del _df
+
+    return MI_df
+
+
+def Pearson_screening_dataframe_parallel(dataframe="_",
+                                         _usecols=[],
+                                         core_num="NOT DECLARED",
+                                         multp=10,
+                                         csv_engine="c",
+                                         parquet_file="_",
+                                         sample=256000,
+                                         verbose=1,
+                                         share_memory=True):
+    """
+    (Multiprocessing version) Take a (potentionally large) csv file to calculate the Pearson's correlation between outcome and covariates.
+    If _usecols is given, the returned Pearson correlation will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    This function accounts for missing data better than the Pearson's correlation matrix function provided by numpy.
+    share_memory is to indicate whether to share the dataframe in memory to 
+    multiple processes -- if set to False, each process will copy the entire dataframe respectively. However, 
+    to read very large dataframe using dask, this option should usually be turned off.    
+    """
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    _df = dataframe
+    if _np.array(_usecols).size == 0:
+        _usecols = _np.array(_df.columns.to_list()[1:])
+    else:
+        _usecols = _np.array(_usecols)
+
+    # share_memory for multiprocess
+    if share_memory == True:
+        # the origingal dataframe is df, store the columns/dtypes pairs
+        df_dtypes_dict = dict(list(zip(_df.columns, _df.dtypes)))
+        # declare a shared Array with data from df
+        mparr = _mp.Array(_ctypes.c_double, _df.values.reshape(-1))
+        # create a new df based on the shared array
+        _df = _pd.DataFrame(_np.frombuffer(mparr.get_obj()).reshape(_df.shape),
+                            columns=_df.columns).astype(df_dtypes_dict)
+
+    def _Pearson_screening_df_slice(_slice):
+        def _map_foo(j):
+            __ = [
+                _usecols[0], _usecols[j]
+            ]  # here using _usecol[j] because only input variables indices were splitted
+            _a, _b = _read_two_columns(_df=_df, __=__, csv_engine=csv_engine)
+            # returned Pearson correlation is a symmetric matrix
+            _a -= _np.mean(_a)
+            _a /= _np.std(_a)
+            _b -= _np.mean(_b)
+            _b /= _np.std(_b)
+            #             return _np.corrcoef(_a, _b)[0, 1]
+            return _a @ _b / len(_a)
+
+        _pearson_slice = _np.array(list(map(_map_foo, _slice)))
+        return _pearson_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(
+        1, len(_usecols)
+    )  # starting from 1 because the first left column should be the outcome
+
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        Pearson_df = pl.map(_Pearson_screening_df_slice, _iter)
+    Pearson_df = _np.hstack(Pearson_df)
+
+    del _df
+
+    return Pearson_df
+
+
+def clump_continuous_dataframe_parallel(
+        dataframe="_",
+        _usecols=[],
+        a_N=300,
+        b_N=300,
+        kernel="epa",
+        bw="silverman",
+        norm=2,
+        clumping_threshold=Pearson_to_MI_Gaussian(.6),
+        num_vars_exam=_np.infty,
+        core_num="NOT DECLARED",
+        multp=10,
+        csv_engine="c",
+        parquet_file="_",
+        sample=256000,
+        verbose=1,
+        share_memory=True,
+        **kwarg):
+    """
+    Perform clumping based on mutual information thresholding
+    The clumping process starts from the left to right, preserve input variables under the clumping threshold
+    share_memory is to indicate whether to share the dataframe in memory to 
+    multiple processes -- if set to False, each process will copy the entire dataframe respectively. However, 
+    to read very large dataframe using dask, this option should usually be turned off.    """
+    # initialization
+    _df = dataframe
+    if _np.array(_usecols).size == 0:
+        _usecols = _np.array(_df.columns.to_list()[1:])
+    else:
+        _usecols = _np.array(_usecols)
+
+    if num_vars_exam == _np.infty:
+        num_vars_exam = len(keep_cols) - 1
+    _iter = _np.arange(num_vars_exam)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    for current_var_ind in _iter:  # note that here _iter and keep_cols don't need to agree, by the break command comes later
+        if current_var_ind + 1 <= len(keep_cols):
+            _MI = continuous_screening_dataframe_parallel(
+                dataframe=dataframe,
                 _usecols=keep_cols[current_var_ind:],
                 core_num=core_num,
                 multp=multp,

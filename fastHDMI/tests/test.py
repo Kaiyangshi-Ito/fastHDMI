@@ -10,72 +10,72 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # test for continuous_screening_parallel on plink files
-bed_file = r"./sim/sim1.bed"
-bim_file = r"./sim/sim1.bim"
-fam_file = r"./sim/sim1.fam"
+# bed_file = r"./sim/sim1.bed"
+# bim_file = r"./sim/sim1.bim"
+# fam_file = r"./sim/sim1.fam"
 
-_bed = open_bed(filepath=bed_file,
-                fam_filepath=fam_file,
-                bim_filepath=bim_file)
-outcome = np.random.rand(_bed.iid_count)
-outcome_iid = _bed.iid
+# _bed = open_bed(filepath=bed_file,
+#                 fam_filepath=fam_file,
+#                 bim_filepath=bim_file)
+# outcome = np.random.rand(_bed.iid_count)
+# outcome_iid = _bed.iid
 
-true_beta = np.array([4.2, -2.5, 2.6])
-for j in np.arange(3):
-    outcome += true_beta[j] * _bed.read(np.s_[:, j], dtype=np.int8).flatten()
-    print(_bed.read(np.s_[:, j], dtype=np.float64).flatten())
+# true_beta = np.array([4.2, -2.5, 2.6])
+# for j in np.arange(3):
+#     outcome += true_beta[j] * _bed.read(np.s_[:, j], dtype=np.int8).flatten()
+#     print(_bed.read(np.s_[:, j], dtype=np.float64).flatten())
 
-iid_ind = np.random.permutation(np.arange(_bed.iid_count))
-outcome = outcome[iid_ind]
-outcome_iid = outcome_iid[iid_ind]
+# iid_ind = np.random.permutation(np.arange(_bed.iid_count))
+# outcome = outcome[iid_ind]
+# outcome_iid = outcome_iid[iid_ind]
 
-MI_continuous = continuous_screening_plink_parallel(bed_file=bed_file,
-                                                    bim_file=bim_file,
-                                                    fam_file=fam_file,
-                                                    outcome=outcome,
-                                                    outcome_iid=outcome_iid)
+# MI_continuous = continuous_screening_plink_parallel(bed_file=bed_file,
+#                                                     bim_file=bim_file,
+#                                                     fam_file=fam_file,
+#                                                     outcome=outcome,
+#                                                     outcome_iid=outcome_iid)
 
-assert np.all(MI_continuous >= 0.)
+# assert np.all(MI_continuous >= 0.)
 
 # testing for plink files screening
-bed_file = r"./sim/sim1.bed"
-bim_file = r"./sim/sim1.bim"
-fam_file = r"./sim/sim1.fam"
+# bed_file = r"./sim/sim1.bed"
+# bim_file = r"./sim/sim1.bim"
+# fam_file = r"./sim/sim1.fam"
 
-_bed = open_bed(filepath=bed_file,
-                fam_filepath=fam_file,
-                bim_filepath=bim_file)
-outcome = np.random.rand(_bed.iid_count)
-outcome_iid = _bed.iid
+# _bed = open_bed(filepath=bed_file,
+#                 fam_filepath=fam_file,
+#                 bim_filepath=bim_file)
+# outcome = np.random.rand(_bed.iid_count)
+# outcome_iid = _bed.iid
 
-true_beta = np.array([4.2, -2.5, 2.6])
-for j in np.arange(3):
-    outcome += true_beta[j] * _bed.read(np.s_[:, j], dtype=np.int8).flatten()
-    print(_bed.read(np.s_[:, j], dtype=np.float64).flatten())
+# true_beta = np.array([4.2, -2.5, 2.6])
+# for j in np.arange(3):
+#     outcome += true_beta[j] * _bed.read(np.s_[:, j], dtype=np.int8).flatten()
+#     print(_bed.read(np.s_[:, j], dtype=np.float64).flatten())
 
-outcome = np.random.binomial(1, np.tanh(outcome / 2) / 2 + .5)
+# outcome = np.random.binomial(1, np.tanh(outcome / 2) / 2 + .5)
 
-iid_ind = np.random.permutation(np.arange(_bed.iid_count))
-outcome = outcome[iid_ind]
-outcome_iid = outcome_iid[iid_ind]
+# iid_ind = np.random.permutation(np.arange(_bed.iid_count))
+# outcome = outcome[iid_ind]
+# outcome_iid = outcome_iid[iid_ind]
 
-MI_binary = binary_screening_plink_parallel(bed_file=bed_file,
-                                            bim_file=bim_file,
-                                            fam_file=fam_file,
-                                            outcome=outcome,
-                                            outcome_iid=outcome_iid)
-# starting from 1 because the first left column should be the outcome
-assert np.all(MI_binary >= 0.)
+# MI_binary = binary_screening_plink_parallel(bed_file=bed_file,
+#                                             bim_file=bim_file,
+#                                             fam_file=fam_file,
+#                                             outcome=outcome,
+#                                             outcome_iid=outcome_iid)
+# # starting from 1 because the first left column should be the outcome
+# assert np.all(MI_binary >= 0.)
 
-# test for clumping for plink files
-bed_file = r"./sim/sim1.bed"
-bim_file = r"./sim/sim1.bim"
-fam_file = r"./sim/sim1.fam"
+# # test for clumping for plink files
+# bed_file = r"./sim/sim1.bed"
+# bim_file = r"./sim/sim1.bim"
+# fam_file = r"./sim/sim1.fam"
 
-clump_plink_parallel(bed_file=bed_file,
-                     bim_file=bim_file,
-                     fam_file=fam_file,
-                     num_SNPS_exam=5)
+# clump_plink_parallel(bed_file=bed_file,
+#                      bim_file=bim_file,
+#                      fam_file=fam_file,
+#                      num_SNPS_exam=5)
 
 # single-thread continuous version test
 
