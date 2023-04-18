@@ -25,6 +25,11 @@ _abide_name = abide.columns.tolist()[1:]
 
 # print(_abide_name)
 
+abide_name = _abide_name[1:-3]
+
+# preserve only the neuro-imaging data
+abide = abide[abide_name]
+
 
 def convert2list(a):
     b = np.asarray(a)
@@ -33,11 +38,6 @@ def convert2list(a):
 
 def sim_based_on_abide_continuous(pair):
     _num_true_vars, _seed = pair
-    abide_name = _abide_name[1:-3]
-
-    # preserve only the neuro-imaging data
-    abide = abide[abide_name]
-
     SNR = 3.
     num_true_vars = _num_true_vars
     seed = _seed
