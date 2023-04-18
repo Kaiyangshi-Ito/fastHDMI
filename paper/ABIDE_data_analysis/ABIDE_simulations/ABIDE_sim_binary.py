@@ -16,20 +16,6 @@ from tqdm import tqdm
 import os
 import itertools
 
-# read the data
-csv_file = os.environ["SLURM_TMPDIR"] + \
-    r"/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
-
-abide = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
-_abide_name = abide.columns.tolist()[1:]
-
-# print(_abide_name)
-
-abide_name = _abide_name[1:-3]
-
-# preserve only the neuro-imaging data
-abide = abide[abide_name]
-
 
 def convert2list(a):
     b = np.asarray(a)
@@ -37,6 +23,20 @@ def convert2list(a):
 
 
 def sim_based_on_abide_binary(pair):
+    # read the data
+    csv_file = os.environ["SLURM_TMPDIR"] + \
+        r"/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
+
+    abide = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
+    _abide_name = abide.columns.tolist()[1:]
+
+    # print(_abide_name)
+
+    abide_name = _abide_name[1:-3]
+
+    # preserve only the neuro-imaging data
+    abide = abide[abide_name]
+
     _num_true_vars, _seed = pair
     SNR = 3.
     num_true_vars = _num_true_vars
