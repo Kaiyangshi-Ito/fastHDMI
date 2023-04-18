@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=def-cgreenwo
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=10
+#SBATCH --cpus-per-task=16
 #SBATCH --mem=80G
 #SBATCH --time=3-12:00:00
 #SBATCH --job-name=poly3_age_MI_tricube_silverman_LassoCV

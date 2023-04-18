@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=def-masd
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=10
+#SBATCH --cpus-per-task=16
 #SBATCH --mem=80G
 #SBATCH --time=20:00:00
 #SBATCH --job-name=ABIDE_screening_diagnosis_share_mem

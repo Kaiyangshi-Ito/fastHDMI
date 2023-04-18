@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=def-masd
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=10
+#SBATCH --cpus-per-task=32
 #SBATCH --mem=80G
 #SBATCH --time=20:00:00
 #SBATCH --job-name=ABIDE_sim_binary

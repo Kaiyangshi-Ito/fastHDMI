@@ -101,7 +101,7 @@ def testing_error(num_covariates=20,
             random_state=seed,
             stratify=y_binned)
         if fun in [ElasticNetCV, LassoCV]:
-            fit = fun(cv=5, random_state=seed, n_jobs=10).fit(X_train, y_train)
+            fit = fun(cv=5, random_state=seed, n_jobs=16).fit(X_train, y_train)
             y_pred = fit.predict(X_test)
             out = r2_score(y_test, y_pred)
         elif fun in [RidgeCV]:  # RidgeCV doesn't have seed setting and n_jobs
@@ -110,7 +110,7 @@ def testing_error(num_covariates=20,
             out = r2_score(y_test, y_pred)
         elif fun in [LarsCV, LassoLarsCV
                      ]:  # LarsCV doesn't have seed setting but have n_jobs
-            fit = fun(cv=5, n_jobs=10).fit(X_train, y_train)
+            fit = fun(cv=5, n_jobs=16).fit(X_train, y_train)
             y_pred = fit.predict(X_test)
             out = r2_score(y_test, y_pred)
         elif fun in [MLPRegressor]:
@@ -123,7 +123,7 @@ def testing_error(num_covariates=20,
                 "alpha": [0.0001, 0.05],
                 "learning_rate": ["constant", "adaptive"]
             }
-            clf = GridSearchCV(mlp_gs, parameter_space, n_jobs=10, cv=5)
+            clf = GridSearchCV(mlp_gs, parameter_space, n_jobs=16, cv=5)
             clf.fit(X_train, y_train)
             y_pred = clf.predict(X_test)
             out = r2_score(y_test, y_pred)
@@ -137,7 +137,7 @@ def testing_error(num_covariates=20,
                 "alpha": [0.0001, 0.05],
                 "learning_rate": ["constant", "adaptive"]
             }
-            clf = GridSearchCV(mlp_gs, parameter_space, n_jobs=10, cv=5)
+            clf = GridSearchCV(mlp_gs, parameter_space, n_jobs=16, cv=5)
             clf.fit(X_train, y_train)
             y_pred = clf.predict_proba(
                 X_test)[:, 1]  # predict probability to calculate ROC
@@ -146,27 +146,27 @@ def testing_error(num_covariates=20,
                 LogisticRegressionCV_l1, LogisticRegressionCV_l2,
                 LogisticRegressionCV_ElasticNet
         ]:
-            fit = fun(cv=5, random_state=seed, n_jobs=10).fit(X_train, y_train)
+            fit = fun(cv=5, random_state=seed, n_jobs=16).fit(X_train, y_train)
             y_pred = fit.predict_proba(
                 X_test)[:, 1]  # predict probability to calculate ROC
             out = roc_auc_score(y_test, y_pred)
         elif fun in [RandomForestRegressor]:
-            fit = fun(random_state=seed, n_jobs=10,
+            fit = fun(random_state=seed, n_jobs=16,
                       n_estimators=500).fit(X_train, y_train)
             y_pred = fit.predict(X_test)
             out = r2_score(y_test, y_pred)
         elif fun in [RandomForestClassifier]:
-            fit = fun(random_state=seed, n_jobs=10,
+            fit = fun(random_state=seed, n_jobs=16,
                       n_estimators=500).fit(X_train, y_train)
             y_pred = fit.predict_proba(
                 X_test)[:, 1]  # predict probability to calculate ROC
             out = roc_auc_score(y_test, y_pred)
         elif fun in [LinearRegression]:
-            fit = fun(n_jobs=10).fit(X_train, y_train)
+            fit = fun(n_jobs=16).fit(X_train, y_train)
             y_pred = fit.predict(X_test)
             out = r2_score(y_test, y_pred)
         elif fun in [LogisticRegression]:
-            fit = fun(penalty=None, n_jobs=10).fit(X_train, y_train)
+            fit = fun(penalty=None, n_jobs=16).fit(X_train, y_train)
             y_pred = fit.predict_proba(
                 X_test)[:, 1]  # predict probability to calculate ROC
             out = roc_auc_score(y_test, y_pred)

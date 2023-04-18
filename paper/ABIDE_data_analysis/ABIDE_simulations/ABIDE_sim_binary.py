@@ -69,7 +69,7 @@ def sim_based_on_abide_binary(pair):
             dataframe=abide,
             _usecols=["outcome"] + abide_name,
             multp=10,
-            core_num=10,
+            core_num=32,
             share_memory=False,
             kernel="epa",
             bw="ISJ")
@@ -82,7 +82,7 @@ def sim_based_on_abide_binary(pair):
         dataframe=abide,
         _usecols=["outcome"] + abide_name,
         multp=10,
-        core_num=10,
+        core_num=32,
         random_state=0,
         share_memory=False)
 
@@ -92,14 +92,17 @@ def sim_based_on_abide_binary(pair):
         dataframe=abide,
         _usecols=["outcome"] + abide_name,
         multp=10,
-        core_num=10,
+        core_num=32,
         share_memory=False)
 
-    mi_selection = abide_name[np.argsort(-mi_output)][:num_true_vars]
+    mi_selection = np.asarray(abide_name)[np.argsort(
+        -mi_output)][:num_true_vars]
     mi_selection = convert2list(mi_selection)
-    skmi_selection = abide_name[np.argsort(-skmi_output)][:num_true_vars]
+    skmi_selection = np.asarray(abide_name)[np.argsort(
+        -skmi_output)][:num_true_vars]
     skmi_selection = convert2list(skmi_selection)
-    pearson_selection = abide_name[np.argsort(-pearson_output)][:num_true_vars]
+    pearson_selection = np.asarray(abide_name)[np.argsort(
+        -pearson_output)][:num_true_vars]
     pearson_selection = convert2list(pearson_selection)
 
     mi_sensitivity = len(set(mi_selection)) + len(set(true_names)) - len(

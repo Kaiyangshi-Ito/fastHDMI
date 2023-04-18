@@ -48,7 +48,7 @@ for _kernel in [
                 csv_engine="c",
                 sample=1250000,
                 multp=10,
-                core_num=10,
+                core_num=16,
                 share_memory=True,
                 kernel=_kernel,
                 bw=_bw)
@@ -70,7 +70,7 @@ skmi_output = mi.binary_skMI_screening_csv_parallel(csv_file,
                                                     csv_engine="c",
                                                     sample=1250000,
                                                     multp=10,
-                                                    core_num=10,
+                                                    core_num=16,
                                                     random_state=0,
                                                     share_memory=True)
 if "share_mem" == "high_mem":
@@ -85,7 +85,7 @@ pearson_output = mi.Pearson_screening_csv_parallel(csv_file,
                                                    csv_engine="c",
                                                    sample=1250000,
                                                    multp=10,
-                                                   core_num=10,
+                                                   core_num=16,
                                                    share_memory=True)
 if "share_mem" == "high_mem":
     np.save(r"./ABIDE_diagnosis_Pearson_output", pearson_output)
