@@ -1,4 +1,3 @@
-import itertools
 import numpy as np
 import pandas as pd
 from dask import dataframe as dd
@@ -15,14 +14,7 @@ from sklearn.metrics import r2_score, roc_auc_score
 import multiprocess as mp
 from tqdm import tqdm
 import os
-
-csv_file = os.environ["SLURM_TMPDIR"] + \
-    r"/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
-
-abide = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
-_abide_name = abide.columns.tolist()[1:]
-
-# print(_abide_name)
+import itertools
 
 
 def convert2list(a):
@@ -31,6 +23,14 @@ def convert2list(a):
 
 
 def sim_based_on_abide_binary(pair):
+    # read the data
+    csv_file = os.environ["SLURM_TMPDIR"] + \
+        r"/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
+
+    abide = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
+    _abide_name = abide.columns.tolist()[1:]
+
+    # print(_abide_name)
     _num_true_vars, _seed = pair
     abide_name = _abide_name[1:-3]
 
@@ -124,6 +124,6 @@ seed_list = range(100)
 
 itrs = itertools.product(num_true_vars_list, seed_list)
 
-output_array = np.array(list(map(sim_based_on_abide_binary, itrs)))
+output_array = np.array(list(map(sim_based_on_abide_binary, tqdm(itrs))))
 output_array = output_array.reshape(5, 100, 3)
 np.save(r"./ABIDE_simulations/ABIDE_sim_binary", output_array)
