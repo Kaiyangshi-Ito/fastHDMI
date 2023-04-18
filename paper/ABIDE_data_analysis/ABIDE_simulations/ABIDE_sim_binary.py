@@ -16,11 +16,9 @@ from tqdm import tqdm
 import os
 import itertools
 
-
 def convert2list(a):
     b = np.asarray(a)
     return b.tolist()
-
 
 def sim_based_on_abide_binary(pair):
     # read the data
@@ -65,7 +63,7 @@ def sim_based_on_abide_binary(pair):
     try:
         mi_output = mi.binary_screening_dataframe_parallel(
             dataframe=abide,
-            _usecols=abide_name.copy(),
+            _usecols=["outcome"] + abide_name,
             csv_engine="c",
             sample=1250000,
             multp=10,
@@ -80,7 +78,7 @@ def sim_based_on_abide_binary(pair):
 
     skmi_output = mi.binary_skMI_screening_dataframe_parallel(
         dataframe=abide,
-        _usecols=abide_name.copy(),
+        _usecols=["outcome"] + abide_name,
         csv_engine="c",
         sample=1250000,
         multp=10,
@@ -92,7 +90,7 @@ def sim_based_on_abide_binary(pair):
 
     pearson_output = mi.Pearson_screening_dataframe_parallel(
         dataframe=abide,
-        _usecols=abide_name.copy(),
+        _usecols=["outcome"] + abide_name,
         csv_engine="c",
         sample=1250000,
         multp=10,
