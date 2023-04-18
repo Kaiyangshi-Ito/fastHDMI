@@ -62,7 +62,7 @@ def sim_based_on_abide_continuous(pair):
     sim_data = sim_data * signs
     sim_data = StandardScaler(copy=False).fit_transform(sim_data)
 
-    X_cov = np.corrcoef(sim_data)
+    X_cov = np.corrcoef(sim_data, rowvar=False)
     true_sigma_sim = np.sqrt(true_beta.T @ X_cov @ true_beta / SNR)
 
     outcome = sim_data @ true_beta + np.random.normal(0, true_sigma_sim,
@@ -79,8 +79,6 @@ def sim_based_on_abide_continuous(pair):
         mi_output = mi.continuous_screening_dataframe_parallel(
             dataframe=abide,
             _usecols=["outcome"] + abide_name,
-            csv_engine="c",
-            sample=1250000,
             multp=10,
             core_num=10,
             share_memory=False,
@@ -95,8 +93,6 @@ def sim_based_on_abide_continuous(pair):
     skmi_output = mi.continuous_skMI_screening_dataframe_parallel(
         dataframe=abide,
         _usecols=["outcome"] + abide_name,
-        csv_engine="c",
-        sample=1250000,
         multp=10,
         core_num=10,
         random_state=0,
@@ -107,8 +103,6 @@ def sim_based_on_abide_continuous(pair):
     pearson_output = mi.Pearson_screening_dataframe_parallel(
         dataframe=abide,
         _usecols=["outcome"] + abide_name,
-        csv_engine="c",
-        sample=1250000,
         multp=10,
         core_num=10,
         share_memory=False)
