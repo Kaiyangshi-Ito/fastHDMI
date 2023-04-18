@@ -24,7 +24,9 @@ _warnings.filterwarnings('ignore')
 ############# clumping and screening using mutual information ###############
 #############################################################################
 def _open_bed():
-    print("bed_reader might have some bugs causing it not running")
+    print(
+        "bed_reader might have some bugs for this version, causing it not running"
+    )
     pass
 
 
@@ -55,8 +57,6 @@ def _joint_to_mi(joint, forward_euler_a=1., forward_euler_b=1.):
 
     # this is to ensure that estimated MI is positive, to solve an numerical issue
     mi_temp = _np.max(_np.array([mi_temp, 0.]))
-
-    #     del log_a_marginal, log_b_marginal, log_joint
 
     return mi_temp
 
@@ -104,8 +104,6 @@ def MI_continuous_012(a, b, N=500, kernel="epa", bw="silverman", **kwarg):
     mi_temp = joint_to_mi_cython(joint=joint,
                                  forward_euler_a=forward_euler_step)
 
-    #     del p0, p1, p2, _a, a_temp, _, _b0, y_cond_p0, _b1, y_cond_p1, _b2, y_cond_p2, joint, mask, forward_euler_step
-
     return mi_temp
 
 
@@ -144,8 +142,6 @@ def MI_012_012(a, b):
 
     mi_temp = joint_to_mi_cython(joint=joint)
 
-    #     del joint
-
     return mi_temp
 
 
@@ -177,8 +173,6 @@ def MI_continuous_continuous(a,
     mi_temp = joint_to_mi_cython(joint=joint,
                                  forward_euler_a=a_forward_euler_step,
                                  forward_euler_b=b_forward_euler_step)
-
-    #     del _temp, data, _data, grid, joint, mask, a_forward_euler_step, b_forward_euler_step
 
     return mi_temp
 
@@ -1111,8 +1105,6 @@ def binary_screening_dataframe(dataframe="_",
                                kernel="epa",
                                bw="silverman",
                                csv_engine="c",
-                               parquet_file="_",
-                               sample=256000,
                                verbose=1,
                                **kwarg):
     """
@@ -1144,8 +1136,6 @@ def binary_screening_dataframe(dataframe="_",
         _iter = _tqdm(_iter)
     MI_df = _np.array(list(map(_map_foo, _iter)))
 
-    del _df
-
     return MI_df
 
 
@@ -1157,8 +1147,6 @@ def continuous_screening_dataframe(dataframe="_",
                                    bw="silverman",
                                    norm=2,
                                    csv_engine="c",
-                                   parquet_file="_",
-                                   sample=256000,
                                    verbose=1,
                                    **kwarg):
     """
@@ -1192,8 +1180,6 @@ def continuous_screening_dataframe(dataframe="_",
         _iter = _tqdm(_iter)
     MI_df = _np.array(list(map(_map_foo, _iter)))
 
-    del _df
-
     return MI_df
 
 
@@ -1205,8 +1191,6 @@ def binary_screening_dataframe_parallel(dataframe="_",
                                         core_num="NOT DECLARED",
                                         multp=10,
                                         csv_engine="c",
-                                        parquet_file="_",
-                                        sample=256000,
                                         verbose=1,
                                         share_memory=True,
                                         **kwarg):
@@ -1270,8 +1254,6 @@ def binary_screening_dataframe_parallel(dataframe="_",
         MI_df = pl.map(_binary_screening_csv_slice, _iter)
     MI_df = _np.hstack(MI_df)
 
-    del _df
-
     return MI_df
 
 
@@ -1285,8 +1267,6 @@ def continuous_screening_dataframe_parallel(dataframe="_",
                                             core_num="NOT DECLARED",
                                             multp=10,
                                             csv_engine="c",
-                                            parquet_file="_",
-                                            sample=256000,
                                             verbose=1,
                                             share_memory=True,
                                             **kwarg):
@@ -1352,8 +1332,6 @@ def continuous_screening_dataframe_parallel(dataframe="_",
         MI_df = pl.map(_continuous_screening_csv_slice, _iter)
     MI_df = _np.hstack(MI_df)
 
-    del _df
-
     return MI_df
 
 
@@ -1363,8 +1341,6 @@ def binary_skMI_screening_dataframe_parallel(dataframe="_",
                                              core_num="NOT DECLARED",
                                              multp=10,
                                              csv_engine="c",
-                                             parquet_file="_",
-                                             sample=256000,
                                              verbose=1,
                                              share_memory=True,
                                              **kwarg):
@@ -1427,8 +1403,6 @@ def binary_skMI_screening_dataframe_parallel(dataframe="_",
         MI_df = pl.map(_binary_skMI_df_slice, _iter)
     MI_df = _np.hstack(MI_df)
 
-    del _df
-
     return MI_df
 
 
@@ -1438,8 +1412,6 @@ def continuous_skMI_screening_dataframe_parallel(dataframe="_",
                                                  core_num="NOT DECLARED",
                                                  multp=10,
                                                  csv_engine="c",
-                                                 parquet_file="_",
-                                                 sample=256000,
                                                  verbose=1,
                                                  share_memory=True,
                                                  **kwarg):
@@ -1502,8 +1474,6 @@ def continuous_skMI_screening_dataframe_parallel(dataframe="_",
         MI_df = pl.map(_continuous_skMI_df_slice, _iter)
     MI_df = _np.hstack(MI_df)
 
-    del _df
-
     return MI_df
 
 
@@ -1512,8 +1482,6 @@ def Pearson_screening_dataframe_parallel(dataframe="_",
                                          core_num="NOT DECLARED",
                                          multp=10,
                                          csv_engine="c",
-                                         parquet_file="_",
-                                         sample=256000,
                                          verbose=1,
                                          share_memory=True):
     """
@@ -1577,8 +1545,6 @@ def Pearson_screening_dataframe_parallel(dataframe="_",
         Pearson_df = pl.map(_Pearson_screening_df_slice, _iter)
     Pearson_df = _np.hstack(Pearson_df)
 
-    del _df
-
     return Pearson_df
 
 
@@ -1595,8 +1561,6 @@ def clump_continuous_dataframe_parallel(
         core_num="NOT DECLARED",
         multp=10,
         csv_engine="c",
-        parquet_file="_",
-        sample=256000,
         verbose=1,
         share_memory=True,
         **kwarg):
