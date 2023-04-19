@@ -20,17 +20,15 @@ import itertools
 csv_file = os.environ["SLURM_TMPDIR"] + \
     r"/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
 
-abide = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
-_abide_name = abide.columns.tolist()[1:]
+abide_original = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
+_abide_name = abide_original.columns.tolist()[1:]
 
 # print(_abide_name)
 
-abide_name = _abide_name[1:-3]
+abide_name_original = _abide_name[1:-3]
 
 # preserve only the neuro-imaging data
-abide = abide[abide_name]
-abide_original = abide.copy()
-abide_name_original = abide_name.copy()
+abide_original = abide_original[abide_name_original]
 
 
 def convert2list(a):

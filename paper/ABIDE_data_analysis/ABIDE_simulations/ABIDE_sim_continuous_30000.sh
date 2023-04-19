@@ -3,7 +3,7 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=80G
-#SBATCH --time=20:00:00
+#SBATCH --time=3-12:00:00
 #SBATCH --job-name=continuous_30000
 
 module load gcc llvm rust arrow cuda nodejs python/3.8.10 r/4.0.2 python-build-bundle
