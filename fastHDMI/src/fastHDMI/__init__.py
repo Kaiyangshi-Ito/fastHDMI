@@ -525,8 +525,8 @@ def _read_two_columns(_df, __, csv_engine):
                         "fastparquet"]:  # these are engines using pandas
         _ = _df[__].dropna().to_numpy()
 
-    _a = _[:, 0]
-    _b = _[:, 1]
+    _a = _[:, 0].copy() # such that _df won't be mutated
+    _b = _[:, 1].copy() # such that _df won't be mutated
     return _a, _b
 
 

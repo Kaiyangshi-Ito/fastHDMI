@@ -56,6 +56,9 @@ def sim_based_on_abide_binary(pair):
     sim_data = abide[true_names].to_numpy(copy=True)
     sim_data = StandardScaler(copy=False).fit_transform(sim_data)
     signal = sim_data @ true_beta
+    signal -= np.mean(
+        signal
+    )  # make sure it's centered at 0 to avoid generated data all be in one class
 
     outcome = np.random.binomial(1, np.tanh(signal / 2) / 2 + .5)
 
