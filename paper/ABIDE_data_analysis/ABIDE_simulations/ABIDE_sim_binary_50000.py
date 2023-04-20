@@ -37,7 +37,6 @@ def convert2list(a):
 
 
 def sim_based_on_abide_binary(pair):
-    global abide_original, abide_name_original
     abide, abide_name = abide_original.copy(), abide_name_original.copy()
     _num_true_vars, _seed = pair
     SNR = 3.
@@ -117,7 +116,7 @@ def sim_based_on_abide_binary(pair):
         set(true_names)) - len(set(pearson_selection + true_names))
     pearson_sensitivity = pearson_sensitivity / len(true_names)
 
-    del mi_output, skmi_output, pearson_output, abide, abide_name, true_names, true_beta, sim_data, X_cov, true_sigma_sim, outcome, mi_selection, skmi_selection, pearson_selection
+    del mi_output, skmi_output, pearson_output, abide, abide_name, true_names, true_beta, sim_data, true_sigma_sim, outcome, mi_selection, skmi_selection, pearson_selection
 
     return np.array([mi_sensitivity, skmi_sensitivity, pearson_sensitivity])
 

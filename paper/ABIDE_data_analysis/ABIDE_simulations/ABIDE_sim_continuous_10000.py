@@ -37,7 +37,6 @@ def convert2list(a):
 
 
 def sim_based_on_abide_continuous(pair):
-    global abide_original, abide_name_original
     abide, abide_name = abide_original.copy(), abide_name_original.copy()
     _num_true_vars, _seed = pair
     SNR = 3.
