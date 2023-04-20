@@ -7,7 +7,7 @@ ctypedef fused floating_float_double:
     float
     double
 
-# @cython.boundscheck(False)
+@cython.boundscheck(False)
 @cython.wraparound(False)
 def joint_to_mi_cython(floating_float_double[:, ::1] joint, floating_float_double forward_euler_a=1., floating_float_double forward_euler_b=1.):
     cdef int i, j

@@ -37,6 +37,7 @@ def convert2list(a):
 
 
 def sim_based_on_abide_binary(pair):
+    global abide_original, abide_name_original
     abide, abide_name = abide_original.copy(), abide_name_original.copy()
     _num_true_vars, _seed = pair
     SNR = 3.
@@ -65,17 +66,14 @@ def sim_based_on_abide_binary(pair):
 
     print("Our developed FFT-based MI calculation:")
 
-    try:
-        mi_output = mi.binary_screening_dataframe_parallel(
-            dataframe=abide,
-            _usecols=["outcome"] + abide_name,
-            multp=10,
-            core_num=32,
-            share_memory=False,
-            kernel="epa",
-            bw="ISJ")
-    except:
-        print("The kernel-bw combination reports an error.")
+    mi_output = mi.binary_screening_dataframe_parallel(dataframe=abide,
+                                                       _usecols=["outcome"] +
+                                                       abide_name,
+                                                       multp=10,
+                                                       core_num=32,
+                                                       share_memory=False,
+                                                       kernel="epa",
+                                                       bw="ISJ")
 
     print("sklearn MI calculation:")
 
@@ -115,6 +113,9 @@ def sim_based_on_abide_binary(pair):
     pearson_sensitivity = len(set(pearson_selection)) + len(
         set(true_names)) - len(set(pearson_selection + true_names))
     pearson_sensitivity = pearson_sensitivity / len(true_names)
+
+    del mi_output, skmi_output, pearson_output, abide, abide_name, true_names, true_beta, sim_data, X_cov, true_sigma_sim, outcome, mi_selection, skmi_selection, pearson_selection
+
     return np.array([mi_sensitivity, skmi_sensitivity, pearson_sensitivity])
 
 
