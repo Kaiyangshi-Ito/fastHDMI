@@ -30,7 +30,7 @@ pip install --no-index --upgrade pip Cython
 # pip wheel fastHDMI --no-deps
 
 # # Here basically to build the packages at login node and install them in slurm job submission locally
-pip install --no-index bed-reader numpy sklearn matplotlib scipy numba multiprocess scikit-learn cupy rpy2 Cython
+pip install --no-index bed-reader numpy sklearn matplotlib scipy numba multiprocess scikit-learn cupy rpy2 pandas dask Cython
 pip install --no-index /home/kyang/KDEpy-1.1.1+computecanada-cp38-cp38-linux_x86_64.whl
 pip install --no-index /home/kyang/nonconvexAG-1.0.6+computecanada-py3-none-any.whl
 pip install --no-index /home/kyang/fastHDMI-1.23.3-cp38-cp38-linux_x86_64.whl
