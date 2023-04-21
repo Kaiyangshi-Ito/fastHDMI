@@ -116,7 +116,7 @@ def sim_based_on_abide_binary(pair):
         set(true_names)) - len(set(pearson_selection + true_names))
     pearson_sensitivity = pearson_sensitivity / len(true_names)
 
-    del mi_output, skmi_output, pearson_output, abide, abide_name, true_names, true_beta, sim_data, true_sigma_sim, outcome, mi_selection, skmi_selection, pearson_selection
+    del mi_output, skmi_output, pearson_output, abide, abide_name, true_names, true_beta, sim_data, signal, outcome, mi_selection, skmi_selection, pearson_selection
 
     return np.array([mi_sensitivity, skmi_sensitivity, pearson_sensitivity])
 
