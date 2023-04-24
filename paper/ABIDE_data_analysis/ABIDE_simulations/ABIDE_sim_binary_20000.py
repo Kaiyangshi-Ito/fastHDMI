@@ -48,7 +48,7 @@ def sim_based_on_abide_binary(pair):
     true_names = np.random.choice(abide_name, num_true_vars, replace=False)
     true_names = convert2list(true_names)
 
-    true_beta = np.random.uniform(low=1.0, high=2.0,
+    true_beta = np.random.uniform(low=2.0, high=3.0,
                                   size=num_true_vars) * np.random.choice(
                                       [1., -1.], num_true_vars, replace=True)
 
@@ -58,6 +58,7 @@ def sim_based_on_abide_binary(pair):
     signal -= np.mean(
         signal
     )  # make sure it's centered at 0 to avoid generated data all be in one class
+    signal /= np.std(signal)  # avoid the case if the data is too centered
 
     outcome = np.random.binomial(1, np.tanh(signal / 2) / 2 + .5)
 

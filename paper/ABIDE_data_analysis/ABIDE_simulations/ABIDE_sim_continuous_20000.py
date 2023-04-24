@@ -39,7 +39,7 @@ def convert2list(a):
 def sim_based_on_abide_continuous(pair):
     abide, abide_name = abide_original.copy(), abide_name_original.copy()
     _num_true_vars, _seed = pair
-    SNR = 3.
+    SNR = 9.
     num_true_vars = _num_true_vars
     seed = _seed
     assert num_true_vars < len(abide_name)
@@ -48,19 +48,13 @@ def sim_based_on_abide_continuous(pair):
     true_names = np.random.choice(abide_name, num_true_vars, replace=False)
     true_names = convert2list(true_names)
 
-    true_beta = np.random.uniform(low=1.0, high=2.0,
+    true_beta = np.random.uniform(low=2.0, high=3.0,
                                   size=num_true_vars) * np.random.choice(
                                       [1., -1.], num_true_vars, replace=True)
 
     sim_data = abide[true_names].to_numpy(copy=True)
     sim_data = StandardScaler(copy=False).fit_transform(sim_data)
-    sim_data += np.abs(
-        np.min(sim_data, 0).reshape(1, -1)
-    )  # to ensure that all the the data are positive so we can take square root
-    sim_data = np.sqrt(sim_data)
-    signs = np.random.choice([1., -1.], sim_data.size,
-                             replace=True).reshape(sim_data.shape)
-    sim_data = sim_data * signs
+    sim_data = sim_data**2
     sim_data = StandardScaler(copy=False).fit_transform(sim_data)
 
     X_cov = np.corrcoef(sim_data, rowvar=False)
