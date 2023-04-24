@@ -48,7 +48,7 @@ def sim_based_on_abide_binary(pair):
     true_names = np.random.choice(abide_name, num_true_vars, replace=False)
     true_names = convert2list(true_names)
 
-    true_beta = np.random.uniform(low=2.0, high=3.0,
+    true_beta = np.random.uniform(low=5.0, high=6.0,
                                   size=num_true_vars) * np.random.choice(
                                       [1., -1.], num_true_vars, replace=True)
 
