@@ -70,15 +70,26 @@ def sim_based_on_abide_continuous(pair):
 
     print("Our developed FFT-based MI calculation:")
 
-    mi_output = mi.continuous_screening_dataframe_parallel(
-        dataframe=abide,
-        _usecols=["outcome"] + abide_name,
-        multp=10,
-        core_num=32,
-        share_memory=False,
-        kernel="epa",
-        bw="ISJ",
-        norm=2)
+    try:
+        mi_output = mi.continuous_screening_dataframe_parallel(
+            dataframe=abide,
+            _usecols=["outcome"] + abide_name,
+            multp=10,
+            core_num=32,
+            share_memory=False,
+            kernel="epa",
+            bw="ISJ",
+            norm=2)
+    except:
+        mi_output = mi.continuous_screening_dataframe_parallel(
+            dataframe=abide,
+            _usecols=["outcome"] + abide_name,
+            multp=10,
+            core_num=32,
+            share_memory=False,
+            kernel="epa",
+            bw="silverman",
+            norm=2)
 
     print("sklearn MI calculation:")
 
