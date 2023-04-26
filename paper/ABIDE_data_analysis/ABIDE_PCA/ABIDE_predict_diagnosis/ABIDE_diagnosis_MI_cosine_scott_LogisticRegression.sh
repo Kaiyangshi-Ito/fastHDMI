@@ -25,15 +25,15 @@ pip install --no-index --upgrade pip
 # ${HOME}/wheels_builder/unmanylinuxize.sh --package KDEpy --version 1.1.1 --python 3.8,3.9,3.10 --find_links https://files.pythonhosted.org/packages/
 # ### built nonconvexAG 1.0.6
 # ${HOME}/wheels_builder/unmanylinuxize.sh --package nonconvexAG --version 1.0.6 --python 3.8,3.9,3.10 --find_links https://files.pythonhosted.org/packages/
-# ### built fastHDMI 1.23.6
-# pip install fastHDMI==1.23.6 --no-cache-dir
+# ### built fastHDMI 1.23.10
+# pip install fastHDMI==1.23.10 --no-cache-dir
 # pip wheel fastHDMI --no-deps
 
 # Here basically to build the packages at login node and install them in slurm job submission locally
 pip install --no-index bed-reader numpy sklearn matplotlib scipy numba multiprocess scikit-learn cupy rpy2 pandas dask Cython
 pip install --no-index /home/kyang/KDEpy-1.1.1+computecanada-cp38-cp38-linux_x86_64.whl
 pip install --no-index /home/kyang/nonconvexAG-1.0.6+computecanada-py3-none-any.whl
-pip install --no-index /home/kyang/fastHDMI-1.23.6-cp38-cp38-linux_x86_64.whl
+pip install --no-index /home/kyang/fastHDMI-1.23.10-cp38-cp38-linux_x86_64.whl
 
 nvidia-smi
 lscpu
