@@ -332,8 +332,8 @@ def UAG_LM_SCAD_MCP(design_matrix,
             old_speed_norm = speed_norm  # restarting
             speed_norm = cp.linalg.norm(beta_md - beta_md_old,
                                         ord=2)  # restarting
-            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty) <
-                         tol)
+            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty)
+                         < tol)
             smooth_grad = update_smooth_grad_SCAD_LM(N=N,
                                                      X=X,
                                                      beta_md=beta_md,
@@ -365,8 +365,8 @@ def UAG_LM_SCAD_MCP(design_matrix,
             old_speed_norm = speed_norm  # restarting
             speed_norm = cp.linalg.norm(beta_md - beta_md_old,
                                         ord=2)  # restarting
-            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty) <
-                         tol)
+            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty)
+                         < tol)
             smooth_grad = update_smooth_grad_MCP_LM(N=N,
                                                     X=X,
                                                     beta_md=beta_md,
@@ -540,8 +540,8 @@ def _UAG_LM_SCAD_MCP_strongrule(design_matrix,
             old_speed_norm = speed_norm  # restarting
             speed_norm = cp.linalg.norm(beta_md - beta_md_old,
                                         ord=2)  # restarting
-            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty) <
-                         tol)
+            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty)
+                         < tol)
             smooth_grad = update_smooth_grad_SCAD_LM(N=N,
                                                      X=X,
                                                      beta_md=beta_md,
@@ -573,8 +573,8 @@ def _UAG_LM_SCAD_MCP_strongrule(design_matrix,
             old_speed_norm = speed_norm  # restarting
             speed_norm = cp.linalg.norm(beta_md - beta_md_old,
                                         ord=2)  # restarting
-            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty) <
-                         tol)
+            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty)
+                         < tol)
             smooth_grad = update_smooth_grad_MCP_LM(N=N,
                                                     X=X,
                                                     beta_md=beta_md,
@@ -837,8 +837,8 @@ def UAG_logistic_SCAD_MCP(design_matrix,
             old_speed_norm = speed_norm  # restarting
             speed_norm = cp.linalg.norm(beta_md - beta_md_old,
                                         ord=2)  # restarting
-            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty) <
-                         tol)
+            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty)
+                         < tol)
             smooth_grad = update_smooth_grad_SCAD_logistic(N=N,
                                                            X=X,
                                                            beta_md=beta_md,
@@ -870,8 +870,8 @@ def UAG_logistic_SCAD_MCP(design_matrix,
             old_speed_norm = speed_norm  # restarting
             speed_norm = cp.linalg.norm(beta_md - beta_md_old,
                                         ord=2)  # restarting
-            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty) <
-                         tol)
+            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty)
+                         < tol)
             smooth_grad = update_smooth_grad_MCP_logistic(N=N,
                                                           X=X,
                                                           beta_md=beta_md,
@@ -1046,8 +1046,8 @@ def _UAG_logistic_SCAD_MCP_strongrule(design_matrix,
             old_speed_norm = speed_norm  # restarting
             speed_norm = cp.linalg.norm(beta_md - beta_md_old,
                                         ord=2)  # restarting
-            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty) <
-                         tol)
+            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty)
+                         < tol)
             smooth_grad = update_smooth_grad_SCAD_logistic(N=N,
                                                            X=X,
                                                            beta_md=beta_md,
@@ -1079,8 +1079,8 @@ def _UAG_logistic_SCAD_MCP_strongrule(design_matrix,
             old_speed_norm = speed_norm  # restarting
             speed_norm = cp.linalg.norm(beta_md - beta_md_old,
                                         ord=2)  # restarting
-            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty) <
-                         tol)
+            converged = (cp.linalg.norm(beta_md - beta_md_old, ord=cp.infty)
+                         < tol)
             smooth_grad = update_smooth_grad_MCP_logistic(N=N,
                                                           X=X,
                                                           beta_md=beta_md,

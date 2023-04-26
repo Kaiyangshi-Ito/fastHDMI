@@ -4,6 +4,10 @@
 import multiprocess as _mp
 import ctypes as _ctypes
 from sklearn.preprocessing import RobustScaler as _scaler
+from sklearn.decomposition import PCA as _PCA
+from KDEpy.bw_selection import silvermans_rule as _silvermans_rule
+from KDEpy.bw_selection import improved_sheather_jones as _improved_sheather_jones
+from KDEpy.bw_selection import scotts_rule as _scotts_rule
 from sklearn.feature_selection import mutual_info_regression as _mutual_info_regression
 from sklearn.feature_selection import mutual_info_classif as _mutual_info_classif
 from dask import dataframe as _dd
@@ -15,7 +19,6 @@ from numba import jit as _jit
 import numpy as _np
 from tqdm import tqdm as _tqdm
 import warnings as _warnings
-from fastHDMI.cython_fun import joint_to_mi_cython
 
 _warnings.filterwarnings('ignore')
 
@@ -154,15 +157,29 @@ def MI_continuous_continuous(a,
                              norm=2,
                              **kwarg):
     """
-    (Single Core version) calculate mutual information on bivariate continuous r.v..
+    Calculate mutual information on bivariate continuous r.v..
     """
     _temp = _np.argsort(a)
     data = _np.hstack((a[_temp].reshape(-1, 1), b[_temp].reshape(-1, 1)))
     _data = _scaler().fit_transform(data)
+
+    if bw == "silverman":
+        bw1, bw2 = _silvermans_rule(_data[:,
+                                          [0]]), _silvermans_rule(_data[:,
+                                                                        [1]])
+    elif bw == "scott":
+        bw1, bw2 = _scotts_rule(_data[:, [0]]), _scotts_rule(_data[:, [1]])
+    elif bw == "ISJ":
+        bw1, bw2 = _improved_sheather_jones(
+            _data[:, [0]]), _improved_sheather_jones(_data[:, [1]])
+
+    data_scaled = _data / _np.array([bw1, bw2])
+
     grid, joint = _FFTKDE(kernel=kernel, norm=norm,
                           **kwarg).fit(_data).evaluate((a_N, b_N))
+
     joint = joint.reshape(b_N, -1).T
-    # this gives joint as a (a_N, b_N) array, following example: https://kdepy.readthedocs.io/en/latest/examples.html#the-effect-of-norms-in-2d
+    # this gives joint as a (a_N * b_N, 2) array, following example: https://kdepy.readthedocs.io/en/latest/examples.html#the-effect-of-norms-in-2d
     a_forward_euler_step = grid[b_N, 0] - grid[0, 0]
     b_forward_euler_step = grid[1, 1] - grid[0, 1]
     mask = joint < 0.
@@ -325,6 +342,7 @@ def continuous_screening_plink_parallel(bed_file,
                                return_indices=True)[1]
 
     def _continuous_screening_plink_slice(_slice):
+
         def _map_foo(j):
             _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
@@ -388,6 +406,7 @@ def binary_screening_plink_parallel(bed_file,
                                return_indices=True)[1]
 
     def _binary_screening_plink_slice(_slice):
+
         def _map_foo(j):
             _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
             _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
@@ -448,6 +467,7 @@ def clump_plink_parallel(bed_file,
             outcome = outcome[gene_ind]
 
             def _012_012_plink_slice(_slice):
+
                 def _map_foo(j):
                     _SNP = bed1.read(_np.s_[:, j], dtype=_np.int8).flatten()
                     _SNP = _SNP[gene_ind]  # get gene iid also in outcome iid
@@ -525,8 +545,8 @@ def _read_two_columns(_df, __, csv_engine):
                         "fastparquet"]:  # these are engines using pandas
         _ = _df[__].dropna().to_numpy()
 
-    _a = _[:, 0].copy() # such that _df won't be mutated
-    _b = _[:, 1].copy() # such that _df won't be mutated
+    _a = _[:, 0].copy()  # such that _df won't be mutated
+    _b = _[:, 1].copy()  # such that _df won't be mutated
     return _a, _b
 
 
@@ -680,6 +700,7 @@ def binary_screening_csv_parallel(csv_file="_",
                             columns=_df.columns).astype(df_dtypes_dict)
 
     def _binary_screening_csv_slice(_slice):
+
         def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
@@ -765,6 +786,7 @@ def continuous_screening_csv_parallel(csv_file="_",
                             columns=_df.columns).astype(df_dtypes_dict)
 
     def _continuous_screening_csv_slice(_slice):
+
         def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
@@ -848,6 +870,7 @@ def binary_skMI_screening_csv_parallel(csv_file="_",
                             columns=_df.columns).astype(df_dtypes_dict)
 
     def _binary_skMI_df_slice(_slice):
+
         def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
@@ -928,6 +951,7 @@ def continuous_skMI_screening_csv_parallel(csv_file="_",
                             columns=_df.columns).astype(df_dtypes_dict)
 
     def _continuous_skMI_df_slice(_slice):
+
         def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
@@ -1005,6 +1029,7 @@ def Pearson_screening_csv_parallel(csv_file="_",
                             columns=_df.columns).astype(df_dtypes_dict)
 
     def _Pearson_screening_df_slice(_slice):
+
         def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
@@ -1227,6 +1252,7 @@ def binary_screening_dataframe_parallel(dataframe="_",
                             columns=_df.columns).astype(df_dtypes_dict)
 
     def _binary_screening_csv_slice(_slice):
+
         def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
@@ -1303,6 +1329,7 @@ def continuous_screening_dataframe_parallel(dataframe="_",
                             columns=_df.columns).astype(df_dtypes_dict)
 
     def _continuous_screening_csv_slice(_slice):
+
         def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
@@ -1377,6 +1404,7 @@ def binary_skMI_screening_dataframe_parallel(dataframe="_",
                             columns=_df.columns).astype(df_dtypes_dict)
 
     def _binary_skMI_df_slice(_slice):
+
         def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
@@ -1448,6 +1476,7 @@ def continuous_skMI_screening_dataframe_parallel(dataframe="_",
                             columns=_df.columns).astype(df_dtypes_dict)
 
     def _continuous_skMI_df_slice(_slice):
+
         def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
@@ -1517,6 +1546,7 @@ def Pearson_screening_dataframe_parallel(dataframe="_",
                             columns=_df.columns).astype(df_dtypes_dict)
 
     def _Pearson_screening_df_slice(_slice):
+
         def _map_foo(j):
             __ = [
                 _usecols[0], _usecols[j]
@@ -1626,6 +1656,7 @@ def continuous_skMI_array_parallel(X,
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
     def _continuous_skMI_array_slice(_slice):
+
         def _map_foo(j):
             _a, _b = y.copy(), X[:, j].copy()
             if drop_na == True:
@@ -1665,6 +1696,7 @@ def binary_screening_array(X,
     The outcome should be binary and the covariates be continuous. 
     If drop_na is set to be True, the NaN values will be dropped in a bivariate manner. 
     """
+
     def _map_foo(j):
         _a, _b = y.copy(), X[:, j].copy()
         if drop_na == True:
@@ -1700,6 +1732,7 @@ def continuous_screening_array(X,
     The outcome should be continuous and the covariates be continuous. 
     If drop_na is set to be True, the NaN values will be dropped in a bivariate manner. 
     """
+
     def _map_foo(j):
         _a, _b = y.copy(), X[:, j].copy()
         if drop_na == True:
@@ -1746,6 +1779,7 @@ def binary_screening_array_parallel(X,
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
     def _binary_screening_array_slice(_slice):
+
         def _map_foo(j):
             _a, _b = y.copy(), X[:, j].copy()
             if drop_na == True:
@@ -1801,6 +1835,7 @@ def continuous_screening_array_parallel(X,
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
     def _continuous_screening_array_slice(_slice):
+
         def _map_foo(j):
             _a, _b = y.copy(), X[:, j].copy()
             if drop_na == True:
@@ -1852,6 +1887,7 @@ def binary_skMI_array_parallel(X,
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
     def _binary_skMI_array_slice(_slice):
+
         def _map_foo(j):
             _a, _b = y.copy(), X[:, j].copy()
             if drop_na == True:
@@ -1900,6 +1936,7 @@ def continuous_skMI_array_parallel(X,
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
     def _continuous_skMI_array_slice(_slice):
+
         def _map_foo(j):
             _a, _b = y.copy(), X[:, j].copy()
             if drop_na == True:
@@ -1947,6 +1984,7 @@ def continuous_Pearson_array_parallel(X,
     assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
 
     def _continuous_Pearson_array_slice(_slice):
+
         def _map_foo(j):
             _a, _b = y.copy(), X[:, j].copy()
             if drop_na == True:
@@ -1971,145 +2009,6 @@ def continuous_Pearson_array_parallel(X,
         MI_array = pl.map(_continuous_Pearson_array_slice, _iter)
     MI_array = _np.hstack(MI_array)
     return MI_array
-
-
-##################################################################
-################### some fudamentals things ######################
-##################################################################
-######################################  some SCAD and MCP things  #######################################
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def soft_thresholding(x, lambda_):
-    '''
-    To calculate soft-thresholding mapping of a given ONE-DIMENSIONAL tensor, BESIDES THE FIRST TERM (so beta_0 will not be penalized). 
-    This function is to be used for calculation involving L1 penalty term later. 
-    '''
-    return _np.hstack((_np.array([x[0]]),
-                       _np.where(
-                           _np.abs(x[1:]) > lambda_,
-                           x[1:] - _np.sign(x[1:]) * lambda_, 0)))
-
-
-soft_thresholding(_np.random.rand(20), 3.1)
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def SCAD(x, lambda_, a=3.7):
-    '''
-    To calculate SCAD penalty value;
-    #x can be a multi-dimensional tensor;
-    lambda_, a are scalars;
-    Fan and Li suggests to take a as 3.7 
-    '''
-    # here I notice the function is de facto a function of absolute value of x, therefore take absolute value first to simplify calculation
-    x = _np.abs(x)
-    temp = _np.where(
-        x <= lambda_, lambda_ * x,
-        _np.where(x < a * lambda_,
-                  (2 * a * lambda_ * x - x**2 - lambda_**2) / (2 * (a - 1)),
-                  lambda_**2 * (a + 1) / 2))
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def SCAD_grad(x, lambda_, a=3.7):
-    '''
-    To calculate the gradient of SCAD wrt. input x; 
-    #x can be a multi-dimensional tensor. 
-    '''
-    # here decompose x to sign and its absolute value for easier calculation
-    sgn = _np.sign(x)
-    x = _np.abs(x)
-    temp = _np.where(
-        x <= lambda_, lambda_ * sgn,
-        _np.where(x < a * lambda_, (a * lambda_ * sgn - sgn * x) / (a - 1), 0))
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def MCP(x, lambda_, gamma):
-    '''
-    To calculate MCP penalty value; 
-    #x can be a multi-dimensional tensor. 
-    '''
-    # the function is a function of absolute value of x
-    x = _np.abs(x)
-    temp = _np.where(x <= gamma * lambda_, lambda_ * x - x**2 / (2 * gamma),
-                     .5 * gamma * lambda_**2)
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def MCP_grad(x, lambda_, gamma):
-    '''
-    To calculate MCP gradient wrt. input x; 
-    #x can be a multi-dimensional tensor. 
-    '''
-    temp = _np.where(
-        _np.abs(x) < gamma * lambda_,
-        lambda_ * _np.sign(x) - x / gamma, _np.zeros_like(x))
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def SCAD_concave(x, lambda_, a=3.7):
-    '''
-    The value of concave part of SCAD penalty; 
-    #x can be a multi-dimensional tensor. 
-    '''
-    x = _np.abs(x)
-    temp = _np.where(
-        x <= lambda_, 0.,
-        _np.where(x < a * lambda_,
-                  (lambda_ * x - (x**2 + lambda_**2) / 2) / (a - 1),
-                  (a + 1) / 2 * lambda_**2 - lambda_ * x))
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def SCAD_concave_grad(x, lambda_, a=3.7):
-    '''
-    The gradient of concave part of SCAD penalty wrt. input x; 
-    #x can be a multi-dimensional tensor. 
-    '''
-    sgn = _np.sign(x)
-    x = _np.abs(x)
-    temp = _np.where(
-        x <= lambda_, 0.,
-        _np.where(x < a * lambda_, (lambda_ * sgn - sgn * x) / (a - 1),
-                  -lambda_ * sgn))
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def MCP_concave(x, lambda_, gamma):
-    '''
-    The value of concave part of MCP penalty; 
-    #x can be a multi-dimensional tensor. 
-    '''
-    # similiar as in MCP
-    x = _np.abs(x)
-    temp = _np.where(x <= gamma * lambda_, -(x**2) / (2 * gamma),
-                     (gamma * lambda_**2) / 2 - lambda_ * x)
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def MCP_concave_grad(x, lambda_, gamma):
-    '''
-    The gradient of concave part of MCP penalty wrt. input x; 
-    #x can be a multi-dimensional tensor. 
-    '''
-    temp = _np.where(
-        _np.abs(x) < gamma * lambda_, -x / gamma, -lambda_ * _np.sign(x))
-    temp[0] = 0.  # this is to NOT penalize intercept beta later
-    return temp
 
 
 ##################################################################
