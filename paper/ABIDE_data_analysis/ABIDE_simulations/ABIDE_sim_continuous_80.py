@@ -45,8 +45,15 @@ def sim_based_on_abide_continuous(pair):
     assert num_true_vars < len(abide_name)
     np.random.seed(seed)
 
-    true_names = np.random.choice(abide_name, num_true_vars, replace=False)
+    true_attr_label = np.zeros(len(abide_name), dtype=int)
+    true_attr_index = np.arange(len(abide_name))
+    true_attr_index = np.random.choice(true_attr_index,
+                                       num_true_vars,
+                                       replace=False)
+    true_names = abide_name[true_attr_index]  # this is a list for true names
     true_names = convert2list(true_names)
+    true_attr_label[
+        true_attr_index] = 1  # true_attr_label is binary indicate whether the covaraite is "true"
 
     true_beta = np.random.uniform(low=5.0, high=6.0,
                                   size=num_true_vars) * np.random.choice(
@@ -110,36 +117,24 @@ def sim_based_on_abide_continuous(pair):
         core_num=32,
         share_memory=False)
 
-    mi_selection = np.asarray(abide_name)[np.argsort(
-        -mi_output)][:num_true_vars]
-    mi_selection = convert2list(mi_selection)
-    skmi_selection = np.asarray(abide_name)[np.argsort(
-        -skmi_output)][:num_true_vars]
-    skmi_selection = convert2list(skmi_selection)
-    pearson_selection = np.asarray(abide_name)[np.argsort(
-        -pearson_output)][:num_true_vars]
-    pearson_selection = convert2list(pearson_selection)
+    mi_pseudo_prob = np.abs(mi_output) / np.max(np.abs(mi_output))
+    mi_auroc = roc_auc_score(true_attr_label, mi_pseudo_prob)
+    skmi_pseudo_prob = np.abs(skmi_output) / np.max(np.abs(skmi_output))
+    skmi_auroc = roc_auc_score(true_attr_label, skmi_pseudo_prob)
+    pearson_pseudo_prob = np.abs(pearson_output) / np.max(
+        np.abs(pearson_output))
+    pearson_auroc = roc_auc_score(true_attr_label, pearson_pseudo_prob)
 
-    mi_sensitivity = len(set(mi_selection)) + len(set(true_names)) - len(
-        set(mi_selection + true_names))
-    mi_sensitivity = mi_sensitivity / len(true_names)
-    skmi_sensitivity = len(set(skmi_selection)) + len(set(true_names)) - len(
-        set(skmi_selection + true_names))
-    skmi_sensitivity = skmi_sensitivity / len(true_names)
-    pearson_sensitivity = len(set(pearson_selection)) + len(
-        set(true_names)) - len(set(pearson_selection + true_names))
-    pearson_sensitivity = pearson_sensitivity / len(true_names)
+    del mi_output, skmi_output, pearson_output, abide, abide_name, true_names, true_beta, sim_data, X_cov, true_sigma_sim, outcome, mi_pseudo_prob, skmi_pseudo_prob, pearson_pseudo_prob
 
-    del mi_output, skmi_output, pearson_output, abide, abide_name, true_names, true_beta, sim_data, X_cov, true_sigma_sim, outcome, mi_selection, skmi_selection, pearson_selection
-
-    return np.array([mi_sensitivity, skmi_sensitivity, pearson_sensitivity])
+    return np.array([mi_auroc, skmi_auroc, pearson_auroc])
 
 
-num_true_vars_list = [30000]
+num_true_vars_list = [80]
 seed_list = range(100)
 
 itrs = itertools.product(num_true_vars_list, seed_list)
 
 output_array = np.array(list(map(sim_based_on_abide_continuous, tqdm(itrs))))
 output_array = output_array.reshape(1, 100, 3).squeeze()
-np.save(r"./ABIDE_sim_continuous_30000", output_array)
+np.save(r"./ABIDE_sim_continuous_80", output_array)

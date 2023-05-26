@@ -4,7 +4,7 @@
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=80G
 #SBATCH --time=3-12:00:00
-#SBATCH --job-name=continuous_10000
+#SBATCH --job-name=binary_80
 
 module load gcc llvm rust arrow cuda nodejs python/3.8.10 r/4.0.2 python-build-bundle
 
@@ -38,8 +38,8 @@ pip install --no-index /home/kyang/fastHDMI-1.23.10-cp38-cp38-linux_x86_64.whl
 nvidia-smi
 lscpu
 
-echo "running ABIDE_sim_continuous_10000.py"
+echo "running ABIDE_sim_binary_80.py"
 
 cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv $SLURM_TMPDIR/
 
-python3 ABIDE_sim_continuous_10000.py
+python3 ABIDE_sim_binary_80.py
