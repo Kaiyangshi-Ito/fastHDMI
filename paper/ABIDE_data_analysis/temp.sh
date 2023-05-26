@@ -1,9 +1,0 @@
-cd ABIDE_predict_age
-sbatch ABIDE_age_MI_epa_ISJ_LinearRegression.sh; sbatch ABIDE_age_skMI_LinearRegression.sh; sbatch ABIDE_age_Pearson_LinearRegression.sh
-cd ../ABIDE_predict_diagnosis
-sbatch ABIDE_diagnosis_MI_epa_ISJ_LogisticRegression.sh; sbatch ABIDE_diagnosis_skMI_LogisticRegression.sh; sbatch ABIDE_diagnosis_Pearson_LogisticRegression.sh
-cd ../ABIDE_poly3_predict_age
-sbatch ABIDE_poly3_age_MI_epa_ISJ_LinearRegression.sh; sbatch ABIDE_poly3_age_skMI_LinearRegression.sh; sbatch ABIDE_poly3_age_Pearson_LinearRegression.sh
-cd ../ABIDE_poly3_predict_diagnosis
-sbatch ABIDE_poly3_diagnosis_MI_epa_ISJ_LogisticRegression.sh; sbatch ABIDE_poly3_diagnosis_skMI_LogisticRegression.sh; sbatch ABIDE_poly3_diagnosis_Pearson_LogisticRegression.sh
-
