@@ -18,7 +18,9 @@ from numba import njit as _njit
 from numba import jit as _jit
 import numpy as _np
 from tqdm import tqdm as _tqdm
+from fastHDMI.cython_fun import joint_to_mi_cython
 import warnings as _warnings
+
 
 _warnings.filterwarnings('ignore')
 

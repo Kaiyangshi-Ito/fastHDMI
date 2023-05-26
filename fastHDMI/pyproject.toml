@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fastHDMI"
-version = "1.23.10"
+version = "1.23.18"
 authors = [
   { name="Kai Yang", email="kai.yang2@mail.mcgill.ca" },
 ]
@@ -21,11 +21,11 @@ dependencies = [
     "numba>=0.54.1",
     "KDEpy>=1.1.0",
     "scikit-learn>=1.0.2",
-    "bed_reader",
+#    "bed_reader",
     "multiprocess>=0.70.6",
 #    "bed-reader",
     "pandas>=1.4.4",
-    "pyarrow>=8.0.0",
+#    "pyarrow>=8.0.0",
     "dask",
     "tqdm>=4.64.1",
     "Cython",
