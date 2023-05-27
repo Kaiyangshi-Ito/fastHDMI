@@ -50,7 +50,8 @@ def sim_based_on_abide_binary(pair):
     true_attr_index = np.random.choice(true_attr_index,
                                        num_true_vars,
                                        replace=False)
-    true_names = abide_name[true_attr_index]  # this is a list for true names
+    true_names = np.take(abide_name,
+                         true_attr_index)  # this is a list for true names
     true_names = convert2list(true_names)
     true_attr_label[
         true_attr_index] = 1  # true_attr_label is binary indicate whether the covaraite is "true"
@@ -113,16 +114,6 @@ def sim_based_on_abide_binary(pair):
         multp=10,
         core_num=32,
         share_memory=False)
-
-    mi_selection = np.asarray(abide_name)[np.argsort(
-        -mi_output)][:num_true_vars]
-    mi_selection = convert2list(mi_selection)
-    skmi_selection = np.asarray(abide_name)[np.argsort(
-        -skmi_output)][:num_true_vars]
-    skmi_selection = convert2list(skmi_selection)
-    pearson_selection = np.asarray(abide_name)[np.argsort(
-        -pearson_output)][:num_true_vars]
-    pearson_selection = convert2list(pearson_selection)
 
     mi_pseudo_prob = np.abs(mi_output) / np.max(np.abs(mi_output))
     mi_auroc = roc_auc_score(true_attr_label, mi_pseudo_prob)

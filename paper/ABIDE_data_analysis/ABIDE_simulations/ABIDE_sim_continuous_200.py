@@ -50,7 +50,8 @@ def sim_based_on_abide_continuous(pair):
     true_attr_index = np.random.choice(true_attr_index,
                                        num_true_vars,
                                        replace=False)
-    true_names = abide_name[true_attr_index]  # this is a list for true names
+    true_names = np.take(abide_name,
+                         true_attr_index)  # this is a list for true names
     true_names = convert2list(true_names)
     true_attr_label[
         true_attr_index] = 1  # true_attr_label is binary indicate whether the covaraite is "true"
