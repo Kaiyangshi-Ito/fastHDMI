@@ -30,14 +30,16 @@ abide_name_original = _abide_name[1:-3]
 # preserve only the neuro-imaging data
 abide_original = abide_original[abide_name_original]
 
+
 def convert2list(a):
     b = np.asarray(a)
     return b.tolist()
 
+
 def sim_based_on_abide_continuous(pair):
     abide, abide_name = abide_original.copy(), abide_name_original.copy()
     _num_true_vars, _seed = pair
-    SNR = 9.
+    SNR = 3.
     num_true_vars = _num_true_vars
     seed = _seed
     assert num_true_vars < len(abide_name)
@@ -48,7 +50,8 @@ def sim_based_on_abide_continuous(pair):
     true_attr_index = np.random.choice(true_attr_index,
                                        num_true_vars,
                                        replace=False)
-    true_names = np.take(abide_name, true_attr_index) # this is a list for true names
+    true_names = np.take(abide_name,
+                         true_attr_index)  # this is a list for true names
     true_names = convert2list(true_names)
     true_attr_label[
         true_attr_index] = 1  # true_attr_label is binary indicate whether the covaraite is "true"

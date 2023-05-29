@@ -33,9 +33,7 @@ abide_name = [_abide_name[-1]] + _abide_name[1:-3]
 del _abide_name
 
 print("The outcome is diagnosis.")
-print(
-    "Now running using dask CSV engine with share_memory=False."
-)
+print("Now running using dask CSV engine with share_memory=False.")
 print("Our developed FFT-based MI calculation:")
 
 for _kernel in [
@@ -67,15 +65,14 @@ for _kernel in [
 
 print("sklearn MI calculation:")
 
-skmi_output = mi.binary_skMI_screening_csv_parallel(
-    csv_file,
-    _usecols=abide_name.copy(),
-    csv_engine="dask",
-    sample=1250000,
-    multp=10,
-    core_num=16,
-    random_state=0,
-    share_memory=False)
+skmi_output = mi.binary_skMI_screening_csv_parallel(csv_file,
+                                                    _usecols=abide_name.copy(),
+                                                    csv_engine="dask",
+                                                    sample=1250000,
+                                                    multp=10,
+                                                    core_num=16,
+                                                    random_state=0,
+                                                    share_memory=False)
 if "dask" == "high_mem":
     np.save(r"./ABIDE_diagnosis_skMI_output", skmi_output)
 
@@ -83,14 +80,13 @@ del skmi_output
 
 print("Pearson's correlation calculation:")
 
-pearson_output = mi.Pearson_screening_csv_parallel(
-    csv_file,
-    _usecols=abide_name.copy(),
-    csv_engine="dask",
-    sample=1250000,
-    multp=10,
-    core_num=16,
-    share_memory=False)
+pearson_output = mi.Pearson_screening_csv_parallel(csv_file,
+                                                   _usecols=abide_name.copy(),
+                                                   csv_engine="dask",
+                                                   sample=1250000,
+                                                   multp=10,
+                                                   core_num=16,
+                                                   share_memory=False)
 if "dask" == "high_mem":
     np.save(r"./ABIDE_diagnosis_Pearson_output", pearson_output)
 
