@@ -20,9 +20,8 @@ csv_file = os.environ["SLURM_TMPDIR"] + \
 original_df = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
 
 columns = np.load(os.environ["SLURM_TMPDIR"] + r"/ABIDE_columns.npy")
-abide_dep = np.load(
-    os.environ["SLURM_TMPDIR"] +
-    r"/ABIDE_age_MI_cosine_silverman_output.npy")  # dep_measure
+abide_dep = np.load(os.environ["SLURM_TMPDIR"] +
+                    r"/ABIDE_age_MI_cosine_silverman_output.npy")  # dep_measure
 abide_dep = np.absolute(abide_dep)
 
 
@@ -186,7 +185,6 @@ def testing_error_rep(num_covariates=20,
                       fun=ElasticNetCV,
                       outcome_name="AGE_AT_SCAN",
                       num_rep=10):
-
     def _testing_error(seed):
         return testing_error(num_covariates=num_covariates,
                              training_proportion=training_proportion,
@@ -203,7 +201,6 @@ def testing_error_num_attr(num_attr,
                            fun=ElasticNetCV,
                            outcome_name="AGE_AT_SCAN",
                            num_rep=10):
-
     def _testing_error_rep(_num_attr):
         return testing_error_rep(num_covariates=_num_attr,
                                  training_proportion=training_proportion,
@@ -224,3 +221,4 @@ output = testing_error_num_attr(
     num_rep=20)
 np.save(r"./ABIDE_poly3_age_MI_cosine_silverman_RidgeCV",
         output)  # dep_measure, fun_name
+    

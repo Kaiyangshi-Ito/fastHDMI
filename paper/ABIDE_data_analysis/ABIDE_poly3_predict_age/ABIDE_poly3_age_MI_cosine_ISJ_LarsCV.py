@@ -185,7 +185,6 @@ def testing_error_rep(num_covariates=20,
                       fun=ElasticNetCV,
                       outcome_name="AGE_AT_SCAN",
                       num_rep=10):
-
     def _testing_error(seed):
         return testing_error(num_covariates=num_covariates,
                              training_proportion=training_proportion,
@@ -202,7 +201,6 @@ def testing_error_num_attr(num_attr,
                            fun=ElasticNetCV,
                            outcome_name="AGE_AT_SCAN",
                            num_rep=10):
-
     def _testing_error_rep(_num_attr):
         return testing_error_rep(num_covariates=_num_attr,
                                  training_proportion=training_proportion,
@@ -223,3 +221,4 @@ output = testing_error_num_attr(
     num_rep=20)
 np.save(r"./ABIDE_poly3_age_MI_cosine_ISJ_LarsCV",
         output)  # dep_measure, fun_name
+    

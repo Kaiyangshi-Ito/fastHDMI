@@ -49,8 +49,8 @@ for outcome in ["diagnosis", "age"]:
                         alpha=.2)
         plt.ylabel(outcome)
         plt.xlabel(colname)
-        plt.title(
-            r"scatter plot for outcome vs the top associated covariates: " +
-            outcome + r" and " + colname)
+        plt.title(r"scatter plot for outcome vs the top associated covariates: " + outcome +
+                  r" and " + colname)
         plt.savefig(r"scatter_" + outcome + r"_" + colname)
         plt.close()
+    
