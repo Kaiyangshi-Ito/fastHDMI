@@ -1,0 +1,11 @@
+Job ID: 6902115
+Cluster: graham
+User/Group: kyang/kyang
+State: FAILED (exit code 1)
+Nodes: 1
+Cores per node: 16
+CPU Utilized: 00:07:52
+CPU Efficiency: 6.03% of 02:10:24 core-walltime
+Job Wall-clock time: 00:08:09
+Memory Utilized: 11.91 GB
+Memory Efficiency: 14.89% of 80.00 GB

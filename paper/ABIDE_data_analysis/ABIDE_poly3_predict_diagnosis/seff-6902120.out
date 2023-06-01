@@ -1,0 +1,11 @@
+Job ID: 6902120
+Cluster: graham
+User/Group: kyang/kyang
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 16
+CPU Utilized: 01:42:27
+CPU Efficiency: 36.04% of 04:44:16 core-walltime
+Job Wall-clock time: 00:17:46
+Memory Utilized: 12.04 GB
+Memory Efficiency: 15.05% of 80.00 GB
