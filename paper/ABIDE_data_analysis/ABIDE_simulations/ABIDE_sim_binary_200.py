@@ -55,7 +55,7 @@ def sim_based_on_abide_binary(pair):
     true_attr_label[
         true_attr_index] = 1  # true_attr_label is binary indicate whether the covaraite is "true"
 
-    true_beta = np.random.uniform(low=5.0, high=6.0,
+    true_beta = np.random.uniform(low=.5, high=.6,
                                   size=num_true_vars) * np.random.choice(
                                       [1., -1.], num_true_vars, replace=True)
 
