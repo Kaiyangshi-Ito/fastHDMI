@@ -62,6 +62,8 @@ def sim_based_on_abide_binary(pair):
 
     sim_data = abide[true_names].to_numpy(copy=True)
     sim_data = StandardScaler(copy=False).fit_transform(sim_data)
+    sim_data = sim_data**2
+    sim_data = StandardScaler(copy=False).fit_transform(sim_data)
     signal = sim_data @ true_beta
     signal -= np.mean(
         signal
