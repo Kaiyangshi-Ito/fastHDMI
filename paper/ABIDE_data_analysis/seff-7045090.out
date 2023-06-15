@@ -1,0 +1,11 @@
+Job ID: 7045090
+Cluster: graham
+User/Group: kyang/kyang
+State: FAILED (exit code 1)
+Nodes: 1
+Cores per node: 10
+CPU Utilized: 00:01:17
+CPU Efficiency: 8.02% of 00:16:00 core-walltime
+Job Wall-clock time: 00:01:36
+Memory Utilized: 241.21 MB
+Memory Efficiency: 0.29% of 80.00 GB
