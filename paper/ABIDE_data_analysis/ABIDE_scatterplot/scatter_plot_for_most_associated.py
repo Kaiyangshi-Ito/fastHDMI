@@ -52,5 +52,7 @@ for outcome in ["diagnosis", "age"]:
         plt.title(
             r"scatter plot for outcome vs the top associated covariates: " +
             outcome + r" and " + colname)
-        plt.savefig(r"scatter_" + outcome + r"_" + colname, format="eps")
+        plt.savefig(r"scatter_" + outcome + r"_" + colname,
+                    format="eps",
+                    dpi=600)
         plt.close()

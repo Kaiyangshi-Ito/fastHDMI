@@ -76,9 +76,8 @@ def testing_error(num_covariates=20,
                   outcome_name="AGE_AT_SCAN",
                   seed=1):
     np.random.seed(seed)
-    _usecols = np.hstack((
-        outcome_name,  # "SEX", "AGE_AT_SCAN",
-        columns[np.argsort(-abide_dep)][:num_covariates]))
+    _usecols = np.hstack((outcome_name, "SEX", "AGE_AT_SCAN",
+                          columns[np.argsort(-abide_dep)][:num_covariates]))
     df = original_df[_usecols].dropna(inplace=False).sample(
         frac=1, random_state=seed, replace=False).reset_index(drop=True,
                                                               inplace=False)
