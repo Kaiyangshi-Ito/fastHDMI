@@ -70,7 +70,10 @@ def sim_based_on_abide_binary(pair):
     )  # make sure it's centered at 0 to avoid generated data all be in one class
     signal /= np.std(signal)  # avoid the case if the data is too centered
 
-    outcome = np.random.binomial(1, np.tanh(signal / 2) / 2 + .5)
+    # outcome = np.random.binomial(1, np.tanh(signal / 2) / 2 + .5) # logistic
+    outcome = np.random.binomial(1,
+                                 np.arcsin(np.sqrt(signal + np.min(signal))) /
+                                 (np.pi / 2.))  # arcsin(sqrt(.))
 
     abide["outcome"] = outcome
     abide = abide[["outcome"] + abide_name]
