@@ -69,11 +69,14 @@ def sim_based_on_abide_binary(pair):
         signal
     )  # make sure it's centered at 0 to avoid generated data all be in one class
     signal /= np.std(signal)  # avoid the case if the data is too centered
+    signal += np.arctanh(
+        (1. / 3)**.5
+    )  # this is to make the data centered at the point with highest curvature to archive most nonlinearity
 
-    # outcome = np.random.binomial(1, np.tanh(signal / 2) / 2 + .5) # logistic
-    outcome = np.random.binomial(1,
-                                 np.arcsin(np.sqrt(signal + np.min(signal))) /
-                                 (np.pi / 2.))  # arcsin(sqrt(.))
+    outcome = np.random.binomial(1, np.tanh(signal / 2) / 2 + .5)  # logistic
+    # outcome = np.random.binomial(1,
+    #                              np.arcsin(np.sqrt(signal + np.min(signal))) /
+    #                              (np.pi / 2.))  # arcsin(sqrt(.))
 
     abide["outcome"] = outcome
     abide = abide[["outcome"] + abide_name]
