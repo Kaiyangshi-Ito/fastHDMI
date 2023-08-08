@@ -3,3 +3,4 @@
 ## <kai.yang2 "at" mail.mcgill.ca>
 
 The manual for the package can be found [here](/fastHDMI/README.md).
+Structure to be added soon...
