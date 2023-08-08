@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=def-cgreenwo
+#SBATCH --account=def-masd
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=80G
@@ -40,6 +40,6 @@ lscpu
 
 echo "running ABIDE_screening_age_dask.py"
 
-cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv $SLURM_TMPDIR/
+cp /home/kyang/projects/def-masd/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv $SLURM_TMPDIR/
 
 python3 ABIDE_screening_age_dask.py
