@@ -137,4 +137,4 @@ itrs = itertools.product(num_true_vars_list, seed_list)
 
 output_array = np.array(list(map(sim_based_on_abide_continuous, tqdm(itrs))))
 output_array = output_array.reshape(1, 100, 3).squeeze()
-np.save(r"./ABIDE_sim_continuous_40", output_array)
+np.save(r"./ABIDE_continuous_40", output_array)

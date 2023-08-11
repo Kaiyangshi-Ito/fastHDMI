@@ -141,4 +141,4 @@ itrs = itertools.product(num_true_vars_list, seed_list)
 
 output_array = np.array(list(map(sim_based_on_abide_binary, tqdm(itrs))))
 output_array = output_array.reshape(1, 100, 3).squeeze()
-np.save(r"./ABIDE_sim_binary_120", output_array)
+np.save(r"./ABIDE_binary_translated_120", output_array)
