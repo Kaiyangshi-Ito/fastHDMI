@@ -2,7 +2,7 @@
 ## Kai Yang
 ## <kai.yang2@mail.mcgill.ca>
 
-To be rewritten... summarize arguments
+To be rewritten... summarize arguments and classify features
 
 This packages uses FFT-based mutual information screening and accelerated gradient method for important variables from (potentially very) high-dimensional large datasets. A `share_memory` option is added for multiprocess computing. As a feature, it can be applied on large `.csv` data in parallel in a memory-efficient manner and use FFT for KDE to estimate the mutual information extremely fast. A tqdm progress bar is now added to be more useful on cloud computing platforms. `verbose` option can take values of `0,1,2`, with `2` being most verbal; `1` being only show progress bar, and `0` being not verbal at all. The corresponding paper by Yang et al. is coming soon...
 
