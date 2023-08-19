@@ -2,7 +2,7 @@
 ## Kai Yang
 ## <kai.yang2 "at" mail.mcgill.ca>
 
-**Refer to my paper here...**
+**Refer to my paper here... keep in bold fonts**
 
 The manual for the package `fastHDMI` can be found [here](/fastHDMI/README.md). The package is published on PyPI [here](https://pypi.org/project/fastHDMI/).
 
