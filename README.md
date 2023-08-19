@@ -10,4 +10,4 @@ The results on [(pre-processed) ABIDE data](http://preprocessed-connectomes-proj
 
 the `seff-[jobID].out` files are the outputs from `seff [jobsID]` command -- they briefly describes the computational resources used for the job. More on Compute Canada running jobs can be found [here](https://docs.alliancecan.ca/wiki/Running_jobs).
 
-% test if GPG key works
+% test if GPG key works testing again
