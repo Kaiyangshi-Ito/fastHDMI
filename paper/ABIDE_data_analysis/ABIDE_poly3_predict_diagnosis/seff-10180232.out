@@ -1,0 +1,11 @@
+Job ID: 10180232
+Cluster: graham
+User/Group: kyang/kyang
+State: FAILED (exit code 1)
+Nodes: 1
+Cores per node: 16
+CPU Utilized: 00:07:34
+CPU Efficiency: 6.00% of 02:06:08 core-walltime
+Job Wall-clock time: 00:07:53
+Memory Utilized: 11.82 GB
+Memory Efficiency: 14.77% of 80.00 GB
