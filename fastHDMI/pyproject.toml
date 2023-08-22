@@ -12,7 +12,7 @@ version = "1.23.18"
 authors = [
   { name="Kai Yang", email="kai.yang2@mail.mcgill.ca" },
 ]
-description = "Use FFT-based mutual information to screen variables, and use accelerated gradient method to optimize nonconvex sparse learning problems, on large CSV files or large genetic bed/bim/fam files. Multiprocessing is now available. Works well on MRI brain imaging data."
+description = "Use FFT-based mutual information to screen variables, and use accelerated gradient method to optimize nonconvex sparse learning problems, on large CSV files or large genetic bed/bim/fam files. Multiprocessing is now available. Works well on MRI brain imaging data. Developed by Kai Yang, PGP Public key: https://keys.openpgp.org/vks/v1/by-fingerprint/CC02CF153594774CF956691492B2600D18170329"
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.7"
