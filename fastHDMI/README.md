@@ -1,9 +1,10 @@
 # fastHDMI -- fast High-Dimensional Mutual Information estimation
 ## Kai Yang
 ## <kai.yang2 "at" mail.mcgill.ca>
+## License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)
 ## [GPG Public key Fingerprint: CC02CF153594774CF956691492B2600D18170329](https://keys.openpgp.org/vks/v1/by-fingerprint/CC02CF153594774CF956691492B2600D18170329)
 
-This packages uses FFT-based mutual information screening and accelerated gradient method for important variables from (potentially very) high-dimensional large datasets. 
+This packages uses FFT-based mutual information screening and accelerated gradient method for important variables from (potentially very) high-dimensional large datasets. **version `1.23.23` is a version with only the README file updated to illustrate the functions more clearly**
 
 Consider the sizes of the datafiles, the most commonly-used functions are the functions run in parallel -- all functions running in parallel will has `_parallel` suffix; and they all have arguments: 
 - `core_num`: number of CPU cores used for multiprocessing; the default option is to use all the cores available, considering the job is most likely running on a server instead of a PC 
