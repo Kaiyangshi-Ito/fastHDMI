@@ -1,33 +1,59 @@
 # fastHDMI -- fast High-Dimensional Mutual Information estimation
 ## Kai Yang
-## <kai.yang2@mail.mcgill.ca>
+## <kai.yang2 "at" mail.mcgill.ca>
+## [GPG Public key Fingerprint: CC02CF153594774CF956691492B2600D18170329](https://keys.openpgp.org/vks/v1/by-fingerprint/CC02CF153594774CF956691492B2600D18170329)
 
-To be rewritten... summarize arguments and classify features
+This packages uses FFT-based mutual information screening and accelerated gradient method for important variables from (potentially very) high-dimensional large datasets. 
 
-This packages uses FFT-based mutual information screening and accelerated gradient method for important variables from (potentially very) high-dimensional large datasets. A `share_memory` option is added for multiprocess computing. As a feature, it can be applied on large `.csv` data in parallel in a memory-efficient manner and use FFT for KDE to estimate the mutual information extremely fast. A tqdm progress bar is now added to be more useful on cloud computing platforms. `verbose` option can take values of `0,1,2`, with `2` being most verbal; `1` being only show progress bar, and `0` being not verbal at all. The corresponding paper by Yang et al. is coming soon...
+Consider the sizes of the datafiles, the most commonly-used functions are the functions run in parallel -- all functions running in parallel will has `_parallel` suffix; and they all have arguments: 
+- `core_num`: number of CPU cores used for multiprocessing; the default option is to use all the cores available, considering the job is most likely running on a server instead of a PC 
+- `multp`: job multiplier, the job to be run in parallel will be first divided into `core_num * multp` sub-jobs -- as equal as possible, then at each time, one core will take one subjob.
+- `verbose`: how verbal the function will be, with `0` being least verbal and increases wrt. the number decalred here
 
-The available functions are:
-- `continuous_screening_plink` caculates the mutual information between a continuous outcome and a bialletic SNP using FFT. Missing data in the input variables is acceptable and will be removed per bivariate calculation. The arguments are:
-  * `bed_file`, `bim_file`, `fam_file` are the location of the plink1 files;
-  * `outcome`, `outcome_iid` are the outcome values and the iids for the outcome. For genetic data, it is usual that the order of SNP iid and the outcome iid don't match. While SNP iid can be obtained from the plink1 files, outcome iid here is to be declared separately. `outcome_iid` should be a list of strings or a one-dimensional numpy string array.
-  * `N=500` is the default values for grid size for FFT.
+The function implementing our propsoed FFT-based mutual information estimation will have the following arguments:
+- `N`: the grid size for 1-D FFT; with `N=500` as the default value
+- `a_N`, `a_N`: similar to above, the grid size for 2-D FFT; with `300` as the default values 
+- `kernel` and `bw` specify the kernel and bandwidth used for KDE
+- `norm` is the norm used for KDE -- this option only takes effects for 2-D KDE
 
-- `binary_screening_plink` works similarly. 
+The screening functions and their arguments: 
 
-- `continuous_screening_plink_parallel` and `binary_screening_plink_parallel` are the multiprocessing version of the above two functions, with `core_num` can be used to declare the number of cores to be used for multiprocessing.
+- For `plink` files:
+* arguments `bed_file`, `bim_file`, `fam_file` are the location of the plink files;
+* arguments `outcome`, `outcome_iid` are the outcome values and the iids for the outcome. For genetic data, it is usual that the order of SNP iid and the outcome iid don't match. While SNP iid can be obtained from the plink1 files, outcome iid here is to be declared separately. `outcome_iid` should be a list of strings or a one-dimensional numpy string array.
+* `continuous_screening_plink`, `continuous_screening_plink_parallel` for screening on continuous outcomes with continuous covariates  
+* `binary_screening_plink`, `binary_screening_plink_parallel` for screening on binary outcomes with continuous covariates
+* `clump_plink_parallel` for clumping -- starting from the first covariate (i.e., the first column on the left of the datafile), clumping will remove all subsequent covariates with a mutual information higher than what the `clumping_threshold` declares with the one it looks at
 
-- `MI_continuous_continuous` and `MI_binary_continuous` are to calculate mutual information between two continuous variables and binary and continuous variables, respectively. `MI_binary_012` and `MI_012_012` are `jit` complied functions -- the later can be used for clumping for very large genetic datasets.
+- For `csv` files: 
+* argument `_usecols` is a list of column labels to be used, **the first element should be the outcome. Returned mutual information calculation results match `_usecols`.**
+* **Note that it is assumed the left first column should be the outcome;** if not, use `_usecols` to set the first element to be the outcome column label. 
+* `csv_engine` can use `dask` for low memory situations, or `pandas`'s `read_csv` `engine`s, or `fastparquet` engine for a created `parquet` file for faster speed. If `fastparquet` is chosen, declare `parquet_file` as the filepath to the parquet file; if `dask` is chosen to read very large CSV, it might need to specify a larger [`sample`](https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html).
+* `binary_screening_csv`, `binary_screening_csv_parallel` for screening on binary outcomes with continuous covariates  
+* `binary_skMI_screening_csv_parallel`, `continuous_skMI_screening_csv_parallel` for screening using mutual information estimation provided by `skLearn`, i.e., `sklearn.metrics.mutual_info_score`, `sklearn.feature_selection.mutual_info_classif`
+* `Pearson_screening_csv_parallel` for screening using Pearson correlation 
+* `continuous_screening_csv`, `continuous_screening_csv_parallel`  for screening on continuous outcomes with continuous covariates  
+* `clump_continuous_csv_parallel` similar to above 
 
-- `binary_screening_csv`, `continuous_screening_csv`, `binary_screening_csv_parallel`, and `continuous_screening_csv_parallel` are to work on large CSV files directly in a memory efficient manner. **Note that it is assumed the left first column should be the outcome;** if not, use `_usecols` to set the first element to be the outcome column label.
-  * `_usecols` is a list of column labels to be used, **the first element should be the outcome. Returned mutual information calculation results match `_usecols`.**
-  * `Pearson_screening_csv_parallel` calculate Pearson's correlation between only the outcome and the covariates in similiar manner -- since `pandas.DataFrame.corr` calculate pairwise Pearson's correlation for the entire dataframe.
-  * `csv_engine` can use `dask` for low memory situations, or `pandas`'s `read_csv` `engine`s, or `fastparquet` engine for a created `parquet` file for faster speed. If `fastparquet` is chosen, declare `parquet_file` as the filepath to the parquet file; if `dask` is chosen to read very large CSV, it might need to specify a larger [`sample`](https://docs.dask.org/en/stable/generated/dask.dataframe.read_csv.html).
+A `share_memory` option is added for multiprocess computing. As a feature, it can be applied on large `.csv` data in parallel in a memory-efficient manner and use FFT for KDE to estimate the mutual information extremely fast. A tqdm progress bar is now added to be more useful on cloud computing platforms. `verbose` option can take values of `0,1,2`, with `2` being most verbal; `1` being only show progress bar, and `0` being not verbal at all.
 
-- `continuous_skMIscreening_csv_parallel` uses the MI calculation from [`sklearn.feature_selection.mutual_info_regression`](https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.mutual_info_regression.html) to carry out the screening process instead.
+- For DataFrame files:
+* `binary_screening_dataframe`, `binary_screening_dataframe_parallel` for screening on binary outcomes with continuous covariates  
+* `binary_skMI_screening_dataframe_parallel`, `continuous_skMI_screening_dataframe_parallel` for screening using mutual information estimation provided by `skLearn`, i.e., `sklearn.metrics.mutual_info_score`, `sklearn.feature_selection.mutual_info_classif`
+* `Pearson_screening_dataframe_parallel`  for screening using Pearson correlation 
+* `continuous_screening_dataframe`, `continuous_screening_dataframe_parallel` for screening on continuous outcomes with continuous covariates  
+* `clump_continuous_dataframe_parallel` similar to above 
 
-- `clump_plink_parallel` and `clump_continuous_csv_parallel` carry out mutual information based clumping in parallel at a very fast speed.
+- For `numpy` arrays:
+* `binary_screening_array`, `binary_screening_array_parallel` for screening on binary outcomes with continuous covariates  
+* `continuous_screening_array`, `continuous_screening_array_parallel` for screening on continuous outcomes with continuous covariates  
+* `binary_skMI_array_parallel`, `continuous_skMI_array_parallel` for screening using mutual information estimation provided by `skLearn`, i.e., `sklearn.metrics.mutual_info_score`, `sklearn.feature_selection.mutual_info_classif`
+* `continuous_Pearson_array_parallel`  for screening using Pearson correlation 
 
-- `UAG_LM_SCAD_MCP`, `UAG_logistic_SCAD_MCP`: these functions find a local minizer for the SCAD/MCP penalized linear models/logistic models. The arguments are:
+
+
+
+<!-- - `UAG_LM_SCAD_MCP`, `UAG_logistic_SCAD_MCP`: these functions find a local minizer for the SCAD/MCP penalized linear models/logistic models. The arguments are:
   * `design_matrix`: the design matrix input, should be a two-dimensional numpy array;
   * `outcome`: the outcome, should be one dimensional numpy array, continuous for linear model, binary for logistic model;
   * `beta_0`: starting value; optional, if not declared, it will be calculated based on the Gauss-Markov theory estimators of $\beta$;
@@ -43,4 +69,4 @@ The available functions are:
 
 - `UAG_LM_SCAD_MCP_strongrule`, `UAG_logistic_SCAD_MCP_strongrule` work just like `UAG_LM_SCAD_MCP`, `UAG_logistic_SCAD_MCP` -- except they use strong rule to screening out many covariates before carrying out the optimization step. Same for `solution_path_LM_strongrule` and `solution_path_logistic_strongrule`. Strong rule increases the computational speed dramatically.
 
-- `SNP_UAG_LM_SCAD_MCP` and `SNP_UAG_logistic_SCAD_MCP` work similar to `UAG_LM_SCAD_MCP` and `UAG_logistic_SCAD_MCP`; and `SNP_solution_path_LM` and `SNP_solution_path_logistic` work similar to `solution_path_LM`, `solution_path_logistic` -- except that it takes plink1 files so it will be more memory-efficient. Since PCA adjustment is usually used to adjust for population structure, PCA can be given for `pca` as a 2-d array -- each column should be one principal component. The pca version is `SNP_UAG_LM_SCAD_MCP_PCA` and `SNP_UAG_logistic_SCAD_MCP_PCA`.
+- `SNP_UAG_LM_SCAD_MCP` and `SNP_UAG_logistic_SCAD_MCP` work similar to `UAG_LM_SCAD_MCP` and `UAG_logistic_SCAD_MCP`; and `SNP_solution_path_LM` and `SNP_solution_path_logistic` work similar to `solution_path_LM`, `solution_path_logistic` -- except that it takes plink1 files so it will be more memory-efficient. Since PCA adjustment is usually used to adjust for population structure, PCA can be given for `pca` as a 2-d array -- each column should be one principal component. The pca version is `SNP_UAG_LM_SCAD_MCP_PCA` and `SNP_UAG_logistic_SCAD_MCP_PCA`. -->
