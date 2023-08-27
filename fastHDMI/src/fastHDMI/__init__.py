@@ -18,7 +18,19 @@ from numba import njit as _njit
 from numba import jit as _jit
 import numpy as _np
 from tqdm import tqdm as _tqdm
-from fastHDMI.cython_fun import joint_to_mi_cython
+
+# if the CPU supports AVX2, use AVX2; otherwise, nvm 
+import os
+def supports_avx2():
+    # Using a simple way to check for AVX2 support
+    return "avx2" in os.popen("cat /proc/cpuinfo").read()
+
+if supports_avx2():
+    from fastHDMI.cython_fun import joint_to_mi_cython
+else:
+    from fastHDMI.cython_fun_notusingavx2 import joint_to_mi_cython
+
+
 import warnings as _warnings
 
 

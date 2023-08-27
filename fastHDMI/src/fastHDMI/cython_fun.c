@@ -3,7 +3,19 @@
 /* BEGIN: Cython Metadata
 {
     "distutils": {
+        "define_macros": [
+            [
+                "USE_AVX2",
+                null
+            ]
+        ],
         "depends": [],
+        "extra_compile_args": [
+            "-mavx2"
+        ],
+        "extra_link_args": [
+            "-mavx2"
+        ],
         "name": "fastHDMI.cython_fun",
         "sources": [
             "src/fastHDMI/cython_fun.pyx"
@@ -2743,11 +2755,11 @@ static CYTHON_INLINE void __Pyx_XCLEAR_MEMVIEW(__Pyx_memviewslice *, int, int);
 /* CIntToPy.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value);
 
-/* CIntToPy.proto */
-static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value);
-
 /* BytesContains.proto */
 static CYTHON_INLINE int __Pyx_BytesContains(PyObject* bytes, char character);
+
+/* CIntToPy.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value);
 
 /* CIntFromPy.proto */
 static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *);
@@ -2862,9 +2874,9 @@ int __pyx_module_is_main_fastHDMI__cython_fun = 0;
 /* #### Code section: global_var ### */
 static PyObject *__pyx_builtin_TypeError;
 static PyObject *__pyx_builtin_ValueError;
+static PyObject *__pyx_builtin_MemoryError;
 static PyObject *__pyx_builtin_range;
 static PyObject *__pyx_builtin___import__;
-static PyObject *__pyx_builtin_MemoryError;
 static PyObject *__pyx_builtin_enumerate;
 static PyObject *__pyx_builtin_AssertionError;
 static PyObject *__pyx_builtin_Ellipsis;
@@ -2885,7 +2897,7 @@ static const char __pyx_k_gc[] = "gc";
 static const char __pyx_k_id[] = "id";
 static const char __pyx_k__10[] = "()";
 static const char __pyx_k__11[] = "|";
-static const char __pyx_k__28[] = "?";
+static const char __pyx_k__29[] = "?";
 static const char __pyx_k_abc[] = "abc";
 static const char __pyx_k_and[] = " and ";
 static const char __pyx_k_got[] = " (got ";
@@ -2937,6 +2949,7 @@ static const char __pyx_k_update[] = "update";
 static const char __pyx_k_values[] = "values";
 static const char __pyx_k_disable[] = "disable";
 static const char __pyx_k_fortran[] = "fortran";
+static const char __pyx_k_log_val[] = "log_val";
 static const char __pyx_k_memview[] = "memview";
 static const char __pyx_k_Ellipsis[] = "Ellipsis";
 static const char __pyx_k_Sequence[] = "Sequence";
@@ -2999,6 +3012,7 @@ static const char __pyx_k_MemoryView_of_r_object[] = "<MemoryView of %r object>"
 static const char __pyx_k_MemoryView_of_r_at_0x_x[] = "<MemoryView of %r at 0x%x>";
 static const char __pyx_k_contiguous_and_indirect[] = "<contiguous and indirect>";
 static const char __pyx_k_Dimension_d_is_not_direct[] = "Dimension %d is not direct";
+static const char __pyx_k_Failed_to_allocate_memory[] = "Failed to allocate memory.";
 static const char __pyx_k_Index_out_of_bounds_axis_d[] = "Index out of bounds (axis %d)";
 static const char __pyx_k_No_matching_signature_found[] = "No matching signature found";
 static const char __pyx_k_Step_may_not_be_zero_axis_d[] = "Step may not be zero (axis %d)";
@@ -3136,6 +3150,7 @@ typedef struct {
   PyObject *__pyx_n_s_Ellipsis;
   PyObject *__pyx_kp_s_Empty_shape_tuple_for_cython_arr;
   PyObject *__pyx_kp_s_Expected_at_least_d_argument_s_g;
+  PyObject *__pyx_kp_u_Failed_to_allocate_memory;
   PyObject *__pyx_kp_s_Function_call_with_ambiguous_arg;
   PyObject *__pyx_kp_s_Incompatible_checksums_0x_x_vs_0;
   PyObject *__pyx_n_s_IndexError;
@@ -3160,7 +3175,7 @@ typedef struct {
   PyObject *__pyx_kp_s__11;
   PyObject *__pyx_kp_u__11;
   PyObject *__pyx_kp_u__2;
-  PyObject *__pyx_n_s__28;
+  PyObject *__pyx_n_s__29;
   PyObject *__pyx_n_s__3;
   PyObject *__pyx_kp_u__6;
   PyObject *__pyx_kp_u__7;
@@ -3226,6 +3241,7 @@ typedef struct {
   PyObject *__pyx_n_s_log_forward_euler_b;
   PyObject *__pyx_n_s_log_joint;
   PyObject *__pyx_n_s_log_temp_sum;
+  PyObject *__pyx_n_s_log_val;
   PyObject *__pyx_n_s_main;
   PyObject *__pyx_n_s_memview;
   PyObject *__pyx_n_s_mode;
@@ -3300,10 +3316,11 @@ typedef struct {
   PyObject *__pyx_tuple__21;
   PyObject *__pyx_tuple__22;
   PyObject *__pyx_tuple__23;
-  PyObject *__pyx_tuple__25;
+  PyObject *__pyx_tuple__24;
   PyObject *__pyx_tuple__26;
-  PyObject *__pyx_codeobj__24;
-  PyObject *__pyx_codeobj__27;
+  PyObject *__pyx_tuple__27;
+  PyObject *__pyx_codeobj__25;
+  PyObject *__pyx_codeobj__28;
 } __pyx_mstate;
 
 #if CYTHON_USE_MODULE_STATE
@@ -3368,6 +3385,7 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_Ellipsis);
   Py_CLEAR(clear_module_state->__pyx_kp_s_Empty_shape_tuple_for_cython_arr);
   Py_CLEAR(clear_module_state->__pyx_kp_s_Expected_at_least_d_argument_s_g);
+  Py_CLEAR(clear_module_state->__pyx_kp_u_Failed_to_allocate_memory);
   Py_CLEAR(clear_module_state->__pyx_kp_s_Function_call_with_ambiguous_arg);
   Py_CLEAR(clear_module_state->__pyx_kp_s_Incompatible_checksums_0x_x_vs_0);
   Py_CLEAR(clear_module_state->__pyx_n_s_IndexError);
@@ -3392,7 +3410,7 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_kp_s__11);
   Py_CLEAR(clear_module_state->__pyx_kp_u__11);
   Py_CLEAR(clear_module_state->__pyx_kp_u__2);
-  Py_CLEAR(clear_module_state->__pyx_n_s__28);
+  Py_CLEAR(clear_module_state->__pyx_n_s__29);
   Py_CLEAR(clear_module_state->__pyx_n_s__3);
   Py_CLEAR(clear_module_state->__pyx_kp_u__6);
   Py_CLEAR(clear_module_state->__pyx_kp_u__7);
@@ -3458,6 +3476,7 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_log_forward_euler_b);
   Py_CLEAR(clear_module_state->__pyx_n_s_log_joint);
   Py_CLEAR(clear_module_state->__pyx_n_s_log_temp_sum);
+  Py_CLEAR(clear_module_state->__pyx_n_s_log_val);
   Py_CLEAR(clear_module_state->__pyx_n_s_main);
   Py_CLEAR(clear_module_state->__pyx_n_s_memview);
   Py_CLEAR(clear_module_state->__pyx_n_s_mode);
@@ -3532,10 +3551,11 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_tuple__21);
   Py_CLEAR(clear_module_state->__pyx_tuple__22);
   Py_CLEAR(clear_module_state->__pyx_tuple__23);
-  Py_CLEAR(clear_module_state->__pyx_tuple__25);
+  Py_CLEAR(clear_module_state->__pyx_tuple__24);
   Py_CLEAR(clear_module_state->__pyx_tuple__26);
-  Py_CLEAR(clear_module_state->__pyx_codeobj__24);
-  Py_CLEAR(clear_module_state->__pyx_codeobj__27);
+  Py_CLEAR(clear_module_state->__pyx_tuple__27);
+  Py_CLEAR(clear_module_state->__pyx_codeobj__25);
+  Py_CLEAR(clear_module_state->__pyx_codeobj__28);
   return 0;
 }
 #endif
@@ -3578,6 +3598,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_Ellipsis);
   Py_VISIT(traverse_module_state->__pyx_kp_s_Empty_shape_tuple_for_cython_arr);
   Py_VISIT(traverse_module_state->__pyx_kp_s_Expected_at_least_d_argument_s_g);
+  Py_VISIT(traverse_module_state->__pyx_kp_u_Failed_to_allocate_memory);
   Py_VISIT(traverse_module_state->__pyx_kp_s_Function_call_with_ambiguous_arg);
   Py_VISIT(traverse_module_state->__pyx_kp_s_Incompatible_checksums_0x_x_vs_0);
   Py_VISIT(traverse_module_state->__pyx_n_s_IndexError);
@@ -3602,7 +3623,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_kp_s__11);
   Py_VISIT(traverse_module_state->__pyx_kp_u__11);
   Py_VISIT(traverse_module_state->__pyx_kp_u__2);
-  Py_VISIT(traverse_module_state->__pyx_n_s__28);
+  Py_VISIT(traverse_module_state->__pyx_n_s__29);
   Py_VISIT(traverse_module_state->__pyx_n_s__3);
   Py_VISIT(traverse_module_state->__pyx_kp_u__6);
   Py_VISIT(traverse_module_state->__pyx_kp_u__7);
@@ -3668,6 +3689,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_log_forward_euler_b);
   Py_VISIT(traverse_module_state->__pyx_n_s_log_joint);
   Py_VISIT(traverse_module_state->__pyx_n_s_log_temp_sum);
+  Py_VISIT(traverse_module_state->__pyx_n_s_log_val);
   Py_VISIT(traverse_module_state->__pyx_n_s_main);
   Py_VISIT(traverse_module_state->__pyx_n_s_memview);
   Py_VISIT(traverse_module_state->__pyx_n_s_mode);
@@ -3742,10 +3764,11 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_tuple__21);
   Py_VISIT(traverse_module_state->__pyx_tuple__22);
   Py_VISIT(traverse_module_state->__pyx_tuple__23);
-  Py_VISIT(traverse_module_state->__pyx_tuple__25);
+  Py_VISIT(traverse_module_state->__pyx_tuple__24);
   Py_VISIT(traverse_module_state->__pyx_tuple__26);
-  Py_VISIT(traverse_module_state->__pyx_codeobj__24);
-  Py_VISIT(traverse_module_state->__pyx_codeobj__27);
+  Py_VISIT(traverse_module_state->__pyx_tuple__27);
+  Py_VISIT(traverse_module_state->__pyx_codeobj__25);
+  Py_VISIT(traverse_module_state->__pyx_codeobj__28);
   return 0;
 }
 #endif
@@ -3810,6 +3833,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_Ellipsis __pyx_mstate_global->__pyx_n_s_Ellipsis
 #define __pyx_kp_s_Empty_shape_tuple_for_cython_arr __pyx_mstate_global->__pyx_kp_s_Empty_shape_tuple_for_cython_arr
 #define __pyx_kp_s_Expected_at_least_d_argument_s_g __pyx_mstate_global->__pyx_kp_s_Expected_at_least_d_argument_s_g
+#define __pyx_kp_u_Failed_to_allocate_memory __pyx_mstate_global->__pyx_kp_u_Failed_to_allocate_memory
 #define __pyx_kp_s_Function_call_with_ambiguous_arg __pyx_mstate_global->__pyx_kp_s_Function_call_with_ambiguous_arg
 #define __pyx_kp_s_Incompatible_checksums_0x_x_vs_0 __pyx_mstate_global->__pyx_kp_s_Incompatible_checksums_0x_x_vs_0
 #define __pyx_n_s_IndexError __pyx_mstate_global->__pyx_n_s_IndexError
@@ -3834,7 +3858,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_kp_s__11 __pyx_mstate_global->__pyx_kp_s__11
 #define __pyx_kp_u__11 __pyx_mstate_global->__pyx_kp_u__11
 #define __pyx_kp_u__2 __pyx_mstate_global->__pyx_kp_u__2
-#define __pyx_n_s__28 __pyx_mstate_global->__pyx_n_s__28
+#define __pyx_n_s__29 __pyx_mstate_global->__pyx_n_s__29
 #define __pyx_n_s__3 __pyx_mstate_global->__pyx_n_s__3
 #define __pyx_kp_u__6 __pyx_mstate_global->__pyx_kp_u__6
 #define __pyx_kp_u__7 __pyx_mstate_global->__pyx_kp_u__7
@@ -3900,6 +3924,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_log_forward_euler_b __pyx_mstate_global->__pyx_n_s_log_forward_euler_b
 #define __pyx_n_s_log_joint __pyx_mstate_global->__pyx_n_s_log_joint
 #define __pyx_n_s_log_temp_sum __pyx_mstate_global->__pyx_n_s_log_temp_sum
+#define __pyx_n_s_log_val __pyx_mstate_global->__pyx_n_s_log_val
 #define __pyx_n_s_main __pyx_mstate_global->__pyx_n_s_main
 #define __pyx_n_s_memview __pyx_mstate_global->__pyx_n_s_memview
 #define __pyx_n_s_mode __pyx_mstate_global->__pyx_n_s_mode
@@ -3974,10 +3999,11 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_tuple__21 __pyx_mstate_global->__pyx_tuple__21
 #define __pyx_tuple__22 __pyx_mstate_global->__pyx_tuple__22
 #define __pyx_tuple__23 __pyx_mstate_global->__pyx_tuple__23
-#define __pyx_tuple__25 __pyx_mstate_global->__pyx_tuple__25
+#define __pyx_tuple__24 __pyx_mstate_global->__pyx_tuple__24
 #define __pyx_tuple__26 __pyx_mstate_global->__pyx_tuple__26
-#define __pyx_codeobj__24 __pyx_mstate_global->__pyx_codeobj__24
-#define __pyx_codeobj__27 __pyx_mstate_global->__pyx_codeobj__27
+#define __pyx_tuple__27 __pyx_mstate_global->__pyx_tuple__27
+#define __pyx_codeobj__25 __pyx_mstate_global->__pyx_codeobj__25
+#define __pyx_codeobj__28 __pyx_mstate_global->__pyx_codeobj__28
 /* #### Code section: module_code ### */
 
 /* "View.MemoryView":131
@@ -17654,7 +17680,7 @@ static PyObject *__pyx_unpickle_Enum__set_state(struct __pyx_MemviewEnum_obj *__
   return __pyx_r;
 }
 
-/* "fastHDMI/cython_fun.pyx":10
+/* "fastHDMI/cython_fun.pyx":13
  *     double
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
@@ -17684,7 +17710,7 @@ static PyObject *__pyx_pw_8fastHDMI_10cython_fun_1joint_to_mi_cython(PyObject *_
   __pyx_nargs = PyTuple_GET_SIZE(__pyx_args);
   #else
   __pyx_nargs = PyTuple_Size(__pyx_args);
-  if (unlikely((__pyx_nargs < 0))) __PYX_ERR(0, 10, __pyx_L3_error)
+  if (unlikely((__pyx_nargs < 0))) __PYX_ERR(0, 13, __pyx_L3_error)
   #endif
   __pyx_kwvalues = __Pyx_KwValues_VARARGS(__pyx_args, __pyx_nargs);
   {
@@ -17714,7 +17740,7 @@ static PyObject *__pyx_pw_8fastHDMI_10cython_fun_1joint_to_mi_cython(PyObject *_
           (void)__Pyx_Arg_NewRef_VARARGS(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
@@ -17722,9 +17748,9 @@ static PyObject *__pyx_pw_8fastHDMI_10cython_fun_1joint_to_mi_cython(PyObject *_
           (void)__Pyx_Arg_NewRef_VARARGS(values[1]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 0, 4, 5, 1); __PYX_ERR(0, 10, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 0, 4, 5, 1); __PYX_ERR(0, 13, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
@@ -17732,9 +17758,9 @@ static PyObject *__pyx_pw_8fastHDMI_10cython_fun_1joint_to_mi_cython(PyObject *_
           (void)__Pyx_Arg_NewRef_VARARGS(values[2]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 0, 4, 5, 2); __PYX_ERR(0, 10, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 0, 4, 5, 2); __PYX_ERR(0, 13, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
@@ -17742,21 +17768,21 @@ static PyObject *__pyx_pw_8fastHDMI_10cython_fun_1joint_to_mi_cython(PyObject *_
           (void)__Pyx_Arg_NewRef_VARARGS(values[3]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 0, 4, 5, 3); __PYX_ERR(0, 10, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 0, 4, 5, 3); __PYX_ERR(0, 13, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_fused_sigindex);
           if (value) { values[4] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "__pyx_fused_cpdef") < 0)) __PYX_ERR(0, 10, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "__pyx_fused_cpdef") < 0)) __PYX_ERR(0, 13, __pyx_L3_error)
       }
     } else {
       switch (__pyx_nargs) {
@@ -17778,7 +17804,7 @@ static PyObject *__pyx_pw_8fastHDMI_10cython_fun_1joint_to_mi_cython(PyObject *_
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 0, 4, 5, __pyx_nargs); __PYX_ERR(0, 10, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 0, 4, 5, __pyx_nargs); __PYX_ERR(0, 13, __pyx_L3_error)
   goto __pyx_L3_error;
   __pyx_L3_error:;
   for (Py_ssize_t i=0; i<(Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++i) {
@@ -17848,11 +17874,11 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("joint_to_mi_cython", 0);
   __Pyx_INCREF(__pyx_v_kwargs);
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(Py_None);
   __Pyx_GIVEREF(Py_None);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_1, 0, Py_None)) __PYX_ERR(0, 10, __pyx_L1_error);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_1, 0, Py_None)) __PYX_ERR(0, 13, __pyx_L1_error);
   __pyx_v_dest_sig = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
   __pyx_t_3 = (__pyx_v_kwargs != Py_None);
@@ -17861,7 +17887,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
     __pyx_t_2 = __pyx_t_3;
     goto __pyx_L4_bool_binop_done;
   }
-  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_v_kwargs); if (unlikely((__pyx_t_3 < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_v_kwargs); if (unlikely((__pyx_t_3 < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
   __pyx_t_4 = (!__pyx_t_3);
   __pyx_t_2 = __pyx_t_4;
   __pyx_L4_bool_binop_done:;
@@ -17869,21 +17895,21 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
     __Pyx_INCREF(Py_None);
     __Pyx_DECREF_SET(__pyx_v_kwargs, Py_None);
   }
-  __pyx_t_1 = ((PyObject *)__Pyx_ImportNumPyArrayTypeIfAvailable()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_1 = ((PyObject *)__Pyx_ImportNumPyArrayTypeIfAvailable()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_ndarray = ((PyTypeObject*)__pyx_t_1);
   __pyx_t_1 = 0;
   __pyx_v_itemsize = -1L;
   if (unlikely(__pyx_v_args == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 10, __pyx_L1_error)
+    __PYX_ERR(0, 13, __pyx_L1_error)
   }
-  __pyx_t_5 = __Pyx_PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 13, __pyx_L1_error)
   __pyx_t_2 = (0 < __pyx_t_5);
   if (__pyx_t_2) {
     if (unlikely(__pyx_v_args == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 10, __pyx_L1_error)
+      __PYX_ERR(0, 13, __pyx_L1_error)
     }
     __pyx_t_1 = PyTuple_GET_ITEM(((PyObject*)__pyx_v_args), 0);
     __Pyx_INCREF(__pyx_t_1);
@@ -17899,17 +17925,17 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
   }
   if (unlikely(__pyx_v_kwargs == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 10, __pyx_L1_error)
+    __PYX_ERR(0, 13, __pyx_L1_error)
   }
-  __pyx_t_4 = (__Pyx_PyDict_ContainsTF(__pyx_n_s_joint, ((PyObject*)__pyx_v_kwargs), Py_EQ)); if (unlikely((__pyx_t_4 < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_4 = (__Pyx_PyDict_ContainsTF(__pyx_n_s_joint, ((PyObject*)__pyx_v_kwargs), Py_EQ)); if (unlikely((__pyx_t_4 < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
   __pyx_t_2 = __pyx_t_4;
   __pyx_L7_bool_binop_done:;
   if (likely(__pyx_t_2)) {
     if (unlikely(__pyx_v_kwargs == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 10, __pyx_L1_error)
+      __PYX_ERR(0, 13, __pyx_L1_error)
     }
-    __pyx_t_1 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_kwargs), __pyx_n_s_joint); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_kwargs), __pyx_n_s_joint); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_v_arg = __pyx_t_1;
     __pyx_t_1 = 0;
@@ -17918,31 +17944,31 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
   /*else*/ {
     if (unlikely(__pyx_v_args == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-      __PYX_ERR(0, 10, __pyx_L1_error)
+      __PYX_ERR(0, 13, __pyx_L1_error)
     }
-    __pyx_t_5 = __Pyx_PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 10, __pyx_L1_error)
-    __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 13, __pyx_L1_error)
+    __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_6 = PyTuple_New(3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_INCREF(__pyx_int_1);
     __Pyx_GIVEREF(__pyx_int_1);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_int_1)) __PYX_ERR(0, 10, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_int_1)) __PYX_ERR(0, 13, __pyx_L1_error);
     __Pyx_INCREF(__pyx_kp_s__9);
     __Pyx_GIVEREF(__pyx_kp_s__9);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_kp_s__9)) __PYX_ERR(0, 10, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_kp_s__9)) __PYX_ERR(0, 13, __pyx_L1_error);
     __Pyx_GIVEREF(__pyx_t_1);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 2, __pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 2, __pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error);
     __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyString_Format(__pyx_kp_s_Expected_at_least_d_argument_s_g, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyString_Format(__pyx_kp_s_Expected_at_least_d_argument_s_g, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_TypeError, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_TypeError, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_Raise(__pyx_t_6, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __PYX_ERR(0, 10, __pyx_L1_error)
+    __PYX_ERR(0, 13, __pyx_L1_error)
   }
   __pyx_L6:;
   while (1) {
@@ -17950,7 +17976,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
     if (__pyx_t_2) {
       __pyx_t_2 = __Pyx_TypeCheck(__pyx_v_arg, __pyx_v_ndarray); 
       if (__pyx_t_2) {
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         __pyx_v_dtype = __pyx_t_6;
         __pyx_t_6 = 0;
@@ -17958,13 +17984,13 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
       }
       __pyx_t_2 = __pyx_memoryview_check(__pyx_v_arg); 
       if (__pyx_t_2) {
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_base); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_base); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         __pyx_v_arg_base = __pyx_t_6;
         __pyx_t_6 = 0;
         __pyx_t_2 = __Pyx_TypeCheck(__pyx_v_arg_base, __pyx_v_ndarray); 
         if (__pyx_t_2) {
-          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg_base, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg_base, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
           __pyx_v_dtype = __pyx_t_6;
           __pyx_t_6 = 0;
@@ -17985,14 +18011,14 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
       __pyx_v_itemsize = -1L;
       __pyx_t_2 = (__pyx_v_dtype != Py_None);
       if (__pyx_t_2) {
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
         __pyx_v_itemsize = __pyx_t_5;
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_7 = __Pyx_PyObject_Ord(__pyx_t_6); if (unlikely(__pyx_t_7 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_7 = __Pyx_PyObject_Ord(__pyx_t_6); if (unlikely(__pyx_t_7 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
         __pyx_v_kind = __pyx_t_7;
         __pyx_v_dtype_signed = (__pyx_v_kind == 'i');
@@ -18007,15 +18033,15 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
             __pyx_t_2 = __pyx_t_4;
             goto __pyx_L16_bool_binop_done;
           }
-          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
-          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
           __pyx_t_4 = (((Py_ssize_t)__pyx_t_5) == 2);
           __pyx_t_2 = __pyx_t_4;
           __pyx_L16_bool_binop_done:;
           if (__pyx_t_2) {
-            if (unlikely((__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+            if (unlikely((__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
             goto __pyx_L10_break;
           }
           __pyx_t_4 = ((sizeof(double)) == __pyx_v_itemsize);
@@ -18024,15 +18050,15 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
             __pyx_t_2 = __pyx_t_4;
             goto __pyx_L19_bool_binop_done;
           }
-          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
-          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
           __pyx_t_4 = (((Py_ssize_t)__pyx_t_5) == 2);
           __pyx_t_2 = __pyx_t_4;
           __pyx_L19_bool_binop_done:;
           if (__pyx_t_2) {
-            if (unlikely((__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+            if (unlikely((__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
             goto __pyx_L10_break;
           }
           break;
@@ -18046,7 +18072,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
     }
     __pyx_t_2 = (__pyx_v_arg == Py_None);
     if (__pyx_t_2) {
-      if (unlikely((__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+      if (unlikely((__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
       goto __pyx_L10_break;
     }
     {
@@ -18057,7 +18083,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
       __Pyx_XGOTREF(__pyx_t_9);
       __Pyx_XGOTREF(__pyx_t_10);
       /*try:*/ {
-        __pyx_t_6 = PyMemoryView_FromObject(__pyx_v_arg); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L22_error)
+        __pyx_t_6 = PyMemoryView_FromObject(__pyx_v_arg); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L22_error)
         __Pyx_GOTREF(__pyx_t_6);
         __pyx_v_arg_as_memoryview = ((PyObject*)__pyx_t_6);
         __pyx_t_6 = 0;
@@ -18068,7 +18094,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
           goto __pyx_L33_next_or;
         } else {
         }
-        __pyx_t_5 = __Pyx_PyMemoryView_Get_itemsize(__pyx_v_arg_as_memoryview); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L24_except_error)
+        __pyx_t_5 = __Pyx_PyMemoryView_Get_itemsize(__pyx_v_arg_as_memoryview); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L24_except_error)
         __pyx_t_4 = (__pyx_t_5 == (sizeof(float)));
         if (!__pyx_t_4) {
         } else {
@@ -18082,7 +18108,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
           goto __pyx_L31_bool_binop_done;
         }
         __pyx_L32_next_and:;
-        __pyx_t_11 = __Pyx_PyMemoryView_Get_ndim(__pyx_v_arg_as_memoryview); if (unlikely(__pyx_t_11 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L24_except_error)
+        __pyx_t_11 = __Pyx_PyMemoryView_Get_ndim(__pyx_v_arg_as_memoryview); if (unlikely(__pyx_t_11 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L24_except_error)
         __pyx_t_4 = (__pyx_t_11 == 2);
         __pyx_t_2 = __pyx_t_4;
         __pyx_L31_bool_binop_done:;
@@ -18092,7 +18118,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
           __pyx_t_2 = (__pyx_v_memslice.memview != 0);
           if (__pyx_t_2) {
             __PYX_XCLEAR_MEMVIEW((&__pyx_v_memslice), 1); 
-            if (unlikely((__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0))) __PYX_ERR(0, 10, __pyx_L24_except_error)
+            if (unlikely((__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0))) __PYX_ERR(0, 13, __pyx_L24_except_error)
             goto __pyx_L27_try_break;
           }
           /*else*/ {
@@ -18104,7 +18130,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
           goto __pyx_L39_next_or;
         } else {
         }
-        __pyx_t_5 = __Pyx_PyMemoryView_Get_itemsize(__pyx_v_arg_as_memoryview); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L24_except_error)
+        __pyx_t_5 = __Pyx_PyMemoryView_Get_itemsize(__pyx_v_arg_as_memoryview); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L24_except_error)
         __pyx_t_4 = (__pyx_t_5 == (sizeof(double)));
         if (!__pyx_t_4) {
         } else {
@@ -18118,7 +18144,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
           goto __pyx_L37_bool_binop_done;
         }
         __pyx_L38_next_and:;
-        __pyx_t_11 = __Pyx_PyMemoryView_Get_ndim(__pyx_v_arg_as_memoryview); if (unlikely(__pyx_t_11 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L24_except_error)
+        __pyx_t_11 = __Pyx_PyMemoryView_Get_ndim(__pyx_v_arg_as_memoryview); if (unlikely(__pyx_t_11 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L24_except_error)
         __pyx_t_4 = (__pyx_t_11 == 2);
         __pyx_t_2 = __pyx_t_4;
         __pyx_L37_bool_binop_done:;
@@ -18128,7 +18154,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
           __pyx_t_2 = (__pyx_v_memslice.memview != 0);
           if (__pyx_t_2) {
             __PYX_XCLEAR_MEMVIEW((&__pyx_v_memslice), 1); 
-            if (unlikely((__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0))) __PYX_ERR(0, 10, __pyx_L24_except_error)
+            if (unlikely((__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0))) __PYX_ERR(0, 13, __pyx_L24_except_error)
             goto __pyx_L27_try_break;
           }
           /*else*/ {
@@ -18146,7 +18172,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
       __pyx_t_11 = __Pyx_PyErr_ExceptionMatches2(__pyx_builtin_ValueError, __pyx_builtin_TypeError);
       if (__pyx_t_11) {
         __Pyx_AddTraceback("fastHDMI.cython_fun.__pyx_fused_cpdef", __pyx_clineno, __pyx_lineno, __pyx_filename);
-        if (__Pyx_GetException(&__pyx_t_6, &__pyx_t_1, &__pyx_t_13) < 0) __PYX_ERR(0, 10, __pyx_L24_except_error)
+        if (__Pyx_GetException(&__pyx_t_6, &__pyx_t_1, &__pyx_t_13) < 0) __PYX_ERR(0, 13, __pyx_L24_except_error)
         __Pyx_XGOTREF(__pyx_t_6);
         __Pyx_XGOTREF(__pyx_t_1);
         __Pyx_XGOTREF(__pyx_t_13);
@@ -18175,19 +18201,19 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
       __Pyx_ExceptionReset(__pyx_t_8, __pyx_t_9, __pyx_t_10);
       __pyx_L29_try_end:;
     }
-    if (unlikely((__Pyx_SetItemInt(__pyx_v_dest_sig, 0, Py_None, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely((__Pyx_SetItemInt(__pyx_v_dest_sig, 0, Py_None, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
     goto __pyx_L10_break;
   }
   __pyx_L10_break:;
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_v__fused_sigindex); if (unlikely((__pyx_t_2 < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_v__fused_sigindex); if (unlikely((__pyx_t_2 < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
   __pyx_t_4 = (!__pyx_t_2);
   if (__pyx_t_4) {
     __pyx_t_5 = 0;
     if (unlikely(__pyx_v_signatures == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-      __PYX_ERR(0, 10, __pyx_L1_error)
+      __PYX_ERR(0, 13, __pyx_L1_error)
     }
-    __pyx_t_1 = __Pyx_dict_iterator(((PyObject*)__pyx_v_signatures), 1, ((PyObject *)NULL), (&__pyx_t_14), (&__pyx_t_11)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_dict_iterator(((PyObject*)__pyx_v_signatures), 1, ((PyObject *)NULL), (&__pyx_t_14), (&__pyx_t_11)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_XDECREF(__pyx_t_13);
     __pyx_t_13 = __pyx_t_1;
@@ -18195,16 +18221,16 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
     while (1) {
       __pyx_t_15 = __Pyx_dict_iter_next(__pyx_t_13, __pyx_t_14, &__pyx_t_5, &__pyx_t_1, NULL, NULL, __pyx_t_11);
       if (unlikely(__pyx_t_15 == 0)) break;
-      if (unlikely(__pyx_t_15 == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+      if (unlikely(__pyx_t_15 == -1)) __PYX_ERR(0, 13, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_XDECREF_SET(__pyx_v_sig, __pyx_t_1);
       __pyx_t_1 = 0;
-      if (!(likely(PyDict_CheckExact(__pyx_v__fused_sigindex))||((__pyx_v__fused_sigindex) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_v__fused_sigindex))) __PYX_ERR(0, 10, __pyx_L1_error)
+      if (!(likely(PyDict_CheckExact(__pyx_v__fused_sigindex))||((__pyx_v__fused_sigindex) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_v__fused_sigindex))) __PYX_ERR(0, 13, __pyx_L1_error)
       __pyx_t_1 = __pyx_v__fused_sigindex;
       __Pyx_INCREF(__pyx_t_1);
       __Pyx_XDECREF_SET(__pyx_v_sigindex_node, ((PyObject*)__pyx_t_1));
       __pyx_t_1 = 0;
-      __pyx_t_16 = __Pyx_PyObject_GetAttrStr(__pyx_v_sig, __pyx_n_s_strip); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 10, __pyx_L1_error)
+      __pyx_t_16 = __Pyx_PyObject_GetAttrStr(__pyx_v_sig, __pyx_n_s_strip); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 13, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_16);
       __pyx_t_17 = NULL;
       __pyx_t_15 = 0;
@@ -18224,11 +18250,11 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
         PyObject *__pyx_callargs[2] = {__pyx_t_17, __pyx_kp_s__10};
         __pyx_t_6 = __Pyx_PyObject_FastCall(__pyx_t_16, __pyx_callargs+1-__pyx_t_15, 1+__pyx_t_15);
         __Pyx_XDECREF(__pyx_t_17); __pyx_t_17 = 0;
-        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         __Pyx_DECREF(__pyx_t_16); __pyx_t_16 = 0;
       }
-      __pyx_t_16 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_split); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 10, __pyx_L1_error)
+      __pyx_t_16 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_split); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 13, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_16);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __pyx_t_6 = NULL;
@@ -18249,16 +18275,16 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
         PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_kp_s__11};
         __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_16, __pyx_callargs+1-__pyx_t_15, 1+__pyx_t_15);
         __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-        if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+        if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_16); __pyx_t_16 = 0;
       }
-      __pyx_t_16 = __Pyx_PySequence_ListKeepNew(__pyx_t_1); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 10, __pyx_L1_error)
+      __pyx_t_16 = __Pyx_PySequence_ListKeepNew(__pyx_t_1); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 13, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_16);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       __pyx_t_18 = PyList_GET_SIZE(__pyx_t_16);
       if (unlikely(__pyx_t_18 < 1)) {
-        __Pyx_RaiseNeedMoreValuesError(0+__pyx_t_18); __PYX_ERR(0, 10, __pyx_L1_error)
+        __Pyx_RaiseNeedMoreValuesError(0+__pyx_t_18); __PYX_ERR(0, 13, __pyx_L1_error)
       }
       #if CYTHON_COMPILING_IN_CPYTHON
       __pyx_t_6 = PyList_GET_ITEM(__pyx_t_16, __pyx_t_18-1); 
@@ -18268,7 +18294,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
       #endif
       __Pyx_GOTREF(__pyx_t_6);
       #if !CYTHON_COMPILING_IN_CPYTHON
-      __pyx_t_17 = PySequence_GetSlice(__pyx_t_16, 0, __pyx_t_18-1); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 10, __pyx_L1_error)
+      __pyx_t_17 = PySequence_GetSlice(__pyx_t_16, 0, __pyx_t_18-1); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 13, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_17);
       __Pyx_DECREF(__pyx_t_16);
       __pyx_t_16 = __pyx_t_17; __pyx_t_17 = NULL;
@@ -18283,26 +18309,26 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
       for (;;) {
         if (__pyx_t_18 >= PyList_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_6 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_18); __Pyx_INCREF(__pyx_t_6); __pyx_t_18++; if (unlikely((0 < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_6 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_18); __Pyx_INCREF(__pyx_t_6); __pyx_t_18++; if (unlikely((0 < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
         #else
-        __pyx_t_6 = PySequence_ITEM(__pyx_t_1, __pyx_t_18); __pyx_t_18++; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_6 = PySequence_ITEM(__pyx_t_1, __pyx_t_18); __pyx_t_18++; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         #endif
         __Pyx_XDECREF_SET(__pyx_v_sig_type, __pyx_t_6);
         __pyx_t_6 = 0;
         if (unlikely(__pyx_v_sigindex_node == Py_None)) {
           PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-          __PYX_ERR(0, 10, __pyx_L1_error)
+          __PYX_ERR(0, 13, __pyx_L1_error)
         }
-        __pyx_t_4 = (__Pyx_PyDict_ContainsTF(__pyx_v_sig_type, __pyx_v_sigindex_node, Py_NE)); if (unlikely((__pyx_t_4 < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_4 = (__Pyx_PyDict_ContainsTF(__pyx_v_sig_type, __pyx_v_sigindex_node, Py_NE)); if (unlikely((__pyx_t_4 < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
         if (__pyx_t_4) {
-          __pyx_t_6 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
           if (unlikely(__pyx_v_sigindex_node == Py_None)) {
             PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-            __PYX_ERR(0, 10, __pyx_L1_error)
+            __PYX_ERR(0, 13, __pyx_L1_error)
           }
-          if (unlikely((PyDict_SetItem(__pyx_v_sigindex_node, __pyx_v_sig_type, __pyx_t_6) < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+          if (unlikely((PyDict_SetItem(__pyx_v_sigindex_node, __pyx_v_sig_type, __pyx_t_6) < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
           __Pyx_INCREF(__pyx_t_6);
           __Pyx_DECREF_SET(__pyx_v_sigindex_node, __pyx_t_6);
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
@@ -18311,11 +18337,11 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
         /*else*/ {
           if (unlikely(__pyx_v_sigindex_node == Py_None)) {
             PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-            __PYX_ERR(0, 10, __pyx_L1_error)
+            __PYX_ERR(0, 13, __pyx_L1_error)
           }
-          __pyx_t_6 = __Pyx_PyDict_GetItem(__pyx_v_sigindex_node, __pyx_v_sig_type); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyDict_GetItem(__pyx_v_sigindex_node, __pyx_v_sig_type); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
-          if (!(likely(PyDict_CheckExact(__pyx_t_6))||((__pyx_t_6) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_6))) __PYX_ERR(0, 10, __pyx_L1_error)
+          if (!(likely(PyDict_CheckExact(__pyx_t_6))||((__pyx_t_6) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_6))) __PYX_ERR(0, 13, __pyx_L1_error)
           __Pyx_DECREF_SET(__pyx_v_sigindex_node, ((PyObject*)__pyx_t_6));
           __pyx_t_6 = 0;
         }
@@ -18324,39 +18350,39 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       if (unlikely(__pyx_v_sigindex_node == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 10, __pyx_L1_error)
+        __PYX_ERR(0, 13, __pyx_L1_error)
       }
-      if (unlikely((PyDict_SetItem(__pyx_v_sigindex_node, __pyx_v_last_type, __pyx_v_sig) < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+      if (unlikely((PyDict_SetItem(__pyx_v_sigindex_node, __pyx_v_last_type, __pyx_v_sig) < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
   }
-  __pyx_t_13 = PyList_New(0); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_13 = PyList_New(0); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_13);
   __pyx_v_sigindex_matches = ((PyObject*)__pyx_t_13);
   __pyx_t_13 = 0;
-  __pyx_t_13 = PyList_New(1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_13 = PyList_New(1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_13);
   __Pyx_INCREF(__pyx_v__fused_sigindex);
   __Pyx_GIVEREF(__pyx_v__fused_sigindex);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_13, 0, __pyx_v__fused_sigindex)) __PYX_ERR(0, 10, __pyx_L1_error);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_13, 0, __pyx_v__fused_sigindex)) __PYX_ERR(0, 13, __pyx_L1_error);
   __pyx_v_sigindex_candidates = ((PyObject*)__pyx_t_13);
   __pyx_t_13 = 0;
   __pyx_t_13 = __pyx_v_dest_sig; __Pyx_INCREF(__pyx_t_13); __pyx_t_14 = 0;
   for (;;) {
     if (__pyx_t_14 >= PyList_GET_SIZE(__pyx_t_13)) break;
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-    __pyx_t_1 = PyList_GET_ITEM(__pyx_t_13, __pyx_t_14); __Pyx_INCREF(__pyx_t_1); __pyx_t_14++; if (unlikely((0 < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+    __pyx_t_1 = PyList_GET_ITEM(__pyx_t_13, __pyx_t_14); __Pyx_INCREF(__pyx_t_1); __pyx_t_14++; if (unlikely((0 < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
     #else
-    __pyx_t_1 = PySequence_ITEM(__pyx_t_13, __pyx_t_14); __pyx_t_14++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    __pyx_t_1 = PySequence_ITEM(__pyx_t_13, __pyx_t_14); __pyx_t_14++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     #endif
     __Pyx_XDECREF_SET(__pyx_v_dst_type, __pyx_t_1);
     __pyx_t_1 = 0;
-    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_found_matches, ((PyObject*)__pyx_t_1));
     __pyx_t_1 = 0;
-    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_found_candidates, ((PyObject*)__pyx_t_1));
     __pyx_t_1 = 0;
@@ -18366,21 +18392,21 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
       for (;;) {
         if (__pyx_t_5 >= PyList_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_6 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_6); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_6 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_6); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
         #else
-        __pyx_t_6 = PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_6 = PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         #endif
-        if (!(likely(PyDict_CheckExact(__pyx_t_6))||((__pyx_t_6) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_6))) __PYX_ERR(0, 10, __pyx_L1_error)
+        if (!(likely(PyDict_CheckExact(__pyx_t_6))||((__pyx_t_6) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_6))) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_XDECREF_SET(__pyx_v_sn, ((PyObject*)__pyx_t_6));
         __pyx_t_6 = 0;
         if (unlikely(__pyx_v_sn == Py_None)) {
           PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "values");
-          __PYX_ERR(0, 10, __pyx_L1_error)
+          __PYX_ERR(0, 13, __pyx_L1_error)
         }
-        __pyx_t_6 = __Pyx_PyDict_Values(__pyx_v_sn); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyDict_Values(__pyx_v_sn); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_19 = __Pyx_PyList_Extend(__pyx_v_found_matches, __pyx_t_6); if (unlikely(__pyx_t_19 == ((int)-1))) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_19 = __Pyx_PyList_Extend(__pyx_v_found_matches, __pyx_t_6); if (unlikely(__pyx_t_19 == ((int)-1))) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       }
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -18388,76 +18414,76 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
       for (;;) {
         if (__pyx_t_5 >= PyList_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_6 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_6); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_6 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_6); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
         #else
-        __pyx_t_6 = PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_6 = PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         #endif
-        if (!(likely(PyDict_CheckExact(__pyx_t_6))||((__pyx_t_6) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_6))) __PYX_ERR(0, 10, __pyx_L1_error)
+        if (!(likely(PyDict_CheckExact(__pyx_t_6))||((__pyx_t_6) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_6))) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_XDECREF_SET(__pyx_v_sn, ((PyObject*)__pyx_t_6));
         __pyx_t_6 = 0;
         if (unlikely(__pyx_v_sn == Py_None)) {
           PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "values");
-          __PYX_ERR(0, 10, __pyx_L1_error)
+          __PYX_ERR(0, 13, __pyx_L1_error)
         }
-        __pyx_t_6 = __Pyx_PyDict_Values(__pyx_v_sn); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyDict_Values(__pyx_v_sn); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_19 = __Pyx_PyList_Extend(__pyx_v_found_candidates, __pyx_t_6); if (unlikely(__pyx_t_19 == ((int)-1))) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_19 = __Pyx_PyList_Extend(__pyx_v_found_candidates, __pyx_t_6); if (unlikely(__pyx_t_19 == ((int)-1))) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       }
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       goto __pyx_L53;
     }
     /*else*/ {
-      __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+      __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_INCREF(__pyx_v_sigindex_matches);
       __Pyx_GIVEREF(__pyx_v_sigindex_matches);
-      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_v_sigindex_matches)) __PYX_ERR(0, 10, __pyx_L1_error);
+      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_v_sigindex_matches)) __PYX_ERR(0, 13, __pyx_L1_error);
       __Pyx_INCREF(__pyx_v_sigindex_candidates);
       __Pyx_GIVEREF(__pyx_v_sigindex_candidates);
-      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_v_sigindex_candidates)) __PYX_ERR(0, 10, __pyx_L1_error);
+      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_v_sigindex_candidates)) __PYX_ERR(0, 13, __pyx_L1_error);
       __pyx_t_6 = __pyx_t_1; __Pyx_INCREF(__pyx_t_6); __pyx_t_5 = 0;
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       for (;;) {
         if (__pyx_t_5 >= 2) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_6, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_6, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_6, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_6, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
         __Pyx_XDECREF_SET(__pyx_v_search_list, ((PyObject*)__pyx_t_1));
         __pyx_t_1 = 0;
         if (unlikely(__pyx_v_search_list == Py_None)) {
           PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-          __PYX_ERR(0, 10, __pyx_L1_error)
+          __PYX_ERR(0, 13, __pyx_L1_error)
         }
         __pyx_t_1 = __pyx_v_search_list; __Pyx_INCREF(__pyx_t_1); __pyx_t_18 = 0;
         for (;;) {
           if (__pyx_t_18 >= PyList_GET_SIZE(__pyx_t_1)) break;
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_16 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_18); __Pyx_INCREF(__pyx_t_16); __pyx_t_18++; if (unlikely((0 < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+          __pyx_t_16 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_18); __Pyx_INCREF(__pyx_t_16); __pyx_t_18++; if (unlikely((0 < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
           #else
-          __pyx_t_16 = PySequence_ITEM(__pyx_t_1, __pyx_t_18); __pyx_t_18++; if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 10, __pyx_L1_error)
+          __pyx_t_16 = PySequence_ITEM(__pyx_t_1, __pyx_t_18); __pyx_t_18++; if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 13, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_16);
           #endif
-          if (!(likely(PyDict_CheckExact(__pyx_t_16))||((__pyx_t_16) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_16))) __PYX_ERR(0, 10, __pyx_L1_error)
+          if (!(likely(PyDict_CheckExact(__pyx_t_16))||((__pyx_t_16) == Py_None) || __Pyx_RaiseUnexpectedTypeError("dict", __pyx_t_16))) __PYX_ERR(0, 13, __pyx_L1_error)
           __Pyx_XDECREF_SET(__pyx_v_sn, ((PyObject*)__pyx_t_16));
           __pyx_t_16 = 0;
           if (unlikely(__pyx_v_sn == Py_None)) {
             PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-            __PYX_ERR(0, 10, __pyx_L1_error)
+            __PYX_ERR(0, 13, __pyx_L1_error)
           }
-          __pyx_t_4 = (__Pyx_PyDict_ContainsTF(__pyx_v_dst_type, __pyx_v_sn, Py_EQ)); if (unlikely((__pyx_t_4 < 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+          __pyx_t_4 = (__Pyx_PyDict_ContainsTF(__pyx_v_dst_type, __pyx_v_sn, Py_EQ)); if (unlikely((__pyx_t_4 < 0))) __PYX_ERR(0, 13, __pyx_L1_error)
           if (__pyx_t_4) {
             if (unlikely(__pyx_v_sn == Py_None)) {
               PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-              __PYX_ERR(0, 10, __pyx_L1_error)
+              __PYX_ERR(0, 13, __pyx_L1_error)
             }
-            __pyx_t_16 = __Pyx_PyDict_GetItem(__pyx_v_sn, __pyx_v_dst_type); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 10, __pyx_L1_error)
+            __pyx_t_16 = __Pyx_PyDict_GetItem(__pyx_v_sn, __pyx_v_dst_type); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 13, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_16);
-            __pyx_t_19 = __Pyx_PyList_Append(__pyx_v_found_matches, __pyx_t_16); if (unlikely(__pyx_t_19 == ((int)-1))) __PYX_ERR(0, 10, __pyx_L1_error)
+            __pyx_t_19 = __Pyx_PyList_Append(__pyx_v_found_matches, __pyx_t_16); if (unlikely(__pyx_t_19 == ((int)-1))) __PYX_ERR(0, 13, __pyx_L1_error)
             __Pyx_DECREF(__pyx_t_16); __pyx_t_16 = 0;
           }
         }
@@ -18495,28 +18521,28 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_joint_to_mi_cython(CYTHON_UNUSE
   __pyx_t_2 = (PyList_GET_SIZE(__pyx_v_candidates) != 0);
   __pyx_t_4 = (!__pyx_t_2);
   if (unlikely(__pyx_t_4)) {
-    __pyx_t_13 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__12, NULL); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 10, __pyx_L1_error)
+    __pyx_t_13 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__12, NULL); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 13, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_13);
     __Pyx_Raise(__pyx_t_13, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-    __PYX_ERR(0, 10, __pyx_L1_error)
+    __PYX_ERR(0, 13, __pyx_L1_error)
   }
-  __pyx_t_14 = __Pyx_PyList_GET_SIZE(__pyx_v_candidates); if (unlikely(__pyx_t_14 == ((Py_ssize_t)-1))) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_14 = __Pyx_PyList_GET_SIZE(__pyx_v_candidates); if (unlikely(__pyx_t_14 == ((Py_ssize_t)-1))) __PYX_ERR(0, 13, __pyx_L1_error)
   __pyx_t_4 = (__pyx_t_14 > 1);
   if (unlikely(__pyx_t_4)) {
-    __pyx_t_13 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__13, NULL); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 10, __pyx_L1_error)
+    __pyx_t_13 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__13, NULL); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 13, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_13);
     __Pyx_Raise(__pyx_t_13, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-    __PYX_ERR(0, 10, __pyx_L1_error)
+    __PYX_ERR(0, 13, __pyx_L1_error)
   }
   /*else*/ {
     __Pyx_XDECREF(__pyx_r);
     if (unlikely(__pyx_v_signatures == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 10, __pyx_L1_error)
+      __PYX_ERR(0, 13, __pyx_L1_error)
     }
-    __pyx_t_13 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_signatures), PyList_GET_ITEM(__pyx_v_candidates, 0)); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 10, __pyx_L1_error)
+    __pyx_t_13 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_signatures), PyList_GET_ITEM(__pyx_v_candidates, 0)); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 13, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_13);
     __pyx_r = __pyx_t_13;
     __pyx_t_13 = 0;
@@ -18578,7 +18604,7 @@ static PyObject *__pyx_fuse_0__pyx_pw_8fastHDMI_10cython_fun_3joint_to_mi_cython
   __pyx_nargs = PyTuple_GET_SIZE(__pyx_args);
   #else
   __pyx_nargs = PyTuple_Size(__pyx_args);
-  if (unlikely((__pyx_nargs < 0))) __PYX_ERR(0, 10, __pyx_L3_error)
+  if (unlikely((__pyx_nargs < 0))) __PYX_ERR(0, 13, __pyx_L3_error)
   #endif
   __pyx_kwvalues = __Pyx_KwValues_VARARGS(__pyx_args, __pyx_nargs);
   {
@@ -18602,26 +18628,26 @@ static PyObject *__pyx_fuse_0__pyx_pw_8fastHDMI_10cython_fun_3joint_to_mi_cython
           (void)__Pyx_Arg_NewRef_VARARGS(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_forward_euler_a);
           if (value) { values[1] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_forward_euler_b);
           if (value) { values[2] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "joint_to_mi_cython") < 0)) __PYX_ERR(0, 10, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "joint_to_mi_cython") < 0)) __PYX_ERR(0, 13, __pyx_L3_error)
       }
     } else {
       switch (__pyx_nargs) {
@@ -18634,21 +18660,21 @@ static PyObject *__pyx_fuse_0__pyx_pw_8fastHDMI_10cython_fun_3joint_to_mi_cython
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_joint = __Pyx_PyObject_to_MemoryviewSlice_d_dc_float(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_joint.memview)) __PYX_ERR(0, 12, __pyx_L3_error)
+    __pyx_v_joint = __Pyx_PyObject_to_MemoryviewSlice_d_dc_float(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_joint.memview)) __PYX_ERR(0, 15, __pyx_L3_error)
     if (values[1]) {
-      __pyx_v_forward_euler_a = __pyx_PyFloat_AsFloat(values[1]); if (unlikely((__pyx_v_forward_euler_a == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 12, __pyx_L3_error)
+      __pyx_v_forward_euler_a = __pyx_PyFloat_AsFloat(values[1]); if (unlikely((__pyx_v_forward_euler_a == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 15, __pyx_L3_error)
     } else {
       __pyx_v_forward_euler_a = ((float)((double)((double)1.)));
     }
     if (values[2]) {
-      __pyx_v_forward_euler_b = __pyx_PyFloat_AsFloat(values[2]); if (unlikely((__pyx_v_forward_euler_b == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 12, __pyx_L3_error)
+      __pyx_v_forward_euler_b = __pyx_PyFloat_AsFloat(values[2]); if (unlikely((__pyx_v_forward_euler_b == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 15, __pyx_L3_error)
     } else {
       __pyx_v_forward_euler_b = ((float)((double)((double)1.)));
     }
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("joint_to_mi_cython", 0, 1, 3, __pyx_nargs); __PYX_ERR(0, 10, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("joint_to_mi_cython", 0, 1, 3, __pyx_nargs); __PYX_ERR(0, 13, __pyx_L3_error)
   goto __pyx_L3_error;
   __pyx_L3_error:;
   for (Py_ssize_t i=0; i<(Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++i) {
@@ -18678,6 +18704,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_2joint_to_mi_cython(CYTHON_UNUS
   float *__pyx_v_log_a_marginal;
   float *__pyx_v_log_b_marginal;
   float __pyx_v_temp_sum;
+  float __pyx_v_log_val;
   CYTHON_UNUSED float __pyx_v_log_temp_sum;
   float __pyx_v_log_forward_euler_a;
   float __pyx_v_log_forward_euler_b;
@@ -18687,24 +18714,25 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_2joint_to_mi_cython(CYTHON_UNUS
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
-  int __pyx_t_3;
+  PyObject *__pyx_t_3 = NULL;
   int __pyx_t_4;
   int __pyx_t_5;
   int __pyx_t_6;
   int __pyx_t_7;
-  Py_ssize_t __pyx_t_8;
-  Py_ssize_t __pyx_t_9;
-  double __pyx_t_10;
-  int __pyx_t_11;
-  float __pyx_t_12;
+  int __pyx_t_8;
+  int __pyx_t_9;
+  int __pyx_t_10;
+  Py_ssize_t __pyx_t_11;
+  Py_ssize_t __pyx_t_12;
   double __pyx_t_13;
-  PyObject *__pyx_t_14 = NULL;
+  float __pyx_t_14;
+  double __pyx_t_15;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__pyx_fuse_0joint_to_mi_cython", 0);
 
-  /* "fastHDMI/cython_fun.pyx":14
+  /* "fastHDMI/cython_fun.pyx":17
  * def joint_to_mi_cython(floating_float_double[:, ::1] joint, floating_float_double forward_euler_a=1., floating_float_double forward_euler_b=1.):
  *     cdef int i, j
  *     cdef int joint_shape0 = joint.shape[0]             # <<<<<<<<<<<<<<
@@ -18713,7 +18741,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_2joint_to_mi_cython(CYTHON_UNUS
  */
   __pyx_v_joint_shape0 = (__pyx_v_joint.shape[0]);
 
-  /* "fastHDMI/cython_fun.pyx":15
+  /* "fastHDMI/cython_fun.pyx":18
  *     cdef int i, j
  *     cdef int joint_shape0 = joint.shape[0]
  *     cdef int joint_shape1 = joint.shape[1]             # <<<<<<<<<<<<<<
@@ -18722,93 +18750,190 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_2joint_to_mi_cython(CYTHON_UNUS
  */
   __pyx_v_joint_shape1 = (__pyx_v_joint.shape[1]);
 
-  /* "fastHDMI/cython_fun.pyx":16
+  /* "fastHDMI/cython_fun.pyx":19
  *     cdef int joint_shape0 = joint.shape[0]
  *     cdef int joint_shape1 = joint.shape[1]
  *     cdef floating_float_double *log_a_marginal = <floating_float_double*>calloc(joint_shape0, sizeof(floating_float_double))             # <<<<<<<<<<<<<<
  *     cdef floating_float_double *log_b_marginal = <floating_float_double*>calloc(joint_shape1, sizeof(floating_float_double))
- *     cdef floating_float_double temp_sum, log_temp_sum, log_forward_euler_a, log_forward_euler_b, log_joint, output
+ *     cdef floating_float_double temp_sum, log_val, log_temp_sum, log_forward_euler_a, log_forward_euler_b, log_joint, output
  */
   __pyx_v_log_a_marginal = ((float *)calloc(__pyx_v_joint_shape0, (sizeof(float))));
 
-  /* "fastHDMI/cython_fun.pyx":17
+  /* "fastHDMI/cython_fun.pyx":20
  *     cdef int joint_shape1 = joint.shape[1]
  *     cdef floating_float_double *log_a_marginal = <floating_float_double*>calloc(joint_shape0, sizeof(floating_float_double))
  *     cdef floating_float_double *log_b_marginal = <floating_float_double*>calloc(joint_shape1, sizeof(floating_float_double))             # <<<<<<<<<<<<<<
- *     cdef floating_float_double temp_sum, log_temp_sum, log_forward_euler_a, log_forward_euler_b, log_joint, output
+ *     cdef floating_float_double temp_sum, log_val, log_temp_sum, log_forward_euler_a, log_forward_euler_b, log_joint, output
  * 
  */
   __pyx_v_log_b_marginal = ((float *)calloc(__pyx_v_joint_shape1, (sizeof(float))));
 
-  /* "fastHDMI/cython_fun.pyx":20
- *     cdef floating_float_double temp_sum, log_temp_sum, log_forward_euler_a, log_forward_euler_b, log_joint, output
+  /* "fastHDMI/cython_fun.pyx":23
+ *     cdef floating_float_double temp_sum, log_val, log_temp_sum, log_forward_euler_a, log_forward_euler_b, log_joint, output
+ * 
+ *     if log_a_marginal == NULL or log_b_marginal == NULL:             # <<<<<<<<<<<<<<
+ *         raise MemoryError("Failed to allocate memory.")
+ * 
+ */
+  __pyx_t_2 = (__pyx_v_log_a_marginal == NULL);
+  if (!__pyx_t_2) {
+  } else {
+    __pyx_t_1 = __pyx_t_2;
+    goto __pyx_L4_bool_binop_done;
+  }
+  __pyx_t_2 = (__pyx_v_log_b_marginal == NULL);
+  __pyx_t_1 = __pyx_t_2;
+  __pyx_L4_bool_binop_done:;
+  if (unlikely(__pyx_t_1)) {
+
+    /* "fastHDMI/cython_fun.pyx":24
+ * 
+ *     if log_a_marginal == NULL or log_b_marginal == NULL:
+ *         raise MemoryError("Failed to allocate memory.")             # <<<<<<<<<<<<<<
+ * 
+ *     temp_sum = 0.0
+ */
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__14, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 24, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_Raise(__pyx_t_3, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __PYX_ERR(0, 24, __pyx_L1_error)
+
+    /* "fastHDMI/cython_fun.pyx":23
+ *     cdef floating_float_double temp_sum, log_val, log_temp_sum, log_forward_euler_a, log_forward_euler_b, log_joint, output
+ * 
+ *     if log_a_marginal == NULL or log_b_marginal == NULL:             # <<<<<<<<<<<<<<
+ *         raise MemoryError("Failed to allocate memory.")
+ * 
+ */
+  }
+
+  /* "fastHDMI/cython_fun.pyx":26
+ *         raise MemoryError("Failed to allocate memory.")
  * 
  *     temp_sum = 0.0             # <<<<<<<<<<<<<<
- *     for i in range(joint_shape0):
+ *     for i in prange(joint_shape0, nogil=True):
  *         for j in range(joint_shape1):
  */
   __pyx_v_temp_sum = 0.0;
 
-  /* "fastHDMI/cython_fun.pyx":21
+  /* "fastHDMI/cython_fun.pyx":27
  * 
  *     temp_sum = 0.0
- *     for i in range(joint_shape0):             # <<<<<<<<<<<<<<
+ *     for i in prange(joint_shape0, nogil=True):             # <<<<<<<<<<<<<<
  *         for j in range(joint_shape1):
  *             log_a_marginal[i] += joint[i, j]
  */
-  __pyx_t_1 = __pyx_v_joint_shape0;
-  __pyx_t_2 = __pyx_t_1;
-  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
-    __pyx_v_i = __pyx_t_3;
+  {
+      #ifdef WITH_THREAD
+      PyThreadState *_save;
+      _save = NULL;
+      Py_UNBLOCK_THREADS
+      __Pyx_FastGIL_Remember();
+      #endif
+      /*try:*/ {
+        __pyx_t_4 = __pyx_v_joint_shape0;
+        {
+            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+                #undef likely
+                #undef unlikely
+                #define likely(x)   (x)
+                #define unlikely(x) (x)
+            #endif
+            __pyx_t_6 = (__pyx_t_4 - 0 + 1 - 1/abs(1)) / 1;
+            if (__pyx_t_6 > 0)
+            {
+                #ifdef _OPENMP
+                #pragma omp parallel reduction(+:__pyx_v_temp_sum) private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_7, __pyx_t_8, __pyx_t_9)
+                #endif /* _OPENMP */
+                {
+                    #ifdef _OPENMP
+                    #pragma omp for firstprivate(__pyx_v_i) lastprivate(__pyx_v_i) lastprivate(__pyx_v_j)
+                    #endif /* _OPENMP */
+                    for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_6; __pyx_t_5++){
+                        {
+                            __pyx_v_i = (int)(0 + 1 * __pyx_t_5);
+                            /* Initialize private variables to invalid values */
+                            __pyx_v_j = ((int)0xbad0bad0);
 
-    /* "fastHDMI/cython_fun.pyx":22
+                            /* "fastHDMI/cython_fun.pyx":28
  *     temp_sum = 0.0
- *     for i in range(joint_shape0):
+ *     for i in prange(joint_shape0, nogil=True):
  *         for j in range(joint_shape1):             # <<<<<<<<<<<<<<
  *             log_a_marginal[i] += joint[i, j]
  *             log_b_marginal[j] += joint[i, j]
  */
-    __pyx_t_4 = __pyx_v_joint_shape1;
-    __pyx_t_5 = __pyx_t_4;
-    for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
-      __pyx_v_j = __pyx_t_6;
+                            __pyx_t_7 = __pyx_v_joint_shape1;
+                            __pyx_t_8 = __pyx_t_7;
+                            for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
+                              __pyx_v_j = __pyx_t_9;
 
-      /* "fastHDMI/cython_fun.pyx":23
- *     for i in range(joint_shape0):
+                              /* "fastHDMI/cython_fun.pyx":29
+ *     for i in prange(joint_shape0, nogil=True):
  *         for j in range(joint_shape1):
  *             log_a_marginal[i] += joint[i, j]             # <<<<<<<<<<<<<<
  *             log_b_marginal[j] += joint[i, j]
  *         temp_sum += log_a_marginal[i]
  */
-      __pyx_t_7 = __pyx_v_i;
-      __pyx_t_8 = __pyx_v_i;
-      __pyx_t_9 = __pyx_v_j;
-      (__pyx_v_log_a_marginal[__pyx_t_7]) = ((__pyx_v_log_a_marginal[__pyx_t_7]) + (*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_8 * __pyx_v_joint.strides[0]) )) + __pyx_t_9)) ))));
+                              __pyx_t_10 = __pyx_v_i;
+                              __pyx_t_11 = __pyx_v_i;
+                              __pyx_t_12 = __pyx_v_j;
+                              (__pyx_v_log_a_marginal[__pyx_t_10]) = ((__pyx_v_log_a_marginal[__pyx_t_10]) + (*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_11 * __pyx_v_joint.strides[0]) )) + __pyx_t_12)) ))));
 
-      /* "fastHDMI/cython_fun.pyx":24
+                              /* "fastHDMI/cython_fun.pyx":30
  *         for j in range(joint_shape1):
  *             log_a_marginal[i] += joint[i, j]
  *             log_b_marginal[j] += joint[i, j]             # <<<<<<<<<<<<<<
  *         temp_sum += log_a_marginal[i]
  *     temp_sum *= forward_euler_a * forward_euler_b
  */
-      __pyx_t_7 = __pyx_v_j;
-      __pyx_t_9 = __pyx_v_i;
-      __pyx_t_8 = __pyx_v_j;
-      (__pyx_v_log_b_marginal[__pyx_t_7]) = ((__pyx_v_log_b_marginal[__pyx_t_7]) + (*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_9 * __pyx_v_joint.strides[0]) )) + __pyx_t_8)) ))));
-    }
+                              __pyx_t_10 = __pyx_v_j;
+                              __pyx_t_12 = __pyx_v_i;
+                              __pyx_t_11 = __pyx_v_j;
+                              (__pyx_v_log_b_marginal[__pyx_t_10]) = ((__pyx_v_log_b_marginal[__pyx_t_10]) + (*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_12 * __pyx_v_joint.strides[0]) )) + __pyx_t_11)) ))));
+                            }
 
-    /* "fastHDMI/cython_fun.pyx":25
+                            /* "fastHDMI/cython_fun.pyx":31
  *             log_a_marginal[i] += joint[i, j]
  *             log_b_marginal[j] += joint[i, j]
  *         temp_sum += log_a_marginal[i]             # <<<<<<<<<<<<<<
  *     temp_sum *= forward_euler_a * forward_euler_b
  *     log_temp_sum = log(temp_sum)
  */
-    __pyx_v_temp_sum = (__pyx_v_temp_sum + (__pyx_v_log_a_marginal[__pyx_v_i]));
+                            __pyx_v_temp_sum = (__pyx_v_temp_sum + (__pyx_v_log_a_marginal[__pyx_v_i]));
+                        }
+                    }
+                }
+            }
+        }
+        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+            #undef likely
+            #undef unlikely
+            #define likely(x)   __builtin_expect(!!(x), 1)
+            #define unlikely(x) __builtin_expect(!!(x), 0)
+        #endif
+      }
+
+      /* "fastHDMI/cython_fun.pyx":27
+ * 
+ *     temp_sum = 0.0
+ *     for i in prange(joint_shape0, nogil=True):             # <<<<<<<<<<<<<<
+ *         for j in range(joint_shape1):
+ *             log_a_marginal[i] += joint[i, j]
+ */
+      /*finally:*/ {
+        /*normal exit:*/{
+          #ifdef WITH_THREAD
+          __Pyx_FastGIL_Forget();
+          Py_BLOCK_THREADS
+          #endif
+          goto __pyx_L8;
+        }
+        __pyx_L8:;
+      }
   }
 
-  /* "fastHDMI/cython_fun.pyx":26
+  /* "fastHDMI/cython_fun.pyx":32
  *             log_b_marginal[j] += joint[i, j]
  *         temp_sum += log_a_marginal[i]
  *     temp_sum *= forward_euler_a * forward_euler_b             # <<<<<<<<<<<<<<
@@ -18817,7 +18942,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_2joint_to_mi_cython(CYTHON_UNUS
  */
   __pyx_v_temp_sum = (__pyx_v_temp_sum * (__pyx_v_forward_euler_a * __pyx_v_forward_euler_b));
 
-  /* "fastHDMI/cython_fun.pyx":27
+  /* "fastHDMI/cython_fun.pyx":33
  *         temp_sum += log_a_marginal[i]
  *     temp_sum *= forward_euler_a * forward_euler_b
  *     log_temp_sum = log(temp_sum)             # <<<<<<<<<<<<<<
@@ -18826,7 +18951,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_2joint_to_mi_cython(CYTHON_UNUS
  */
   __pyx_v_log_temp_sum = log(__pyx_v_temp_sum);
 
-  /* "fastHDMI/cython_fun.pyx":28
+  /* "fastHDMI/cython_fun.pyx":34
  *     temp_sum *= forward_euler_a * forward_euler_b
  *     log_temp_sum = log(temp_sum)
  *     log_forward_euler_a = log(forward_euler_a)             # <<<<<<<<<<<<<<
@@ -18835,154 +18960,344 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_2joint_to_mi_cython(CYTHON_UNUS
  */
   __pyx_v_log_forward_euler_a = log(__pyx_v_forward_euler_a);
 
-  /* "fastHDMI/cython_fun.pyx":29
+  /* "fastHDMI/cython_fun.pyx":35
  *     log_temp_sum = log(temp_sum)
  *     log_forward_euler_a = log(forward_euler_a)
  *     log_forward_euler_b = log(forward_euler_b)             # <<<<<<<<<<<<<<
  * 
- *     for i in range(joint_shape0):
+ *     for i in prange(joint_shape0, nogil=True):
  */
   __pyx_v_log_forward_euler_b = log(__pyx_v_forward_euler_b);
 
-  /* "fastHDMI/cython_fun.pyx":31
+  /* "fastHDMI/cython_fun.pyx":37
  *     log_forward_euler_b = log(forward_euler_b)
  * 
- *     for i in range(joint_shape0):             # <<<<<<<<<<<<<<
- *         log_a_marginal[i] = log(log_a_marginal[i]) + log_forward_euler_b if isfinite(log(log_a_marginal[i])) else 0.0
- *     for j in range(joint_shape1):
+ *     for i in prange(joint_shape0, nogil=True):             # <<<<<<<<<<<<<<
+ *         log_val = log(log_a_marginal[i])
+ *         log_a_marginal[i] = log_val + log_forward_euler_b if isfinite(log_val) else 0.0
  */
-  __pyx_t_1 = __pyx_v_joint_shape0;
-  __pyx_t_2 = __pyx_t_1;
-  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
-    __pyx_v_i = __pyx_t_3;
+  {
+      #ifdef WITH_THREAD
+      PyThreadState *_save;
+      _save = NULL;
+      Py_UNBLOCK_THREADS
+      __Pyx_FastGIL_Remember();
+      #endif
+      /*try:*/ {
+        __pyx_t_6 = __pyx_v_joint_shape0;
+        {
+            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+                #undef likely
+                #undef unlikely
+                #define likely(x)   (x)
+                #define unlikely(x) (x)
+            #endif
+            __pyx_t_4 = (__pyx_t_6 - 0 + 1 - 1/abs(1)) / 1;
+            if (__pyx_t_4 > 0)
+            {
+                #ifdef _OPENMP
+                #pragma omp parallel private(__pyx_t_1, __pyx_t_13)
+                #endif /* _OPENMP */
+                {
+                    #ifdef _OPENMP
+                    #pragma omp for firstprivate(__pyx_v_i) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_val)
+                    #endif /* _OPENMP */
+                    for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5++){
+                        {
+                            __pyx_v_i = (int)(0 + 1 * __pyx_t_5);
+                            /* Initialize private variables to invalid values */
+                            __pyx_v_log_val = ((float)__PYX_NAN());
 
-    /* "fastHDMI/cython_fun.pyx":32
+                            /* "fastHDMI/cython_fun.pyx":38
  * 
- *     for i in range(joint_shape0):
- *         log_a_marginal[i] = log(log_a_marginal[i]) + log_forward_euler_b if isfinite(log(log_a_marginal[i])) else 0.0             # <<<<<<<<<<<<<<
- *     for j in range(joint_shape1):
- *         log_b_marginal[j] = log(log_b_marginal[j]) + log_forward_euler_a if isfinite(log(log_b_marginal[j])) else 0.0
+ *     for i in prange(joint_shape0, nogil=True):
+ *         log_val = log(log_a_marginal[i])             # <<<<<<<<<<<<<<
+ *         log_a_marginal[i] = log_val + log_forward_euler_b if isfinite(log_val) else 0.0
+ *     for j in prange(joint_shape1, nogil=True):
  */
-    __pyx_t_11 = isfinite(log((__pyx_v_log_a_marginal[__pyx_v_i])));
-    if (__pyx_t_11) {
-      __pyx_t_10 = (log((__pyx_v_log_a_marginal[__pyx_v_i])) + __pyx_v_log_forward_euler_b);
-    } else {
-      __pyx_t_10 = 0.0;
-    }
-    (__pyx_v_log_a_marginal[__pyx_v_i]) = __pyx_t_10;
+                            __pyx_v_log_val = log((__pyx_v_log_a_marginal[__pyx_v_i]));
+
+                            /* "fastHDMI/cython_fun.pyx":39
+ *     for i in prange(joint_shape0, nogil=True):
+ *         log_val = log(log_a_marginal[i])
+ *         log_a_marginal[i] = log_val + log_forward_euler_b if isfinite(log_val) else 0.0             # <<<<<<<<<<<<<<
+ *     for j in prange(joint_shape1, nogil=True):
+ *         log_val = log(log_b_marginal[j])
+ */
+                            __pyx_t_1 = isfinite(__pyx_v_log_val);
+                            if (__pyx_t_1) {
+                              __pyx_t_13 = (__pyx_v_log_val + __pyx_v_log_forward_euler_b);
+                            } else {
+                              __pyx_t_13 = 0.0;
+                            }
+                            (__pyx_v_log_a_marginal[__pyx_v_i]) = __pyx_t_13;
+                        }
+                    }
+                }
+            }
+        }
+        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+            #undef likely
+            #undef unlikely
+            #define likely(x)   __builtin_expect(!!(x), 1)
+            #define unlikely(x) __builtin_expect(!!(x), 0)
+        #endif
+      }
+
+      /* "fastHDMI/cython_fun.pyx":37
+ *     log_forward_euler_b = log(forward_euler_b)
+ * 
+ *     for i in prange(joint_shape0, nogil=True):             # <<<<<<<<<<<<<<
+ *         log_val = log(log_a_marginal[i])
+ *         log_a_marginal[i] = log_val + log_forward_euler_b if isfinite(log_val) else 0.0
+ */
+      /*finally:*/ {
+        /*normal exit:*/{
+          #ifdef WITH_THREAD
+          __Pyx_FastGIL_Forget();
+          Py_BLOCK_THREADS
+          #endif
+          goto __pyx_L19;
+        }
+        __pyx_L19:;
+      }
   }
 
-  /* "fastHDMI/cython_fun.pyx":33
- *     for i in range(joint_shape0):
- *         log_a_marginal[i] = log(log_a_marginal[i]) + log_forward_euler_b if isfinite(log(log_a_marginal[i])) else 0.0
- *     for j in range(joint_shape1):             # <<<<<<<<<<<<<<
- *         log_b_marginal[j] = log(log_b_marginal[j]) + log_forward_euler_a if isfinite(log(log_b_marginal[j])) else 0.0
+  /* "fastHDMI/cython_fun.pyx":40
+ *         log_val = log(log_a_marginal[i])
+ *         log_a_marginal[i] = log_val + log_forward_euler_b if isfinite(log_val) else 0.0
+ *     for j in prange(joint_shape1, nogil=True):             # <<<<<<<<<<<<<<
+ *         log_val = log(log_b_marginal[j])
+ *         log_b_marginal[j] = log_val + log_forward_euler_a if isfinite(log_val) else 0.0
+ */
+  {
+      #ifdef WITH_THREAD
+      PyThreadState *_save;
+      _save = NULL;
+      Py_UNBLOCK_THREADS
+      __Pyx_FastGIL_Remember();
+      #endif
+      /*try:*/ {
+        __pyx_t_4 = __pyx_v_joint_shape1;
+        {
+            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+                #undef likely
+                #undef unlikely
+                #define likely(x)   (x)
+                #define unlikely(x) (x)
+            #endif
+            __pyx_t_6 = (__pyx_t_4 - 0 + 1 - 1/abs(1)) / 1;
+            if (__pyx_t_6 > 0)
+            {
+                #ifdef _OPENMP
+                #pragma omp parallel private(__pyx_t_1, __pyx_t_13)
+                #endif /* _OPENMP */
+                {
+                    #ifdef _OPENMP
+                    #pragma omp for firstprivate(__pyx_v_j) lastprivate(__pyx_v_j) lastprivate(__pyx_v_log_val)
+                    #endif /* _OPENMP */
+                    for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_6; __pyx_t_5++){
+                        {
+                            __pyx_v_j = (int)(0 + 1 * __pyx_t_5);
+                            /* Initialize private variables to invalid values */
+                            __pyx_v_log_val = ((float)__PYX_NAN());
+
+                            /* "fastHDMI/cython_fun.pyx":41
+ *         log_a_marginal[i] = log_val + log_forward_euler_b if isfinite(log_val) else 0.0
+ *     for j in prange(joint_shape1, nogil=True):
+ *         log_val = log(log_b_marginal[j])             # <<<<<<<<<<<<<<
+ *         log_b_marginal[j] = log_val + log_forward_euler_a if isfinite(log_val) else 0.0
  * 
  */
-  __pyx_t_1 = __pyx_v_joint_shape1;
-  __pyx_t_2 = __pyx_t_1;
-  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
-    __pyx_v_j = __pyx_t_3;
+                            __pyx_v_log_val = log((__pyx_v_log_b_marginal[__pyx_v_j]));
 
-    /* "fastHDMI/cython_fun.pyx":34
- *         log_a_marginal[i] = log(log_a_marginal[i]) + log_forward_euler_b if isfinite(log(log_a_marginal[i])) else 0.0
- *     for j in range(joint_shape1):
- *         log_b_marginal[j] = log(log_b_marginal[j]) + log_forward_euler_a if isfinite(log(log_b_marginal[j])) else 0.0             # <<<<<<<<<<<<<<
+                            /* "fastHDMI/cython_fun.pyx":42
+ *     for j in prange(joint_shape1, nogil=True):
+ *         log_val = log(log_b_marginal[j])
+ *         log_b_marginal[j] = log_val + log_forward_euler_a if isfinite(log_val) else 0.0             # <<<<<<<<<<<<<<
  * 
  *     output = 0.0
  */
-    __pyx_t_11 = isfinite(log((__pyx_v_log_b_marginal[__pyx_v_j])));
-    if (__pyx_t_11) {
-      __pyx_t_10 = (log((__pyx_v_log_b_marginal[__pyx_v_j])) + __pyx_v_log_forward_euler_a);
-    } else {
-      __pyx_t_10 = 0.0;
-    }
-    (__pyx_v_log_b_marginal[__pyx_v_j]) = __pyx_t_10;
+                            __pyx_t_1 = isfinite(__pyx_v_log_val);
+                            if (__pyx_t_1) {
+                              __pyx_t_13 = (__pyx_v_log_val + __pyx_v_log_forward_euler_a);
+                            } else {
+                              __pyx_t_13 = 0.0;
+                            }
+                            (__pyx_v_log_b_marginal[__pyx_v_j]) = __pyx_t_13;
+                        }
+                    }
+                }
+            }
+        }
+        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+            #undef likely
+            #undef unlikely
+            #define likely(x)   __builtin_expect(!!(x), 1)
+            #define unlikely(x) __builtin_expect(!!(x), 0)
+        #endif
+      }
+
+      /* "fastHDMI/cython_fun.pyx":40
+ *         log_val = log(log_a_marginal[i])
+ *         log_a_marginal[i] = log_val + log_forward_euler_b if isfinite(log_val) else 0.0
+ *     for j in prange(joint_shape1, nogil=True):             # <<<<<<<<<<<<<<
+ *         log_val = log(log_b_marginal[j])
+ *         log_b_marginal[j] = log_val + log_forward_euler_a if isfinite(log_val) else 0.0
+ */
+      /*finally:*/ {
+        /*normal exit:*/{
+          #ifdef WITH_THREAD
+          __Pyx_FastGIL_Forget();
+          Py_BLOCK_THREADS
+          #endif
+          goto __pyx_L28;
+        }
+        __pyx_L28:;
+      }
   }
 
-  /* "fastHDMI/cython_fun.pyx":36
- *         log_b_marginal[j] = log(log_b_marginal[j]) + log_forward_euler_a if isfinite(log(log_b_marginal[j])) else 0.0
+  /* "fastHDMI/cython_fun.pyx":44
+ *         log_b_marginal[j] = log_val + log_forward_euler_a if isfinite(log_val) else 0.0
  * 
  *     output = 0.0             # <<<<<<<<<<<<<<
- *     for i in range(joint_shape0):
+ *     for i in prange(joint_shape0, nogil=True):
  *         for j in range(joint_shape1):
  */
   __pyx_v_output = 0.0;
 
-  /* "fastHDMI/cython_fun.pyx":37
+  /* "fastHDMI/cython_fun.pyx":45
  * 
  *     output = 0.0
- *     for i in range(joint_shape0):             # <<<<<<<<<<<<<<
+ *     for i in prange(joint_shape0, nogil=True):             # <<<<<<<<<<<<<<
  *         for j in range(joint_shape1):
  *             log_joint = log(joint[i, j]) if isfinite(log(joint[i, j])) else 0.0
  */
-  __pyx_t_1 = __pyx_v_joint_shape0;
-  __pyx_t_2 = __pyx_t_1;
-  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
-    __pyx_v_i = __pyx_t_3;
+  {
+      #ifdef WITH_THREAD
+      PyThreadState *_save;
+      _save = NULL;
+      Py_UNBLOCK_THREADS
+      __Pyx_FastGIL_Remember();
+      #endif
+      /*try:*/ {
+        __pyx_t_6 = __pyx_v_joint_shape0;
+        {
+            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+                #undef likely
+                #undef unlikely
+                #define likely(x)   (x)
+                #define unlikely(x) (x)
+            #endif
+            __pyx_t_4 = (__pyx_t_6 - 0 + 1 - 1/abs(1)) / 1;
+            if (__pyx_t_4 > 0)
+            {
+                #ifdef _OPENMP
+                #pragma omp parallel reduction(+:__pyx_v_output) private(__pyx_t_1, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_7, __pyx_t_8, __pyx_t_9)
+                #endif /* _OPENMP */
+                {
+                    #ifdef _OPENMP
+                    #pragma omp for firstprivate(__pyx_v_i) lastprivate(__pyx_v_i) lastprivate(__pyx_v_j) lastprivate(__pyx_v_log_joint)
+                    #endif /* _OPENMP */
+                    for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5++){
+                        {
+                            __pyx_v_i = (int)(0 + 1 * __pyx_t_5);
+                            /* Initialize private variables to invalid values */
+                            __pyx_v_j = ((int)0xbad0bad0);
+                            __pyx_v_log_joint = ((float)__PYX_NAN());
 
-    /* "fastHDMI/cython_fun.pyx":38
+                            /* "fastHDMI/cython_fun.pyx":46
  *     output = 0.0
- *     for i in range(joint_shape0):
+ *     for i in prange(joint_shape0, nogil=True):
  *         for j in range(joint_shape1):             # <<<<<<<<<<<<<<
  *             log_joint = log(joint[i, j]) if isfinite(log(joint[i, j])) else 0.0
  *             output += joint[i, j] * (log_joint - log_a_marginal[i] - log_b_marginal[j]) * forward_euler_a * forward_euler_b
  */
-    __pyx_t_4 = __pyx_v_joint_shape1;
-    __pyx_t_5 = __pyx_t_4;
-    for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
-      __pyx_v_j = __pyx_t_6;
+                            __pyx_t_7 = __pyx_v_joint_shape1;
+                            __pyx_t_8 = __pyx_t_7;
+                            for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
+                              __pyx_v_j = __pyx_t_9;
 
-      /* "fastHDMI/cython_fun.pyx":39
- *     for i in range(joint_shape0):
+                              /* "fastHDMI/cython_fun.pyx":47
+ *     for i in prange(joint_shape0, nogil=True):
  *         for j in range(joint_shape1):
  *             log_joint = log(joint[i, j]) if isfinite(log(joint[i, j])) else 0.0             # <<<<<<<<<<<<<<
  *             output += joint[i, j] * (log_joint - log_a_marginal[i] - log_b_marginal[j]) * forward_euler_a * forward_euler_b
  * 
  */
-      __pyx_t_8 = __pyx_v_i;
-      __pyx_t_9 = __pyx_v_j;
-      __pyx_t_11 = isfinite(log((*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_8 * __pyx_v_joint.strides[0]) )) + __pyx_t_9)) )))));
-      if (__pyx_t_11) {
-        __pyx_t_9 = __pyx_v_i;
-        __pyx_t_8 = __pyx_v_j;
-        __pyx_t_10 = log((*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_9 * __pyx_v_joint.strides[0]) )) + __pyx_t_8)) ))));
-      } else {
-        __pyx_t_10 = 0.0;
-      }
-      __pyx_v_log_joint = __pyx_t_10;
+                              __pyx_t_11 = __pyx_v_i;
+                              __pyx_t_12 = __pyx_v_j;
+                              __pyx_t_1 = isfinite(log((*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_11 * __pyx_v_joint.strides[0]) )) + __pyx_t_12)) )))));
+                              if (__pyx_t_1) {
+                                __pyx_t_12 = __pyx_v_i;
+                                __pyx_t_11 = __pyx_v_j;
+                                __pyx_t_13 = log((*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_12 * __pyx_v_joint.strides[0]) )) + __pyx_t_11)) ))));
+                              } else {
+                                __pyx_t_13 = 0.0;
+                              }
+                              __pyx_v_log_joint = __pyx_t_13;
 
-      /* "fastHDMI/cython_fun.pyx":40
+                              /* "fastHDMI/cython_fun.pyx":48
  *         for j in range(joint_shape1):
  *             log_joint = log(joint[i, j]) if isfinite(log(joint[i, j])) else 0.0
  *             output += joint[i, j] * (log_joint - log_a_marginal[i] - log_b_marginal[j]) * forward_euler_a * forward_euler_b             # <<<<<<<<<<<<<<
  * 
  *     output = max(output, 0.0)
  */
-      __pyx_t_8 = __pyx_v_i;
-      __pyx_t_9 = __pyx_v_j;
-      __pyx_v_output = (__pyx_v_output + ((((*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_8 * __pyx_v_joint.strides[0]) )) + __pyx_t_9)) ))) * ((__pyx_v_log_joint - (__pyx_v_log_a_marginal[__pyx_v_i])) - (__pyx_v_log_b_marginal[__pyx_v_j]))) * __pyx_v_forward_euler_a) * __pyx_v_forward_euler_b));
-    }
+                              __pyx_t_11 = __pyx_v_i;
+                              __pyx_t_12 = __pyx_v_j;
+                              __pyx_v_output = (__pyx_v_output + ((((*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_11 * __pyx_v_joint.strides[0]) )) + __pyx_t_12)) ))) * ((__pyx_v_log_joint - (__pyx_v_log_a_marginal[__pyx_v_i])) - (__pyx_v_log_b_marginal[__pyx_v_j]))) * __pyx_v_forward_euler_a) * __pyx_v_forward_euler_b));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+            #undef likely
+            #undef unlikely
+            #define likely(x)   __builtin_expect(!!(x), 1)
+            #define unlikely(x) __builtin_expect(!!(x), 0)
+        #endif
+      }
+
+      /* "fastHDMI/cython_fun.pyx":45
+ * 
+ *     output = 0.0
+ *     for i in prange(joint_shape0, nogil=True):             # <<<<<<<<<<<<<<
+ *         for j in range(joint_shape1):
+ *             log_joint = log(joint[i, j]) if isfinite(log(joint[i, j])) else 0.0
+ */
+      /*finally:*/ {
+        /*normal exit:*/{
+          #ifdef WITH_THREAD
+          __Pyx_FastGIL_Forget();
+          Py_BLOCK_THREADS
+          #endif
+          goto __pyx_L37;
+        }
+        __pyx_L37:;
+      }
   }
 
-  /* "fastHDMI/cython_fun.pyx":42
+  /* "fastHDMI/cython_fun.pyx":50
  *             output += joint[i, j] * (log_joint - log_a_marginal[i] - log_b_marginal[j]) * forward_euler_a * forward_euler_b
  * 
  *     output = max(output, 0.0)             # <<<<<<<<<<<<<<
  * 
  *     free(log_a_marginal)
  */
-  __pyx_t_10 = 0.0;
-  __pyx_t_12 = __pyx_v_output;
-  __pyx_t_11 = (__pyx_t_10 > __pyx_t_12);
-  if (__pyx_t_11) {
-    __pyx_t_13 = __pyx_t_10;
+  __pyx_t_13 = 0.0;
+  __pyx_t_14 = __pyx_v_output;
+  __pyx_t_1 = (__pyx_t_13 > __pyx_t_14);
+  if (__pyx_t_1) {
+    __pyx_t_15 = __pyx_t_13;
   } else {
-    __pyx_t_13 = __pyx_t_12;
+    __pyx_t_15 = __pyx_t_14;
   }
-  __pyx_v_output = __pyx_t_13;
+  __pyx_v_output = __pyx_t_15;
 
-  /* "fastHDMI/cython_fun.pyx":44
+  /* "fastHDMI/cython_fun.pyx":52
  *     output = max(output, 0.0)
  * 
  *     free(log_a_marginal)             # <<<<<<<<<<<<<<
@@ -18991,7 +19306,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_2joint_to_mi_cython(CYTHON_UNUS
  */
   free(__pyx_v_log_a_marginal);
 
-  /* "fastHDMI/cython_fun.pyx":45
+  /* "fastHDMI/cython_fun.pyx":53
  * 
  *     free(log_a_marginal)
  *     free(log_b_marginal)             # <<<<<<<<<<<<<<
@@ -19000,19 +19315,20 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_2joint_to_mi_cython(CYTHON_UNUS
  */
   free(__pyx_v_log_b_marginal);
 
-  /* "fastHDMI/cython_fun.pyx":47
+  /* "fastHDMI/cython_fun.pyx":55
  *     free(log_b_marginal)
  * 
  *     return output             # <<<<<<<<<<<<<<
+ * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_14 = PyFloat_FromDouble(__pyx_v_output); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 47, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_14);
-  __pyx_r = __pyx_t_14;
-  __pyx_t_14 = 0;
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_output); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 55, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_r = __pyx_t_3;
+  __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "fastHDMI/cython_fun.pyx":10
+  /* "fastHDMI/cython_fun.pyx":13
  *     double
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
@@ -19022,7 +19338,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_2joint_to_mi_cython(CYTHON_UNUS
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_14);
+  __Pyx_XDECREF(__pyx_t_3);
   __Pyx_AddTraceback("fastHDMI.cython_fun.joint_to_mi_cython", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -19051,7 +19367,7 @@ static PyObject *__pyx_fuse_1__pyx_pw_8fastHDMI_10cython_fun_5joint_to_mi_cython
   __pyx_nargs = PyTuple_GET_SIZE(__pyx_args);
   #else
   __pyx_nargs = PyTuple_Size(__pyx_args);
-  if (unlikely((__pyx_nargs < 0))) __PYX_ERR(0, 10, __pyx_L3_error)
+  if (unlikely((__pyx_nargs < 0))) __PYX_ERR(0, 13, __pyx_L3_error)
   #endif
   __pyx_kwvalues = __Pyx_KwValues_VARARGS(__pyx_args, __pyx_nargs);
   {
@@ -19075,26 +19391,26 @@ static PyObject *__pyx_fuse_1__pyx_pw_8fastHDMI_10cython_fun_5joint_to_mi_cython
           (void)__Pyx_Arg_NewRef_VARARGS(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_forward_euler_a);
           if (value) { values[1] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_forward_euler_b);
           if (value) { values[2] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 10, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 13, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "joint_to_mi_cython") < 0)) __PYX_ERR(0, 10, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "joint_to_mi_cython") < 0)) __PYX_ERR(0, 13, __pyx_L3_error)
       }
     } else {
       switch (__pyx_nargs) {
@@ -19107,21 +19423,21 @@ static PyObject *__pyx_fuse_1__pyx_pw_8fastHDMI_10cython_fun_5joint_to_mi_cython
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_joint = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_joint.memview)) __PYX_ERR(0, 12, __pyx_L3_error)
+    __pyx_v_joint = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_joint.memview)) __PYX_ERR(0, 15, __pyx_L3_error)
     if (values[1]) {
-      __pyx_v_forward_euler_a = __pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_forward_euler_a == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 12, __pyx_L3_error)
+      __pyx_v_forward_euler_a = __pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_forward_euler_a == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 15, __pyx_L3_error)
     } else {
       __pyx_v_forward_euler_a = ((double)((double)((double)1.)));
     }
     if (values[2]) {
-      __pyx_v_forward_euler_b = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_forward_euler_b == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 12, __pyx_L3_error)
+      __pyx_v_forward_euler_b = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_forward_euler_b == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 15, __pyx_L3_error)
     } else {
       __pyx_v_forward_euler_b = ((double)((double)((double)1.)));
     }
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("joint_to_mi_cython", 0, 1, 3, __pyx_nargs); __PYX_ERR(0, 10, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("joint_to_mi_cython", 0, 1, 3, __pyx_nargs); __PYX_ERR(0, 13, __pyx_L3_error)
   goto __pyx_L3_error;
   __pyx_L3_error:;
   for (Py_ssize_t i=0; i<(Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++i) {
@@ -19151,6 +19467,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_4joint_to_mi_cython(CYTHON_UNUS
   double *__pyx_v_log_a_marginal;
   double *__pyx_v_log_b_marginal;
   double __pyx_v_temp_sum;
+  double __pyx_v_log_val;
   CYTHON_UNUSED double __pyx_v_log_temp_sum;
   double __pyx_v_log_forward_euler_a;
   double __pyx_v_log_forward_euler_b;
@@ -19160,24 +19477,25 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_4joint_to_mi_cython(CYTHON_UNUS
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
-  int __pyx_t_3;
+  PyObject *__pyx_t_3 = NULL;
   int __pyx_t_4;
   int __pyx_t_5;
   int __pyx_t_6;
   int __pyx_t_7;
-  Py_ssize_t __pyx_t_8;
-  Py_ssize_t __pyx_t_9;
-  double __pyx_t_10;
-  int __pyx_t_11;
-  double __pyx_t_12;
+  int __pyx_t_8;
+  int __pyx_t_9;
+  int __pyx_t_10;
+  Py_ssize_t __pyx_t_11;
+  Py_ssize_t __pyx_t_12;
   double __pyx_t_13;
-  PyObject *__pyx_t_14 = NULL;
+  double __pyx_t_14;
+  double __pyx_t_15;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__pyx_fuse_1joint_to_mi_cython", 0);
 
-  /* "fastHDMI/cython_fun.pyx":14
+  /* "fastHDMI/cython_fun.pyx":17
  * def joint_to_mi_cython(floating_float_double[:, ::1] joint, floating_float_double forward_euler_a=1., floating_float_double forward_euler_b=1.):
  *     cdef int i, j
  *     cdef int joint_shape0 = joint.shape[0]             # <<<<<<<<<<<<<<
@@ -19186,7 +19504,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_4joint_to_mi_cython(CYTHON_UNUS
  */
   __pyx_v_joint_shape0 = (__pyx_v_joint.shape[0]);
 
-  /* "fastHDMI/cython_fun.pyx":15
+  /* "fastHDMI/cython_fun.pyx":18
  *     cdef int i, j
  *     cdef int joint_shape0 = joint.shape[0]
  *     cdef int joint_shape1 = joint.shape[1]             # <<<<<<<<<<<<<<
@@ -19195,93 +19513,190 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_4joint_to_mi_cython(CYTHON_UNUS
  */
   __pyx_v_joint_shape1 = (__pyx_v_joint.shape[1]);
 
-  /* "fastHDMI/cython_fun.pyx":16
+  /* "fastHDMI/cython_fun.pyx":19
  *     cdef int joint_shape0 = joint.shape[0]
  *     cdef int joint_shape1 = joint.shape[1]
  *     cdef floating_float_double *log_a_marginal = <floating_float_double*>calloc(joint_shape0, sizeof(floating_float_double))             # <<<<<<<<<<<<<<
  *     cdef floating_float_double *log_b_marginal = <floating_float_double*>calloc(joint_shape1, sizeof(floating_float_double))
- *     cdef floating_float_double temp_sum, log_temp_sum, log_forward_euler_a, log_forward_euler_b, log_joint, output
+ *     cdef floating_float_double temp_sum, log_val, log_temp_sum, log_forward_euler_a, log_forward_euler_b, log_joint, output
  */
   __pyx_v_log_a_marginal = ((double *)calloc(__pyx_v_joint_shape0, (sizeof(double))));
 
-  /* "fastHDMI/cython_fun.pyx":17
+  /* "fastHDMI/cython_fun.pyx":20
  *     cdef int joint_shape1 = joint.shape[1]
  *     cdef floating_float_double *log_a_marginal = <floating_float_double*>calloc(joint_shape0, sizeof(floating_float_double))
  *     cdef floating_float_double *log_b_marginal = <floating_float_double*>calloc(joint_shape1, sizeof(floating_float_double))             # <<<<<<<<<<<<<<
- *     cdef floating_float_double temp_sum, log_temp_sum, log_forward_euler_a, log_forward_euler_b, log_joint, output
+ *     cdef floating_float_double temp_sum, log_val, log_temp_sum, log_forward_euler_a, log_forward_euler_b, log_joint, output
  * 
  */
   __pyx_v_log_b_marginal = ((double *)calloc(__pyx_v_joint_shape1, (sizeof(double))));
 
-  /* "fastHDMI/cython_fun.pyx":20
- *     cdef floating_float_double temp_sum, log_temp_sum, log_forward_euler_a, log_forward_euler_b, log_joint, output
+  /* "fastHDMI/cython_fun.pyx":23
+ *     cdef floating_float_double temp_sum, log_val, log_temp_sum, log_forward_euler_a, log_forward_euler_b, log_joint, output
+ * 
+ *     if log_a_marginal == NULL or log_b_marginal == NULL:             # <<<<<<<<<<<<<<
+ *         raise MemoryError("Failed to allocate memory.")
+ * 
+ */
+  __pyx_t_2 = (__pyx_v_log_a_marginal == NULL);
+  if (!__pyx_t_2) {
+  } else {
+    __pyx_t_1 = __pyx_t_2;
+    goto __pyx_L4_bool_binop_done;
+  }
+  __pyx_t_2 = (__pyx_v_log_b_marginal == NULL);
+  __pyx_t_1 = __pyx_t_2;
+  __pyx_L4_bool_binop_done:;
+  if (unlikely(__pyx_t_1)) {
+
+    /* "fastHDMI/cython_fun.pyx":24
+ * 
+ *     if log_a_marginal == NULL or log_b_marginal == NULL:
+ *         raise MemoryError("Failed to allocate memory.")             # <<<<<<<<<<<<<<
+ * 
+ *     temp_sum = 0.0
+ */
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__14, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 24, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_Raise(__pyx_t_3, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __PYX_ERR(0, 24, __pyx_L1_error)
+
+    /* "fastHDMI/cython_fun.pyx":23
+ *     cdef floating_float_double temp_sum, log_val, log_temp_sum, log_forward_euler_a, log_forward_euler_b, log_joint, output
+ * 
+ *     if log_a_marginal == NULL or log_b_marginal == NULL:             # <<<<<<<<<<<<<<
+ *         raise MemoryError("Failed to allocate memory.")
+ * 
+ */
+  }
+
+  /* "fastHDMI/cython_fun.pyx":26
+ *         raise MemoryError("Failed to allocate memory.")
  * 
  *     temp_sum = 0.0             # <<<<<<<<<<<<<<
- *     for i in range(joint_shape0):
+ *     for i in prange(joint_shape0, nogil=True):
  *         for j in range(joint_shape1):
  */
   __pyx_v_temp_sum = 0.0;
 
-  /* "fastHDMI/cython_fun.pyx":21
+  /* "fastHDMI/cython_fun.pyx":27
  * 
  *     temp_sum = 0.0
- *     for i in range(joint_shape0):             # <<<<<<<<<<<<<<
+ *     for i in prange(joint_shape0, nogil=True):             # <<<<<<<<<<<<<<
  *         for j in range(joint_shape1):
  *             log_a_marginal[i] += joint[i, j]
  */
-  __pyx_t_1 = __pyx_v_joint_shape0;
-  __pyx_t_2 = __pyx_t_1;
-  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
-    __pyx_v_i = __pyx_t_3;
+  {
+      #ifdef WITH_THREAD
+      PyThreadState *_save;
+      _save = NULL;
+      Py_UNBLOCK_THREADS
+      __Pyx_FastGIL_Remember();
+      #endif
+      /*try:*/ {
+        __pyx_t_4 = __pyx_v_joint_shape0;
+        {
+            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+                #undef likely
+                #undef unlikely
+                #define likely(x)   (x)
+                #define unlikely(x) (x)
+            #endif
+            __pyx_t_6 = (__pyx_t_4 - 0 + 1 - 1/abs(1)) / 1;
+            if (__pyx_t_6 > 0)
+            {
+                #ifdef _OPENMP
+                #pragma omp parallel reduction(+:__pyx_v_temp_sum) private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_7, __pyx_t_8, __pyx_t_9)
+                #endif /* _OPENMP */
+                {
+                    #ifdef _OPENMP
+                    #pragma omp for firstprivate(__pyx_v_i) lastprivate(__pyx_v_i) lastprivate(__pyx_v_j)
+                    #endif /* _OPENMP */
+                    for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_6; __pyx_t_5++){
+                        {
+                            __pyx_v_i = (int)(0 + 1 * __pyx_t_5);
+                            /* Initialize private variables to invalid values */
+                            __pyx_v_j = ((int)0xbad0bad0);
 
-    /* "fastHDMI/cython_fun.pyx":22
+                            /* "fastHDMI/cython_fun.pyx":28
  *     temp_sum = 0.0
- *     for i in range(joint_shape0):
+ *     for i in prange(joint_shape0, nogil=True):
  *         for j in range(joint_shape1):             # <<<<<<<<<<<<<<
  *             log_a_marginal[i] += joint[i, j]
  *             log_b_marginal[j] += joint[i, j]
  */
-    __pyx_t_4 = __pyx_v_joint_shape1;
-    __pyx_t_5 = __pyx_t_4;
-    for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
-      __pyx_v_j = __pyx_t_6;
+                            __pyx_t_7 = __pyx_v_joint_shape1;
+                            __pyx_t_8 = __pyx_t_7;
+                            for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
+                              __pyx_v_j = __pyx_t_9;
 
-      /* "fastHDMI/cython_fun.pyx":23
- *     for i in range(joint_shape0):
+                              /* "fastHDMI/cython_fun.pyx":29
+ *     for i in prange(joint_shape0, nogil=True):
  *         for j in range(joint_shape1):
  *             log_a_marginal[i] += joint[i, j]             # <<<<<<<<<<<<<<
  *             log_b_marginal[j] += joint[i, j]
  *         temp_sum += log_a_marginal[i]
  */
-      __pyx_t_7 = __pyx_v_i;
-      __pyx_t_8 = __pyx_v_i;
-      __pyx_t_9 = __pyx_v_j;
-      (__pyx_v_log_a_marginal[__pyx_t_7]) = ((__pyx_v_log_a_marginal[__pyx_t_7]) + (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_8 * __pyx_v_joint.strides[0]) )) + __pyx_t_9)) ))));
+                              __pyx_t_10 = __pyx_v_i;
+                              __pyx_t_11 = __pyx_v_i;
+                              __pyx_t_12 = __pyx_v_j;
+                              (__pyx_v_log_a_marginal[__pyx_t_10]) = ((__pyx_v_log_a_marginal[__pyx_t_10]) + (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_11 * __pyx_v_joint.strides[0]) )) + __pyx_t_12)) ))));
 
-      /* "fastHDMI/cython_fun.pyx":24
+                              /* "fastHDMI/cython_fun.pyx":30
  *         for j in range(joint_shape1):
  *             log_a_marginal[i] += joint[i, j]
  *             log_b_marginal[j] += joint[i, j]             # <<<<<<<<<<<<<<
  *         temp_sum += log_a_marginal[i]
  *     temp_sum *= forward_euler_a * forward_euler_b
  */
-      __pyx_t_7 = __pyx_v_j;
-      __pyx_t_9 = __pyx_v_i;
-      __pyx_t_8 = __pyx_v_j;
-      (__pyx_v_log_b_marginal[__pyx_t_7]) = ((__pyx_v_log_b_marginal[__pyx_t_7]) + (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_9 * __pyx_v_joint.strides[0]) )) + __pyx_t_8)) ))));
-    }
+                              __pyx_t_10 = __pyx_v_j;
+                              __pyx_t_12 = __pyx_v_i;
+                              __pyx_t_11 = __pyx_v_j;
+                              (__pyx_v_log_b_marginal[__pyx_t_10]) = ((__pyx_v_log_b_marginal[__pyx_t_10]) + (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_12 * __pyx_v_joint.strides[0]) )) + __pyx_t_11)) ))));
+                            }
 
-    /* "fastHDMI/cython_fun.pyx":25
+                            /* "fastHDMI/cython_fun.pyx":31
  *             log_a_marginal[i] += joint[i, j]
  *             log_b_marginal[j] += joint[i, j]
  *         temp_sum += log_a_marginal[i]             # <<<<<<<<<<<<<<
  *     temp_sum *= forward_euler_a * forward_euler_b
  *     log_temp_sum = log(temp_sum)
  */
-    __pyx_v_temp_sum = (__pyx_v_temp_sum + (__pyx_v_log_a_marginal[__pyx_v_i]));
+                            __pyx_v_temp_sum = (__pyx_v_temp_sum + (__pyx_v_log_a_marginal[__pyx_v_i]));
+                        }
+                    }
+                }
+            }
+        }
+        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+            #undef likely
+            #undef unlikely
+            #define likely(x)   __builtin_expect(!!(x), 1)
+            #define unlikely(x) __builtin_expect(!!(x), 0)
+        #endif
+      }
+
+      /* "fastHDMI/cython_fun.pyx":27
+ * 
+ *     temp_sum = 0.0
+ *     for i in prange(joint_shape0, nogil=True):             # <<<<<<<<<<<<<<
+ *         for j in range(joint_shape1):
+ *             log_a_marginal[i] += joint[i, j]
+ */
+      /*finally:*/ {
+        /*normal exit:*/{
+          #ifdef WITH_THREAD
+          __Pyx_FastGIL_Forget();
+          Py_BLOCK_THREADS
+          #endif
+          goto __pyx_L8;
+        }
+        __pyx_L8:;
+      }
   }
 
-  /* "fastHDMI/cython_fun.pyx":26
+  /* "fastHDMI/cython_fun.pyx":32
  *             log_b_marginal[j] += joint[i, j]
  *         temp_sum += log_a_marginal[i]
  *     temp_sum *= forward_euler_a * forward_euler_b             # <<<<<<<<<<<<<<
@@ -19290,7 +19705,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_4joint_to_mi_cython(CYTHON_UNUS
  */
   __pyx_v_temp_sum = (__pyx_v_temp_sum * (__pyx_v_forward_euler_a * __pyx_v_forward_euler_b));
 
-  /* "fastHDMI/cython_fun.pyx":27
+  /* "fastHDMI/cython_fun.pyx":33
  *         temp_sum += log_a_marginal[i]
  *     temp_sum *= forward_euler_a * forward_euler_b
  *     log_temp_sum = log(temp_sum)             # <<<<<<<<<<<<<<
@@ -19299,7 +19714,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_4joint_to_mi_cython(CYTHON_UNUS
  */
   __pyx_v_log_temp_sum = log(__pyx_v_temp_sum);
 
-  /* "fastHDMI/cython_fun.pyx":28
+  /* "fastHDMI/cython_fun.pyx":34
  *     temp_sum *= forward_euler_a * forward_euler_b
  *     log_temp_sum = log(temp_sum)
  *     log_forward_euler_a = log(forward_euler_a)             # <<<<<<<<<<<<<<
@@ -19308,154 +19723,344 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_4joint_to_mi_cython(CYTHON_UNUS
  */
   __pyx_v_log_forward_euler_a = log(__pyx_v_forward_euler_a);
 
-  /* "fastHDMI/cython_fun.pyx":29
+  /* "fastHDMI/cython_fun.pyx":35
  *     log_temp_sum = log(temp_sum)
  *     log_forward_euler_a = log(forward_euler_a)
  *     log_forward_euler_b = log(forward_euler_b)             # <<<<<<<<<<<<<<
  * 
- *     for i in range(joint_shape0):
+ *     for i in prange(joint_shape0, nogil=True):
  */
   __pyx_v_log_forward_euler_b = log(__pyx_v_forward_euler_b);
 
-  /* "fastHDMI/cython_fun.pyx":31
+  /* "fastHDMI/cython_fun.pyx":37
  *     log_forward_euler_b = log(forward_euler_b)
  * 
- *     for i in range(joint_shape0):             # <<<<<<<<<<<<<<
- *         log_a_marginal[i] = log(log_a_marginal[i]) + log_forward_euler_b if isfinite(log(log_a_marginal[i])) else 0.0
- *     for j in range(joint_shape1):
+ *     for i in prange(joint_shape0, nogil=True):             # <<<<<<<<<<<<<<
+ *         log_val = log(log_a_marginal[i])
+ *         log_a_marginal[i] = log_val + log_forward_euler_b if isfinite(log_val) else 0.0
  */
-  __pyx_t_1 = __pyx_v_joint_shape0;
-  __pyx_t_2 = __pyx_t_1;
-  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
-    __pyx_v_i = __pyx_t_3;
+  {
+      #ifdef WITH_THREAD
+      PyThreadState *_save;
+      _save = NULL;
+      Py_UNBLOCK_THREADS
+      __Pyx_FastGIL_Remember();
+      #endif
+      /*try:*/ {
+        __pyx_t_6 = __pyx_v_joint_shape0;
+        {
+            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+                #undef likely
+                #undef unlikely
+                #define likely(x)   (x)
+                #define unlikely(x) (x)
+            #endif
+            __pyx_t_4 = (__pyx_t_6 - 0 + 1 - 1/abs(1)) / 1;
+            if (__pyx_t_4 > 0)
+            {
+                #ifdef _OPENMP
+                #pragma omp parallel private(__pyx_t_1, __pyx_t_13)
+                #endif /* _OPENMP */
+                {
+                    #ifdef _OPENMP
+                    #pragma omp for firstprivate(__pyx_v_i) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_val)
+                    #endif /* _OPENMP */
+                    for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5++){
+                        {
+                            __pyx_v_i = (int)(0 + 1 * __pyx_t_5);
+                            /* Initialize private variables to invalid values */
+                            __pyx_v_log_val = ((double)__PYX_NAN());
 
-    /* "fastHDMI/cython_fun.pyx":32
+                            /* "fastHDMI/cython_fun.pyx":38
  * 
- *     for i in range(joint_shape0):
- *         log_a_marginal[i] = log(log_a_marginal[i]) + log_forward_euler_b if isfinite(log(log_a_marginal[i])) else 0.0             # <<<<<<<<<<<<<<
- *     for j in range(joint_shape1):
- *         log_b_marginal[j] = log(log_b_marginal[j]) + log_forward_euler_a if isfinite(log(log_b_marginal[j])) else 0.0
+ *     for i in prange(joint_shape0, nogil=True):
+ *         log_val = log(log_a_marginal[i])             # <<<<<<<<<<<<<<
+ *         log_a_marginal[i] = log_val + log_forward_euler_b if isfinite(log_val) else 0.0
+ *     for j in prange(joint_shape1, nogil=True):
  */
-    __pyx_t_11 = isfinite(log((__pyx_v_log_a_marginal[__pyx_v_i])));
-    if (__pyx_t_11) {
-      __pyx_t_10 = (log((__pyx_v_log_a_marginal[__pyx_v_i])) + __pyx_v_log_forward_euler_b);
-    } else {
-      __pyx_t_10 = 0.0;
-    }
-    (__pyx_v_log_a_marginal[__pyx_v_i]) = __pyx_t_10;
+                            __pyx_v_log_val = log((__pyx_v_log_a_marginal[__pyx_v_i]));
+
+                            /* "fastHDMI/cython_fun.pyx":39
+ *     for i in prange(joint_shape0, nogil=True):
+ *         log_val = log(log_a_marginal[i])
+ *         log_a_marginal[i] = log_val + log_forward_euler_b if isfinite(log_val) else 0.0             # <<<<<<<<<<<<<<
+ *     for j in prange(joint_shape1, nogil=True):
+ *         log_val = log(log_b_marginal[j])
+ */
+                            __pyx_t_1 = isfinite(__pyx_v_log_val);
+                            if (__pyx_t_1) {
+                              __pyx_t_13 = (__pyx_v_log_val + __pyx_v_log_forward_euler_b);
+                            } else {
+                              __pyx_t_13 = 0.0;
+                            }
+                            (__pyx_v_log_a_marginal[__pyx_v_i]) = __pyx_t_13;
+                        }
+                    }
+                }
+            }
+        }
+        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+            #undef likely
+            #undef unlikely
+            #define likely(x)   __builtin_expect(!!(x), 1)
+            #define unlikely(x) __builtin_expect(!!(x), 0)
+        #endif
+      }
+
+      /* "fastHDMI/cython_fun.pyx":37
+ *     log_forward_euler_b = log(forward_euler_b)
+ * 
+ *     for i in prange(joint_shape0, nogil=True):             # <<<<<<<<<<<<<<
+ *         log_val = log(log_a_marginal[i])
+ *         log_a_marginal[i] = log_val + log_forward_euler_b if isfinite(log_val) else 0.0
+ */
+      /*finally:*/ {
+        /*normal exit:*/{
+          #ifdef WITH_THREAD
+          __Pyx_FastGIL_Forget();
+          Py_BLOCK_THREADS
+          #endif
+          goto __pyx_L19;
+        }
+        __pyx_L19:;
+      }
   }
 
-  /* "fastHDMI/cython_fun.pyx":33
- *     for i in range(joint_shape0):
- *         log_a_marginal[i] = log(log_a_marginal[i]) + log_forward_euler_b if isfinite(log(log_a_marginal[i])) else 0.0
- *     for j in range(joint_shape1):             # <<<<<<<<<<<<<<
- *         log_b_marginal[j] = log(log_b_marginal[j]) + log_forward_euler_a if isfinite(log(log_b_marginal[j])) else 0.0
+  /* "fastHDMI/cython_fun.pyx":40
+ *         log_val = log(log_a_marginal[i])
+ *         log_a_marginal[i] = log_val + log_forward_euler_b if isfinite(log_val) else 0.0
+ *     for j in prange(joint_shape1, nogil=True):             # <<<<<<<<<<<<<<
+ *         log_val = log(log_b_marginal[j])
+ *         log_b_marginal[j] = log_val + log_forward_euler_a if isfinite(log_val) else 0.0
+ */
+  {
+      #ifdef WITH_THREAD
+      PyThreadState *_save;
+      _save = NULL;
+      Py_UNBLOCK_THREADS
+      __Pyx_FastGIL_Remember();
+      #endif
+      /*try:*/ {
+        __pyx_t_4 = __pyx_v_joint_shape1;
+        {
+            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+                #undef likely
+                #undef unlikely
+                #define likely(x)   (x)
+                #define unlikely(x) (x)
+            #endif
+            __pyx_t_6 = (__pyx_t_4 - 0 + 1 - 1/abs(1)) / 1;
+            if (__pyx_t_6 > 0)
+            {
+                #ifdef _OPENMP
+                #pragma omp parallel private(__pyx_t_1, __pyx_t_13)
+                #endif /* _OPENMP */
+                {
+                    #ifdef _OPENMP
+                    #pragma omp for firstprivate(__pyx_v_j) lastprivate(__pyx_v_j) lastprivate(__pyx_v_log_val)
+                    #endif /* _OPENMP */
+                    for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_6; __pyx_t_5++){
+                        {
+                            __pyx_v_j = (int)(0 + 1 * __pyx_t_5);
+                            /* Initialize private variables to invalid values */
+                            __pyx_v_log_val = ((double)__PYX_NAN());
+
+                            /* "fastHDMI/cython_fun.pyx":41
+ *         log_a_marginal[i] = log_val + log_forward_euler_b if isfinite(log_val) else 0.0
+ *     for j in prange(joint_shape1, nogil=True):
+ *         log_val = log(log_b_marginal[j])             # <<<<<<<<<<<<<<
+ *         log_b_marginal[j] = log_val + log_forward_euler_a if isfinite(log_val) else 0.0
  * 
  */
-  __pyx_t_1 = __pyx_v_joint_shape1;
-  __pyx_t_2 = __pyx_t_1;
-  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
-    __pyx_v_j = __pyx_t_3;
+                            __pyx_v_log_val = log((__pyx_v_log_b_marginal[__pyx_v_j]));
 
-    /* "fastHDMI/cython_fun.pyx":34
- *         log_a_marginal[i] = log(log_a_marginal[i]) + log_forward_euler_b if isfinite(log(log_a_marginal[i])) else 0.0
- *     for j in range(joint_shape1):
- *         log_b_marginal[j] = log(log_b_marginal[j]) + log_forward_euler_a if isfinite(log(log_b_marginal[j])) else 0.0             # <<<<<<<<<<<<<<
+                            /* "fastHDMI/cython_fun.pyx":42
+ *     for j in prange(joint_shape1, nogil=True):
+ *         log_val = log(log_b_marginal[j])
+ *         log_b_marginal[j] = log_val + log_forward_euler_a if isfinite(log_val) else 0.0             # <<<<<<<<<<<<<<
  * 
  *     output = 0.0
  */
-    __pyx_t_11 = isfinite(log((__pyx_v_log_b_marginal[__pyx_v_j])));
-    if (__pyx_t_11) {
-      __pyx_t_10 = (log((__pyx_v_log_b_marginal[__pyx_v_j])) + __pyx_v_log_forward_euler_a);
-    } else {
-      __pyx_t_10 = 0.0;
-    }
-    (__pyx_v_log_b_marginal[__pyx_v_j]) = __pyx_t_10;
+                            __pyx_t_1 = isfinite(__pyx_v_log_val);
+                            if (__pyx_t_1) {
+                              __pyx_t_13 = (__pyx_v_log_val + __pyx_v_log_forward_euler_a);
+                            } else {
+                              __pyx_t_13 = 0.0;
+                            }
+                            (__pyx_v_log_b_marginal[__pyx_v_j]) = __pyx_t_13;
+                        }
+                    }
+                }
+            }
+        }
+        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+            #undef likely
+            #undef unlikely
+            #define likely(x)   __builtin_expect(!!(x), 1)
+            #define unlikely(x) __builtin_expect(!!(x), 0)
+        #endif
+      }
+
+      /* "fastHDMI/cython_fun.pyx":40
+ *         log_val = log(log_a_marginal[i])
+ *         log_a_marginal[i] = log_val + log_forward_euler_b if isfinite(log_val) else 0.0
+ *     for j in prange(joint_shape1, nogil=True):             # <<<<<<<<<<<<<<
+ *         log_val = log(log_b_marginal[j])
+ *         log_b_marginal[j] = log_val + log_forward_euler_a if isfinite(log_val) else 0.0
+ */
+      /*finally:*/ {
+        /*normal exit:*/{
+          #ifdef WITH_THREAD
+          __Pyx_FastGIL_Forget();
+          Py_BLOCK_THREADS
+          #endif
+          goto __pyx_L28;
+        }
+        __pyx_L28:;
+      }
   }
 
-  /* "fastHDMI/cython_fun.pyx":36
- *         log_b_marginal[j] = log(log_b_marginal[j]) + log_forward_euler_a if isfinite(log(log_b_marginal[j])) else 0.0
+  /* "fastHDMI/cython_fun.pyx":44
+ *         log_b_marginal[j] = log_val + log_forward_euler_a if isfinite(log_val) else 0.0
  * 
  *     output = 0.0             # <<<<<<<<<<<<<<
- *     for i in range(joint_shape0):
+ *     for i in prange(joint_shape0, nogil=True):
  *         for j in range(joint_shape1):
  */
   __pyx_v_output = 0.0;
 
-  /* "fastHDMI/cython_fun.pyx":37
+  /* "fastHDMI/cython_fun.pyx":45
  * 
  *     output = 0.0
- *     for i in range(joint_shape0):             # <<<<<<<<<<<<<<
+ *     for i in prange(joint_shape0, nogil=True):             # <<<<<<<<<<<<<<
  *         for j in range(joint_shape1):
  *             log_joint = log(joint[i, j]) if isfinite(log(joint[i, j])) else 0.0
  */
-  __pyx_t_1 = __pyx_v_joint_shape0;
-  __pyx_t_2 = __pyx_t_1;
-  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
-    __pyx_v_i = __pyx_t_3;
+  {
+      #ifdef WITH_THREAD
+      PyThreadState *_save;
+      _save = NULL;
+      Py_UNBLOCK_THREADS
+      __Pyx_FastGIL_Remember();
+      #endif
+      /*try:*/ {
+        __pyx_t_6 = __pyx_v_joint_shape0;
+        {
+            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+                #undef likely
+                #undef unlikely
+                #define likely(x)   (x)
+                #define unlikely(x) (x)
+            #endif
+            __pyx_t_4 = (__pyx_t_6 - 0 + 1 - 1/abs(1)) / 1;
+            if (__pyx_t_4 > 0)
+            {
+                #ifdef _OPENMP
+                #pragma omp parallel reduction(+:__pyx_v_output) private(__pyx_t_1, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_7, __pyx_t_8, __pyx_t_9)
+                #endif /* _OPENMP */
+                {
+                    #ifdef _OPENMP
+                    #pragma omp for firstprivate(__pyx_v_i) lastprivate(__pyx_v_i) lastprivate(__pyx_v_j) lastprivate(__pyx_v_log_joint)
+                    #endif /* _OPENMP */
+                    for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5++){
+                        {
+                            __pyx_v_i = (int)(0 + 1 * __pyx_t_5);
+                            /* Initialize private variables to invalid values */
+                            __pyx_v_j = ((int)0xbad0bad0);
+                            __pyx_v_log_joint = ((double)__PYX_NAN());
 
-    /* "fastHDMI/cython_fun.pyx":38
+                            /* "fastHDMI/cython_fun.pyx":46
  *     output = 0.0
- *     for i in range(joint_shape0):
+ *     for i in prange(joint_shape0, nogil=True):
  *         for j in range(joint_shape1):             # <<<<<<<<<<<<<<
  *             log_joint = log(joint[i, j]) if isfinite(log(joint[i, j])) else 0.0
  *             output += joint[i, j] * (log_joint - log_a_marginal[i] - log_b_marginal[j]) * forward_euler_a * forward_euler_b
  */
-    __pyx_t_4 = __pyx_v_joint_shape1;
-    __pyx_t_5 = __pyx_t_4;
-    for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
-      __pyx_v_j = __pyx_t_6;
+                            __pyx_t_7 = __pyx_v_joint_shape1;
+                            __pyx_t_8 = __pyx_t_7;
+                            for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
+                              __pyx_v_j = __pyx_t_9;
 
-      /* "fastHDMI/cython_fun.pyx":39
- *     for i in range(joint_shape0):
+                              /* "fastHDMI/cython_fun.pyx":47
+ *     for i in prange(joint_shape0, nogil=True):
  *         for j in range(joint_shape1):
  *             log_joint = log(joint[i, j]) if isfinite(log(joint[i, j])) else 0.0             # <<<<<<<<<<<<<<
  *             output += joint[i, j] * (log_joint - log_a_marginal[i] - log_b_marginal[j]) * forward_euler_a * forward_euler_b
  * 
  */
-      __pyx_t_8 = __pyx_v_i;
-      __pyx_t_9 = __pyx_v_j;
-      __pyx_t_11 = isfinite(log((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_8 * __pyx_v_joint.strides[0]) )) + __pyx_t_9)) )))));
-      if (__pyx_t_11) {
-        __pyx_t_9 = __pyx_v_i;
-        __pyx_t_8 = __pyx_v_j;
-        __pyx_t_10 = log((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_9 * __pyx_v_joint.strides[0]) )) + __pyx_t_8)) ))));
-      } else {
-        __pyx_t_10 = 0.0;
-      }
-      __pyx_v_log_joint = __pyx_t_10;
+                              __pyx_t_11 = __pyx_v_i;
+                              __pyx_t_12 = __pyx_v_j;
+                              __pyx_t_1 = isfinite(log((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_11 * __pyx_v_joint.strides[0]) )) + __pyx_t_12)) )))));
+                              if (__pyx_t_1) {
+                                __pyx_t_12 = __pyx_v_i;
+                                __pyx_t_11 = __pyx_v_j;
+                                __pyx_t_13 = log((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_12 * __pyx_v_joint.strides[0]) )) + __pyx_t_11)) ))));
+                              } else {
+                                __pyx_t_13 = 0.0;
+                              }
+                              __pyx_v_log_joint = __pyx_t_13;
 
-      /* "fastHDMI/cython_fun.pyx":40
+                              /* "fastHDMI/cython_fun.pyx":48
  *         for j in range(joint_shape1):
  *             log_joint = log(joint[i, j]) if isfinite(log(joint[i, j])) else 0.0
  *             output += joint[i, j] * (log_joint - log_a_marginal[i] - log_b_marginal[j]) * forward_euler_a * forward_euler_b             # <<<<<<<<<<<<<<
  * 
  *     output = max(output, 0.0)
  */
-      __pyx_t_8 = __pyx_v_i;
-      __pyx_t_9 = __pyx_v_j;
-      __pyx_v_output = (__pyx_v_output + ((((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_8 * __pyx_v_joint.strides[0]) )) + __pyx_t_9)) ))) * ((__pyx_v_log_joint - (__pyx_v_log_a_marginal[__pyx_v_i])) - (__pyx_v_log_b_marginal[__pyx_v_j]))) * __pyx_v_forward_euler_a) * __pyx_v_forward_euler_b));
-    }
+                              __pyx_t_11 = __pyx_v_i;
+                              __pyx_t_12 = __pyx_v_j;
+                              __pyx_v_output = (__pyx_v_output + ((((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_joint.data + __pyx_t_11 * __pyx_v_joint.strides[0]) )) + __pyx_t_12)) ))) * ((__pyx_v_log_joint - (__pyx_v_log_a_marginal[__pyx_v_i])) - (__pyx_v_log_b_marginal[__pyx_v_j]))) * __pyx_v_forward_euler_a) * __pyx_v_forward_euler_b));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+            #undef likely
+            #undef unlikely
+            #define likely(x)   __builtin_expect(!!(x), 1)
+            #define unlikely(x) __builtin_expect(!!(x), 0)
+        #endif
+      }
+
+      /* "fastHDMI/cython_fun.pyx":45
+ * 
+ *     output = 0.0
+ *     for i in prange(joint_shape0, nogil=True):             # <<<<<<<<<<<<<<
+ *         for j in range(joint_shape1):
+ *             log_joint = log(joint[i, j]) if isfinite(log(joint[i, j])) else 0.0
+ */
+      /*finally:*/ {
+        /*normal exit:*/{
+          #ifdef WITH_THREAD
+          __Pyx_FastGIL_Forget();
+          Py_BLOCK_THREADS
+          #endif
+          goto __pyx_L37;
+        }
+        __pyx_L37:;
+      }
   }
 
-  /* "fastHDMI/cython_fun.pyx":42
+  /* "fastHDMI/cython_fun.pyx":50
  *             output += joint[i, j] * (log_joint - log_a_marginal[i] - log_b_marginal[j]) * forward_euler_a * forward_euler_b
  * 
  *     output = max(output, 0.0)             # <<<<<<<<<<<<<<
  * 
  *     free(log_a_marginal)
  */
-  __pyx_t_10 = 0.0;
-  __pyx_t_12 = __pyx_v_output;
-  __pyx_t_11 = (__pyx_t_10 > __pyx_t_12);
-  if (__pyx_t_11) {
-    __pyx_t_13 = __pyx_t_10;
+  __pyx_t_13 = 0.0;
+  __pyx_t_14 = __pyx_v_output;
+  __pyx_t_1 = (__pyx_t_13 > __pyx_t_14);
+  if (__pyx_t_1) {
+    __pyx_t_15 = __pyx_t_13;
   } else {
-    __pyx_t_13 = __pyx_t_12;
+    __pyx_t_15 = __pyx_t_14;
   }
-  __pyx_v_output = __pyx_t_13;
+  __pyx_v_output = __pyx_t_15;
 
-  /* "fastHDMI/cython_fun.pyx":44
+  /* "fastHDMI/cython_fun.pyx":52
  *     output = max(output, 0.0)
  * 
  *     free(log_a_marginal)             # <<<<<<<<<<<<<<
@@ -19464,7 +20069,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_4joint_to_mi_cython(CYTHON_UNUS
  */
   free(__pyx_v_log_a_marginal);
 
-  /* "fastHDMI/cython_fun.pyx":45
+  /* "fastHDMI/cython_fun.pyx":53
  * 
  *     free(log_a_marginal)
  *     free(log_b_marginal)             # <<<<<<<<<<<<<<
@@ -19473,19 +20078,20 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_4joint_to_mi_cython(CYTHON_UNUS
  */
   free(__pyx_v_log_b_marginal);
 
-  /* "fastHDMI/cython_fun.pyx":47
+  /* "fastHDMI/cython_fun.pyx":55
  *     free(log_b_marginal)
  * 
  *     return output             # <<<<<<<<<<<<<<
+ * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_14 = PyFloat_FromDouble(__pyx_v_output); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 47, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_14);
-  __pyx_r = __pyx_t_14;
-  __pyx_t_14 = 0;
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_output); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 55, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_r = __pyx_t_3;
+  __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "fastHDMI/cython_fun.pyx":10
+  /* "fastHDMI/cython_fun.pyx":13
  *     double
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
@@ -19495,7 +20101,7 @@ static PyObject *__pyx_pf_8fastHDMI_10cython_fun_4joint_to_mi_cython(CYTHON_UNUS
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_14);
+  __Pyx_XDECREF(__pyx_t_3);
   __Pyx_AddTraceback("fastHDMI.cython_fun.joint_to_mi_cython", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -20480,6 +21086,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_Ellipsis, __pyx_k_Ellipsis, sizeof(__pyx_k_Ellipsis), 0, 0, 1, 1},
     {&__pyx_kp_s_Empty_shape_tuple_for_cython_arr, __pyx_k_Empty_shape_tuple_for_cython_arr, sizeof(__pyx_k_Empty_shape_tuple_for_cython_arr), 0, 0, 1, 0},
     {&__pyx_kp_s_Expected_at_least_d_argument_s_g, __pyx_k_Expected_at_least_d_argument_s_g, sizeof(__pyx_k_Expected_at_least_d_argument_s_g), 0, 0, 1, 0},
+    {&__pyx_kp_u_Failed_to_allocate_memory, __pyx_k_Failed_to_allocate_memory, sizeof(__pyx_k_Failed_to_allocate_memory), 0, 1, 0, 0},
     {&__pyx_kp_s_Function_call_with_ambiguous_arg, __pyx_k_Function_call_with_ambiguous_arg, sizeof(__pyx_k_Function_call_with_ambiguous_arg), 0, 0, 1, 0},
     {&__pyx_kp_s_Incompatible_checksums_0x_x_vs_0, __pyx_k_Incompatible_checksums_0x_x_vs_0, sizeof(__pyx_k_Incompatible_checksums_0x_x_vs_0), 0, 0, 1, 0},
     {&__pyx_n_s_IndexError, __pyx_k_IndexError, sizeof(__pyx_k_IndexError), 0, 0, 1, 1},
@@ -20504,7 +21111,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_kp_s__11, __pyx_k__11, sizeof(__pyx_k__11), 0, 0, 1, 0},
     {&__pyx_kp_u__11, __pyx_k__11, sizeof(__pyx_k__11), 0, 1, 0, 0},
     {&__pyx_kp_u__2, __pyx_k__2, sizeof(__pyx_k__2), 0, 1, 0, 0},
-    {&__pyx_n_s__28, __pyx_k__28, sizeof(__pyx_k__28), 0, 0, 1, 1},
+    {&__pyx_n_s__29, __pyx_k__29, sizeof(__pyx_k__29), 0, 0, 1, 1},
     {&__pyx_n_s__3, __pyx_k__3, sizeof(__pyx_k__3), 0, 0, 1, 1},
     {&__pyx_kp_u__6, __pyx_k__6, sizeof(__pyx_k__6), 0, 1, 0, 0},
     {&__pyx_kp_u__7, __pyx_k__7, sizeof(__pyx_k__7), 0, 1, 0, 0},
@@ -20570,6 +21177,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_log_forward_euler_b, __pyx_k_log_forward_euler_b, sizeof(__pyx_k_log_forward_euler_b), 0, 0, 1, 1},
     {&__pyx_n_s_log_joint, __pyx_k_log_joint, sizeof(__pyx_k_log_joint), 0, 0, 1, 1},
     {&__pyx_n_s_log_temp_sum, __pyx_k_log_temp_sum, sizeof(__pyx_k_log_temp_sum), 0, 0, 1, 1},
+    {&__pyx_n_s_log_val, __pyx_k_log_val, sizeof(__pyx_k_log_val), 0, 0, 1, 1},
     {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
     {&__pyx_n_s_memview, __pyx_k_memview, sizeof(__pyx_k_memview), 0, 0, 1, 1},
     {&__pyx_n_s_mode, __pyx_k_mode, sizeof(__pyx_k_mode), 0, 0, 1, 1},
@@ -20627,11 +21235,11 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
 }
 /* #### Code section: cached_builtins ### */
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(0, 10, __pyx_L1_error)
-  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(0, 10, __pyx_L1_error)
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 21, __pyx_L1_error)
+  __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(0, 13, __pyx_L1_error)
+  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(0, 13, __pyx_L1_error)
+  __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(0, 24, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 28, __pyx_L1_error)
   __pyx_builtin___import__ = __Pyx_GetBuiltinName(__pyx_n_s_import); if (!__pyx_builtin___import__) __PYX_ERR(1, 100, __pyx_L1_error)
-  __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(1, 156, __pyx_L1_error)
   __pyx_builtin_enumerate = __Pyx_GetBuiltinName(__pyx_n_s_enumerate); if (!__pyx_builtin_enumerate) __PYX_ERR(1, 159, __pyx_L1_error)
   __pyx_builtin_AssertionError = __Pyx_GetBuiltinName(__pyx_n_s_AssertionError); if (!__pyx_builtin_AssertionError) __PYX_ERR(1, 373, __pyx_L1_error)
   __pyx_builtin_Ellipsis = __Pyx_GetBuiltinName(__pyx_n_s_Ellipsis); if (!__pyx_builtin_Ellipsis) __PYX_ERR(1, 408, __pyx_L1_error)
@@ -20683,19 +21291,30 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__8);
   __Pyx_GIVEREF(__pyx_tuple__8);
 
-  /* "fastHDMI/cython_fun.pyx":10
+  /* "fastHDMI/cython_fun.pyx":13
  *     double
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
  * @cython.wraparound(False)
  * def joint_to_mi_cython(floating_float_double[:, ::1] joint, floating_float_double forward_euler_a=1., floating_float_double forward_euler_b=1.):
  */
-  __pyx_tuple__12 = PyTuple_Pack(1, __pyx_kp_s_No_matching_signature_found); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_tuple__12 = PyTuple_Pack(1, __pyx_kp_s_No_matching_signature_found); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__12);
   __Pyx_GIVEREF(__pyx_tuple__12);
-  __pyx_tuple__13 = PyTuple_Pack(1, __pyx_kp_s_Function_call_with_ambiguous_arg); if (unlikely(!__pyx_tuple__13)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_tuple__13 = PyTuple_Pack(1, __pyx_kp_s_Function_call_with_ambiguous_arg); if (unlikely(!__pyx_tuple__13)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__13);
   __Pyx_GIVEREF(__pyx_tuple__13);
+
+  /* "fastHDMI/cython_fun.pyx":24
+ * 
+ *     if log_a_marginal == NULL or log_b_marginal == NULL:
+ *         raise MemoryError("Failed to allocate memory.")             # <<<<<<<<<<<<<<
+ * 
+ *     temp_sum = 0.0
+ */
+  __pyx_tuple__14 = PyTuple_Pack(1, __pyx_kp_u_Failed_to_allocate_memory); if (unlikely(!__pyx_tuple__14)) __PYX_ERR(0, 24, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__14);
+  __Pyx_GIVEREF(__pyx_tuple__14);
 
   /* "View.MemoryView":100
  * cdef object __pyx_collections_abc_Sequence "__pyx_collections_abc_Sequence"
@@ -20704,12 +21323,12 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  *         __pyx_collections_abc_Sequence = __import__("collections.abc").abc.Sequence
  *     else:
  */
-  __pyx_tuple__14 = PyTuple_Pack(1, __pyx_n_s_sys); if (unlikely(!__pyx_tuple__14)) __PYX_ERR(1, 100, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__14);
-  __Pyx_GIVEREF(__pyx_tuple__14);
-  __pyx_tuple__15 = PyTuple_Pack(2, __pyx_int_3, __pyx_int_3); if (unlikely(!__pyx_tuple__15)) __PYX_ERR(1, 100, __pyx_L1_error)
+  __pyx_tuple__15 = PyTuple_Pack(1, __pyx_n_s_sys); if (unlikely(!__pyx_tuple__15)) __PYX_ERR(1, 100, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__15);
   __Pyx_GIVEREF(__pyx_tuple__15);
+  __pyx_tuple__16 = PyTuple_Pack(2, __pyx_int_3, __pyx_int_3); if (unlikely(!__pyx_tuple__16)) __PYX_ERR(1, 100, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__16);
+  __Pyx_GIVEREF(__pyx_tuple__16);
 
   /* "View.MemoryView":101
  * try:
@@ -20718,9 +21337,9 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  *     else:
  *         __pyx_collections_abc_Sequence = __import__("collections").Sequence
  */
-  __pyx_tuple__16 = PyTuple_Pack(1, __pyx_kp_s_collections_abc); if (unlikely(!__pyx_tuple__16)) __PYX_ERR(1, 101, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__16);
-  __Pyx_GIVEREF(__pyx_tuple__16);
+  __pyx_tuple__17 = PyTuple_Pack(1, __pyx_kp_s_collections_abc); if (unlikely(!__pyx_tuple__17)) __PYX_ERR(1, 101, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__17);
+  __Pyx_GIVEREF(__pyx_tuple__17);
 
   /* "View.MemoryView":103
  *         __pyx_collections_abc_Sequence = __import__("collections.abc").abc.Sequence
@@ -20729,9 +21348,9 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * except:
  * 
  */
-  __pyx_tuple__17 = PyTuple_Pack(1, __pyx_n_s_collections); if (unlikely(!__pyx_tuple__17)) __PYX_ERR(1, 103, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__17);
-  __Pyx_GIVEREF(__pyx_tuple__17);
+  __pyx_tuple__18 = PyTuple_Pack(1, __pyx_n_s_collections); if (unlikely(!__pyx_tuple__18)) __PYX_ERR(1, 103, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__18);
+  __Pyx_GIVEREF(__pyx_tuple__18);
 
   /* "View.MemoryView":309
  *         return self.name
@@ -20740,9 +21359,9 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * cdef strided = Enum("<strided and direct>") # default
  * cdef indirect = Enum("<strided and indirect>")
  */
-  __pyx_tuple__18 = PyTuple_Pack(1, __pyx_kp_s_strided_and_direct_or_indirect); if (unlikely(!__pyx_tuple__18)) __PYX_ERR(1, 309, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__18);
-  __Pyx_GIVEREF(__pyx_tuple__18);
+  __pyx_tuple__19 = PyTuple_Pack(1, __pyx_kp_s_strided_and_direct_or_indirect); if (unlikely(!__pyx_tuple__19)) __PYX_ERR(1, 309, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__19);
+  __Pyx_GIVEREF(__pyx_tuple__19);
 
   /* "View.MemoryView":310
  * 
@@ -20751,9 +21370,9 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * cdef indirect = Enum("<strided and indirect>")
  * 
  */
-  __pyx_tuple__19 = PyTuple_Pack(1, __pyx_kp_s_strided_and_direct); if (unlikely(!__pyx_tuple__19)) __PYX_ERR(1, 310, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__19);
-  __Pyx_GIVEREF(__pyx_tuple__19);
+  __pyx_tuple__20 = PyTuple_Pack(1, __pyx_kp_s_strided_and_direct); if (unlikely(!__pyx_tuple__20)) __PYX_ERR(1, 310, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__20);
+  __Pyx_GIVEREF(__pyx_tuple__20);
 
   /* "View.MemoryView":311
  * cdef generic = Enum("<strided and direct or indirect>")
@@ -20762,9 +21381,9 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * 
  * 
  */
-  __pyx_tuple__20 = PyTuple_Pack(1, __pyx_kp_s_strided_and_indirect); if (unlikely(!__pyx_tuple__20)) __PYX_ERR(1, 311, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__20);
-  __Pyx_GIVEREF(__pyx_tuple__20);
+  __pyx_tuple__21 = PyTuple_Pack(1, __pyx_kp_s_strided_and_indirect); if (unlikely(!__pyx_tuple__21)) __PYX_ERR(1, 311, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__21);
+  __Pyx_GIVEREF(__pyx_tuple__21);
 
   /* "View.MemoryView":314
  * 
@@ -20773,9 +21392,9 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * cdef indirect_contiguous = Enum("<contiguous and indirect>")
  * 
  */
-  __pyx_tuple__21 = PyTuple_Pack(1, __pyx_kp_s_contiguous_and_direct); if (unlikely(!__pyx_tuple__21)) __PYX_ERR(1, 314, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__21);
-  __Pyx_GIVEREF(__pyx_tuple__21);
+  __pyx_tuple__22 = PyTuple_Pack(1, __pyx_kp_s_contiguous_and_direct); if (unlikely(!__pyx_tuple__22)) __PYX_ERR(1, 314, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__22);
+  __Pyx_GIVEREF(__pyx_tuple__22);
 
   /* "View.MemoryView":315
  * 
@@ -20784,34 +21403,34 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * 
  * 
  */
-  __pyx_tuple__22 = PyTuple_Pack(1, __pyx_kp_s_contiguous_and_indirect); if (unlikely(!__pyx_tuple__22)) __PYX_ERR(1, 315, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__22);
-  __Pyx_GIVEREF(__pyx_tuple__22);
+  __pyx_tuple__23 = PyTuple_Pack(1, __pyx_kp_s_contiguous_and_indirect); if (unlikely(!__pyx_tuple__23)) __PYX_ERR(1, 315, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__23);
+  __Pyx_GIVEREF(__pyx_tuple__23);
 
   /* "(tree fragment)":1
  * def __pyx_unpickle_Enum(__pyx_type, long __pyx_checksum, __pyx_state):             # <<<<<<<<<<<<<<
  *     cdef object __pyx_PickleError
  *     cdef object __pyx_result
  */
-  __pyx_tuple__23 = PyTuple_Pack(5, __pyx_n_s_pyx_type, __pyx_n_s_pyx_checksum, __pyx_n_s_pyx_state, __pyx_n_s_pyx_PickleError, __pyx_n_s_pyx_result); if (unlikely(!__pyx_tuple__23)) __PYX_ERR(1, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__23);
-  __Pyx_GIVEREF(__pyx_tuple__23);
-  __pyx_codeobj__24 = (PyObject*)__Pyx_PyCode_New(3, 0, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__23, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_pyx_unpickle_Enum, 1, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__24)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __pyx_tuple__24 = PyTuple_Pack(5, __pyx_n_s_pyx_type, __pyx_n_s_pyx_checksum, __pyx_n_s_pyx_state, __pyx_n_s_pyx_PickleError, __pyx_n_s_pyx_result); if (unlikely(!__pyx_tuple__24)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__24);
+  __Pyx_GIVEREF(__pyx_tuple__24);
+  __pyx_codeobj__25 = (PyObject*)__Pyx_PyCode_New(3, 0, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__24, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_pyx_unpickle_Enum, 1, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__25)) __PYX_ERR(1, 1, __pyx_L1_error)
 
-  /* "fastHDMI/cython_fun.pyx":10
+  /* "fastHDMI/cython_fun.pyx":13
  *     double
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
  * @cython.wraparound(False)
  * def joint_to_mi_cython(floating_float_double[:, ::1] joint, floating_float_double forward_euler_a=1., floating_float_double forward_euler_b=1.):
  */
-  __pyx_tuple__25 = PyTuple_Pack(2, __pyx_float_1_, __pyx_float_1_); if (unlikely(!__pyx_tuple__25)) __PYX_ERR(0, 10, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__25);
-  __Pyx_GIVEREF(__pyx_tuple__25);
-  __pyx_tuple__26 = PyTuple_Pack(15, __pyx_n_s_joint, __pyx_n_s_forward_euler_a, __pyx_n_s_forward_euler_b, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_joint_shape0, __pyx_n_s_joint_shape1, __pyx_n_s_log_a_marginal, __pyx_n_s_log_b_marginal, __pyx_n_s_temp_sum, __pyx_n_s_log_temp_sum, __pyx_n_s_log_forward_euler_a, __pyx_n_s_log_forward_euler_b, __pyx_n_s_log_joint, __pyx_n_s_output); if (unlikely(!__pyx_tuple__26)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_tuple__26 = PyTuple_Pack(2, __pyx_float_1_, __pyx_float_1_); if (unlikely(!__pyx_tuple__26)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__26);
   __Pyx_GIVEREF(__pyx_tuple__26);
-  __pyx_codeobj__27 = (PyObject*)__Pyx_PyCode_New(3, 0, 0, 15, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__26, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_fastHDMI_cython_fun_pyx, __pyx_n_s_joint_to_mi_cython, 10, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__27)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_tuple__27 = PyTuple_Pack(16, __pyx_n_s_joint, __pyx_n_s_forward_euler_a, __pyx_n_s_forward_euler_b, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_joint_shape0, __pyx_n_s_joint_shape1, __pyx_n_s_log_a_marginal, __pyx_n_s_log_b_marginal, __pyx_n_s_temp_sum, __pyx_n_s_log_val, __pyx_n_s_log_temp_sum, __pyx_n_s_log_forward_euler_a, __pyx_n_s_log_forward_euler_b, __pyx_n_s_log_joint, __pyx_n_s_output); if (unlikely(!__pyx_tuple__27)) __PYX_ERR(0, 13, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__27);
+  __Pyx_GIVEREF(__pyx_tuple__27);
+  __pyx_codeobj__28 = (PyObject*)__Pyx_PyCode_New(3, 0, 0, 16, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__27, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_fastHDMI_cython_fun_pyx, __pyx_n_s_joint_to_mi_cython, 13, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__28)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -20841,6 +21460,13 @@ static CYTHON_SMALL_CODE int __Pyx_InitConstants(void) {
 static CYTHON_SMALL_CODE int __Pyx_InitGlobals(void) {
   /* AssertionsEnabled.init */
   if (likely(__Pyx_init_assertions_enabled() == 0)); else
+
+if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1, __pyx_L1_error)
+
+  /* InitThreads.init */
+  #if defined(WITH_THREAD) && PY_VERSION_HEX < 0x030700F0
+PyEval_InitThreads();
+#endif
 
 if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1, __pyx_L1_error)
 
@@ -21377,12 +22003,12 @@ if (!__Pyx_RefNanny) {
  *         __pyx_collections_abc_Sequence = __import__("collections.abc").abc.Sequence
  *     else:
  */
-      __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin___import__, __pyx_tuple__14, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 100, __pyx_L2_error)
+      __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin___import__, __pyx_tuple__15, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 100, __pyx_L2_error)
       __Pyx_GOTREF(__pyx_t_4);
       __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_version_info); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 100, __pyx_L2_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      __pyx_t_4 = PyObject_RichCompare(__pyx_t_5, __pyx_tuple__15, Py_GE); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 100, __pyx_L2_error)
+      __pyx_t_4 = PyObject_RichCompare(__pyx_t_5, __pyx_tuple__16, Py_GE); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 100, __pyx_L2_error)
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely((__pyx_t_6 < 0))) __PYX_ERR(1, 100, __pyx_L2_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -21395,7 +22021,7 @@ if (!__Pyx_RefNanny) {
  *     else:
  *         __pyx_collections_abc_Sequence = __import__("collections").Sequence
  */
-        __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin___import__, __pyx_tuple__16, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 101, __pyx_L2_error)
+        __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin___import__, __pyx_tuple__17, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 101, __pyx_L2_error)
         __Pyx_GOTREF(__pyx_t_4);
         __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_abc); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 101, __pyx_L2_error)
         __Pyx_GOTREF(__pyx_t_5);
@@ -21426,7 +22052,7 @@ if (!__Pyx_RefNanny) {
  * 
  */
       /*else*/ {
-        __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin___import__, __pyx_tuple__17, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 103, __pyx_L2_error)
+        __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin___import__, __pyx_tuple__18, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 103, __pyx_L2_error)
         __Pyx_GOTREF(__pyx_t_4);
         __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_Sequence); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 103, __pyx_L2_error)
         __Pyx_GOTREF(__pyx_t_5);
@@ -21591,7 +22217,7 @@ if (!__Pyx_RefNanny) {
  * cdef strided = Enum("<strided and direct>") # default
  * cdef indirect = Enum("<strided and indirect>")
  */
-  __pyx_t_7 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__18, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(1, 309, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__19, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(1, 309, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_XGOTREF(generic);
   __Pyx_DECREF_SET(generic, __pyx_t_7);
@@ -21605,7 +22231,7 @@ if (!__Pyx_RefNanny) {
  * cdef indirect = Enum("<strided and indirect>")
  * 
  */
-  __pyx_t_7 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__19, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(1, 310, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__20, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(1, 310, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_XGOTREF(strided);
   __Pyx_DECREF_SET(strided, __pyx_t_7);
@@ -21619,7 +22245,7 @@ if (!__Pyx_RefNanny) {
  * 
  * 
  */
-  __pyx_t_7 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__20, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(1, 311, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__21, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(1, 311, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_XGOTREF(indirect);
   __Pyx_DECREF_SET(indirect, __pyx_t_7);
@@ -21633,7 +22259,7 @@ if (!__Pyx_RefNanny) {
  * cdef indirect_contiguous = Enum("<contiguous and indirect>")
  * 
  */
-  __pyx_t_7 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__21, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(1, 314, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__22, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(1, 314, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_XGOTREF(contiguous);
   __Pyx_DECREF_SET(contiguous, __pyx_t_7);
@@ -21647,7 +22273,7 @@ if (!__Pyx_RefNanny) {
  * 
  * 
  */
-  __pyx_t_7 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__22, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(1, 315, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__23, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(1, 315, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_XGOTREF(indirect_contiguous);
   __Pyx_DECREF_SET(indirect_contiguous, __pyx_t_7);
@@ -21867,44 +22493,44 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_pyx_unpickle_Enum, __pyx_t_7) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "fastHDMI/cython_fun.pyx":10
+  /* "fastHDMI/cython_fun.pyx":13
  *     double
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
  * @cython.wraparound(False)
  * def joint_to_mi_cython(floating_float_double[:, ::1] joint, floating_float_double forward_euler_a=1., floating_float_double forward_euler_b=1.):
  */
-  __pyx_t_7 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
-  __pyx_t_4 = __pyx_FusedFunction_New(&__pyx_fuse_0__pyx_mdef_8fastHDMI_10cython_fun_3joint_to_mi_cython, 0, __pyx_n_s_joint_to_mi_cython, NULL, __pyx_n_s_fastHDMI_cython_fun, __pyx_d, ((PyObject *)__pyx_codeobj__27)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_4 = __pyx_FusedFunction_New(&__pyx_fuse_0__pyx_mdef_8fastHDMI_10cython_fun_3joint_to_mi_cython, 0, __pyx_n_s_joint_to_mi_cython, NULL, __pyx_n_s_fastHDMI_cython_fun, __pyx_d, ((PyObject *)__pyx_codeobj__28)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_4, __pyx_tuple__25);
-  if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_float, __pyx_t_4) < 0) __PYX_ERR(0, 10, __pyx_L1_error)
+  __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_4, __pyx_tuple__26);
+  if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_float, __pyx_t_4) < 0) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __pyx_FusedFunction_New(&__pyx_fuse_1__pyx_mdef_8fastHDMI_10cython_fun_5joint_to_mi_cython, 0, __pyx_n_s_joint_to_mi_cython, NULL, __pyx_n_s_fastHDMI_cython_fun, __pyx_d, ((PyObject *)__pyx_codeobj__27)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_4 = __pyx_FusedFunction_New(&__pyx_fuse_1__pyx_mdef_8fastHDMI_10cython_fun_5joint_to_mi_cython, 0, __pyx_n_s_joint_to_mi_cython, NULL, __pyx_n_s_fastHDMI_cython_fun, __pyx_d, ((PyObject *)__pyx_codeobj__28)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_4, __pyx_tuple__25);
-  if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_double, __pyx_t_4) < 0) __PYX_ERR(0, 10, __pyx_L1_error)
+  __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_4, __pyx_tuple__26);
+  if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_double, __pyx_t_4) < 0) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __pyx_FusedFunction_New(&__pyx_mdef_8fastHDMI_10cython_fun_1joint_to_mi_cython, 0, __pyx_n_s_joint_to_mi_cython, NULL, __pyx_n_s_fastHDMI_cython_fun, __pyx_d, ((PyObject *)__pyx_codeobj__27)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_4 = __pyx_FusedFunction_New(&__pyx_mdef_8fastHDMI_10cython_fun_1joint_to_mi_cython, 0, __pyx_n_s_joint_to_mi_cython, NULL, __pyx_n_s_fastHDMI_cython_fun, __pyx_d, ((PyObject *)__pyx_codeobj__28)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (!__Pyx_CyFunction_InitDefaults(__pyx_t_4, sizeof(__pyx_defaults), 1)) __PYX_ERR(0, 10, __pyx_L1_error)
-  __pyx_t_5 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 10, __pyx_L1_error)
+  if (!__Pyx_CyFunction_InitDefaults(__pyx_t_4, sizeof(__pyx_defaults), 1)) __PYX_ERR(0, 13, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_CyFunction_Defaults(__pyx_defaults, __pyx_t_4)->__pyx_arg__fused_sigindex = __pyx_t_5;
   __Pyx_GIVEREF(__pyx_t_5);
   __pyx_t_5 = 0;
-  __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_4, __pyx_tuple__25);
+  __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_4, __pyx_tuple__26);
   ((__pyx_FusedFunctionObject *) __pyx_t_4)->__signatures__ = __pyx_t_7;
   __Pyx_GIVEREF(__pyx_t_7);
   __pyx_t_7 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_joint_to_mi_cython, __pyx_t_4) < 0) __PYX_ERR(0, 10, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_joint_to_mi_cython, __pyx_t_4) < 0) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
   /* "fastHDMI/cython_fun.pyx":1
- * from libc.math cimport log, isfinite             # <<<<<<<<<<<<<<
- * from libc.stdlib cimport calloc, free
- * cimport cython
+ * # cython: language_level=3             # <<<<<<<<<<<<<<
+ * 
+ * from libc.math cimport log, isfinite
  */
   __pyx_t_4 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
@@ -28378,6 +29004,13 @@ static CYTHON_INLINE void __Pyx_XCLEAR_MEMVIEW(__Pyx_memviewslice *memslice,
     }
 }
 
+/* BytesContains */
+  static CYTHON_INLINE int __Pyx_BytesContains(PyObject* bytes, char character) {
+    const Py_ssize_t length = PyBytes_GET_SIZE(bytes);
+    char* char_start = PyBytes_AS_STRING(bytes);
+    return memchr(char_start, (unsigned char)character, (size_t)length) != NULL;
+}
+
 /* CIntToPy */
   static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value) {
 #ifdef __Pyx_HAS_GCC_DIAGNOSTIC
@@ -28438,13 +29071,6 @@ static CYTHON_INLINE void __Pyx_XCLEAR_MEMVIEW(__Pyx_memviewslice *memslice,
         return result;
 #endif
     }
-}
-
-/* BytesContains */
-  static CYTHON_INLINE int __Pyx_BytesContains(PyObject* bytes, char character) {
-    const Py_ssize_t length = PyBytes_GET_SIZE(bytes);
-    char* char_start = PyBytes_AS_STRING(bytes);
-    return memchr(char_start, (unsigned char)character, (size_t)length) != NULL;
 }
 
 /* CIntFromPy */
@@ -29302,7 +29928,7 @@ __Pyx_PyType_GetName(PyTypeObject* tp)
     if (unlikely(name == NULL) || unlikely(!PyUnicode_Check(name))) {
         PyErr_Clear();
         Py_XDECREF(name);
-        name = __Pyx_NewRef(__pyx_n_s__28);
+        name = __Pyx_NewRef(__pyx_n_s__29);
     }
     return name;
 }
