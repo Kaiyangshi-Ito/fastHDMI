@@ -1,0 +1,11 @@
+Job ID: 10568772
+Cluster: graham
+User/Group: kyang/kyang
+State: TIMEOUT (exit code 0)
+Nodes: 1
+Cores per node: 16
+CPU Utilized: 3-22:14:59
+CPU Efficiency: 29.45% of 13-08:00:00 core-walltime
+Job Wall-clock time: 20:00:00
+Memory Utilized: 80.00 GB
+Memory Efficiency: 100.00% of 80.00 GB

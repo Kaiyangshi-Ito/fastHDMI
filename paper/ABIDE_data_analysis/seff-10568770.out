@@ -1,0 +1,11 @@
+Job ID: 10568770
+Cluster: graham
+User/Group: kyang/kyang
+State: FAILED (exit code 1)
+Nodes: 1
+Cores per node: 10
+CPU Utilized: 00:01:16
+CPU Efficiency: 2.30% of 00:55:10 core-walltime
+Job Wall-clock time: 00:05:31
+Memory Utilized: 237.16 MB
+Memory Efficiency: 0.29% of 80.00 GB
