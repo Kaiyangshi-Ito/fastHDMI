@@ -63,4 +63,4 @@ def _get_computing_time(prop_input_vars):
 
 
 output_array = np.array(list(map(_get_computing_time, prop_input_vars_list)))
-np.save(r"./running_time_age", output_array)
+np.save(r"./running_time_age_share_mem", output_array)
