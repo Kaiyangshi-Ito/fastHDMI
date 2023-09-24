@@ -38,21 +38,21 @@ prop_input_vars_list = np.linspace(0, 1, num_input_vars_divide)[1:]
 
 
 def _get_computing_time(prop_input_vars):
-    s = '''mi.continuous_screening_csv_parallel(csv_file, _usecols=abide_name.copy()[0:int(len(abide_name)*prop_input_vars)], csv_engine="c", sample=1250000, multp=10, core_num=16, share_memory=False, kernel="epa", bw="ISJ", norm=2)'''
+    s = '''mi.continuous_screening_csv_parallel(csv_file, _usecols=abide_name.copy()[0:int(len(abide_name)*prop_input_vars)], csv_engine="c", sample=1250000, multp=10, core_num=16, share_memory=False, kernel="epa", bw="ISJ", norm=2,verbose=0)'''
     imports_and_vars = globals()
     imports_and_vars.update(locals())
     num_loops = timeit.Timer(stmt=s, globals=imports_and_vars).autorange()[0]
     FFTKDE_MI_times = timeit.Timer(stmt=s, globals=imports_and_vars).repeat(
         repeat=7, number=num_loops)
 
-    s = '''mi.continuous_skMI_screening_csv_parallel(csv_file, _usecols=abide_name.copy()[0:int(len(abide_name)*prop_input_vars)], csv_engine="c", sample=1250000, multp=10, core_num=16, random_state=0, share_memory=False)'''
+    s = '''mi.continuous_skMI_screening_csv_parallel(csv_file, _usecols=abide_name.copy()[0:int(len(abide_name)*prop_input_vars)], csv_engine="c", sample=1250000, multp=10, core_num=16, random_state=0, share_memory=False,verbose=0)'''
     imports_and_vars = globals()
     imports_and_vars.update(locals())
     num_loops = timeit.Timer(stmt=s, globals=imports_and_vars).autorange()[0]
     sklearn_MI_times = timeit.Timer(stmt=s, globals=imports_and_vars).repeat(
         repeat=7, number=num_loops)
 
-    s = '''pearson_output = mi.Pearson_screening_csv_parallel(csv_file, _usecols=abide_name.copy()[0:int(len(abide_name)*prop_input_vars)], csv_engine="c", sample=1250000, multp=10, core_num=16, share_memory=False)'''
+    s = '''pearson_output = mi.Pearson_screening_csv_parallel(csv_file, _usecols=abide_name.copy()[0:int(len(abide_name)*prop_input_vars)], csv_engine="c", sample=1250000, multp=10, core_num=16, share_memory=False,verbose=0)'''
     imports_and_vars = globals()
     imports_and_vars.update(locals())
     num_loops = timeit.Timer(stmt=s, globals=imports_and_vars).autorange()[0]
@@ -62,5 +62,9 @@ def _get_computing_time(prop_input_vars):
     return np.vstack((FFTKDE_MI_times, sklearn_MI_times, Pearson_times))
 
 
-output_array = np.array(list(map(_get_computing_time, prop_input_vars_list)))
+print(
+    "Running speed comparison when the outcome variable is age (continuous) and the memory setting is high_mem... "
+)
+output_array = np.array(
+    list(map(_get_computing_time, tqdm(prop_input_vars_list))))
 np.save(r"./running_time_age_high_mem", output_array)
