@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import warnings as _warnings
 import multiprocess as _mp
 import ctypes as _ctypes
 from sklearn.preprocessing import RobustScaler as _scaler
@@ -19,19 +20,19 @@ from numba import jit as _jit
 import numpy as _np
 from tqdm import tqdm as _tqdm
 
-# if the CPU supports AVX2, use AVX2; otherwise, nvm 
+# if the CPU supports AVX2, use AVX2; otherwise, nvm
 import os
+
+
 def supports_avx2():
     # Using a simple way to check for AVX2 support
     return "avx2" in os.popen("cat /proc/cpuinfo").read()
+
 
 if supports_avx2():
     from fastHDMI.cython_fun import joint_to_mi_cython
 else:
     from fastHDMI.cython_fun_notusingavx2 import joint_to_mi_cython
-
-
-import warnings as _warnings
 
 
 _warnings.filterwarnings('ignore')
@@ -78,9 +79,49 @@ def _joint_to_mi(joint, forward_euler_a=1., forward_euler_b=1.):
     return mi_temp
 
 
-def MI_continuous_012(a, b, N=500, kernel="epa", bw="silverman", **kwarg):
+def _univariate_bw(input_var, bw_multiplier, bw="silverman"):
+    # a function that outputs bandwidth from UNIVARIATE data
+    # input_var will be reshaped into (-1, 1) due to the requirement of the bw calculation functions
+    if bw == "silverman":
+        _bw = _silvermans_rule(input_var.reshape(-1, 1))
+    elif bw == "scott":
+        _bw = _scotts_rule(input_var.reshape(-1, 1))
+    elif bw == "ISJ":
+        _bw = _improved_sheather_jones(input_var.reshape(-1, 1))
+    elif type(bw) is float:  # if it's passed as a value
+        _bw = bw
+    _bw *= bw_multiplier
+    return _bw
+
+
+def _bivariate_bw(_data, bw_multiplier, bw="silverman"):
+    # a function that outputs bandwidth from BIVARIATE data
+    # input_var should be of shape (-1, 2)
+    if bw == "silverman":
+        bw1, bw2 = _silvermans_rule(_data[:,
+                                          [0]]), _silvermans_rule(_data[:,
+                                                                        [1]])
+    elif bw == "scott":
+        bw1, bw2 = _scotts_rule(_data[:, [0]]), _scotts_rule(_data[:, [1]])
+    elif bw == "ISJ":
+        bw1, bw2 = _improved_sheather_jones(
+            _data[:, [0]]), _improved_sheather_jones(_data[:, [1]])
+    elif type(bw) is _np.ndarray or list:  # if it's passed as a value
+        bw1, bw2 = bw
+    bw1 *= bw_multiplier
+    bw2 *= bw_multiplier
+    return bw1, bw2
+
+
+def MI_continuous_012(a,
+                      b,
+                      bw_multiplier,
+                      N=500,
+                      kernel="epa",
+                      bw="silverman",
+                      **kwarg):
     """
-    calculate mutual information between continuous outcome and an SNP variable of 0,1,2
+    calculate mutual information between continuous outcome and a SNP variable of 0,1,2, or, in fact, a binary variable
     assume no missing data
     """
     # first estimate the pmf
@@ -90,22 +131,27 @@ def MI_continuous_012(a, b, N=500, kernel="epa", bw="silverman", **kwarg):
     _a = _scaler().fit_transform(a.reshape(-1, 1)).flatten()
     # this step is just to get the boundary width for the joint density grid
     # the three conditional density estimates need to be evaluated on the joint density grid
-    a_temp, _ = _FFTKDE(kernel=kernel, bw=bw, **kwarg).fit(data=_a).evaluate(N)
+    _bw = _univariate_bw(_a, bw=bw, bw_multiplier=bw_multiplier)
+    a_temp, _ = _FFTKDE(kernel=kernel, bw=_bw,
+                        **kwarg).fit(data=_a).evaluate(N)
     # estimate cond density
     _b0 = (b == 0)
     if _np.count_nonzero(_b0) > 2:
         # here proceed to kde only if there are more than 5 data points
-        y_cond_p0 = _FFTKDE(kernel=kernel, bw=bw, **kwarg).fit(data=_a[_b0])
+        _bw = _univariate_bw(_a[_b0], bw=bw, bw_multiplier=bw_multiplier)
+        y_cond_p0 = _FFTKDE(kernel=kernel, bw=_bw, **kwarg).fit(data=_a[_b0])
     else:
         y_cond_p0 = _np.zeros_like
     _b1 = (b == 1)
     if _np.count_nonzero(_b1) > 2:
-        y_cond_p1 = _FFTKDE(kernel=kernel, bw=bw, **kwarg).fit(data=_a[_b1])
+        _bw = _univariate_bw(_a[_b1], bw=bw, bw_multiplier=bw_multiplier)
+        y_cond_p1 = _FFTKDE(kernel=kernel, bw=_bw, **kwarg).fit(data=_a[_b1])
     else:
         y_cond_p1 = _np.zeros_like
     _b2 = (b == 2)
     if _np.count_nonzero(_b2) > 2:
-        y_cond_p2 = _FFTKDE(kernel=kernel, bw=bw, **kwarg).fit(data=_a[_b2])
+        _bw = _univariate_bw(_a[_b2], bw=bw, bw_multiplier=bw_multiplier)
+        y_cond_p2 = _FFTKDE(kernel=kernel, bw=_bw, **kwarg).fit(data=_a[_b2])
     else:
         y_cond_p2 = _np.zeros_like
     joint = _np.zeros((N, 3))
@@ -127,7 +173,7 @@ def MI_continuous_012(a, b, N=500, kernel="epa", bw="silverman", **kwarg):
 # @_njit(cache=True)
 def MI_binary_012(a, b):
     """
-    calculate mutual information between binary outcome and an SNP variable of 0,1,2
+    calculate mutual information between binary outcome and a SNP variable of 0,1,2, or, in fact, a binary variable
     assume no missing data
     """
     return MI_012_012(a, b)
@@ -164,6 +210,7 @@ def MI_012_012(a, b):
 
 def MI_continuous_continuous(a,
                              b,
+                             bw_multiplier,
                              a_N=300,
                              b_N=300,
                              kernel="epa",
@@ -177,15 +224,7 @@ def MI_continuous_continuous(a,
     data = _np.hstack((a[_temp].reshape(-1, 1), b[_temp].reshape(-1, 1)))
     _data = _scaler().fit_transform(data)
 
-    if bw == "silverman":
-        bw1, bw2 = _silvermans_rule(_data[:,
-                                          [0]]), _silvermans_rule(_data[:,
-                                                                        [1]])
-    elif bw == "scott":
-        bw1, bw2 = _scotts_rule(_data[:, [0]]), _scotts_rule(_data[:, [1]])
-    elif bw == "ISJ":
-        bw1, bw2 = _improved_sheather_jones(
-            _data[:, [0]]), _improved_sheather_jones(_data[:, [1]])
+    bw1, bw2 = _bivariate_bw(_data=_data, bw=bw, bw_multiplier=bw_multiplier)
 
     data_scaled = _data / _np.array([bw1, bw2])
 
@@ -208,8 +247,20 @@ def MI_continuous_continuous(a,
     return mi_temp
 
 
-def MI_binary_continuous(a, b, N=500, kernel="epa", bw="silverman", **kwarg):
-    return MI_continuous_012(a=b, b=a, N=N, kernel=kernel, bw=bw, **kwarg)
+def MI_binary_continuous(a,
+                         b,
+                         bw_multiplier,
+                         N=500,
+                         kernel="epa",
+                         bw="silverman",
+                         **kwarg):
+    return MI_continuous_012(a=b,
+                             b=a,
+                             N=N,
+                             kernel=kernel,
+                             bw=bw,
+                             bw_multiplier=bw_multiplier,
+                             **kwarg)
 
 
 @_njit(cache=True)
@@ -237,6 +288,7 @@ def continuous_screening_plink(bed_file,
                                N=500,
                                kernel="epa",
                                bw="silverman",
+                               bw_multiplier=1.,
                                verbose=1,
                                **kwarg):
     """
@@ -268,6 +320,7 @@ def continuous_screening_plink(bed_file,
                                  N=N,
                                  kernel=kernel,
                                  bw=bw,
+                                 bw_multiplier=bw_multiplier,
                                  **kwarg)
 
     _iter = range(len(bed1_sid))
@@ -324,6 +377,7 @@ def continuous_screening_plink_parallel(bed_file,
                                         N=500,
                                         kernel="epa",
                                         bw="silverman",
+                                        bw_multiplier=1.,
                                         core_num="NOT DECLARED",
                                         multp=10,
                                         verbose=1,
@@ -367,6 +421,7 @@ def continuous_screening_plink_parallel(bed_file,
                                      N=N,
                                      kernel=kernel,
                                      bw=bw,
+                                     bw_multiplier=bw_multiplier,
                                      **kwarg)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
@@ -569,6 +624,7 @@ def binary_screening_csv(csv_file="_",
                          N=500,
                          kernel="epa",
                          bw="silverman",
+                         bw_multiplier=1.,
                          csv_engine="c",
                          parquet_file="_",
                          sample=256000,
@@ -600,6 +656,7 @@ def binary_screening_csv(csv_file="_",
                                     N=N,
                                     kernel=kernel,
                                     bw=bw,
+                                    bw_multiplier=bw_multiplier,
                                     **kwarg)
 
     _iter = _np.arange(len(_usecols) - 1)
@@ -618,6 +675,7 @@ def continuous_screening_csv(csv_file="_",
                              b_N=300,
                              kernel="epa",
                              bw="silverman",
+                             bw_multiplier=1.,
                              norm=2,
                              csv_engine="c",
                              parquet_file="_",
@@ -650,6 +708,7 @@ def continuous_screening_csv(csv_file="_",
                                         b_N=b_N,
                                         kernel=kernel,
                                         bw=bw,
+                                        bw_multiplier=bw_multiplier,
                                         norm=norm,
                                         **kwarg)
 
@@ -668,6 +727,7 @@ def binary_screening_csv_parallel(csv_file="_",
                                   N=500,
                                   kernel="epa",
                                   bw="silverman",
+                                  bw_multiplier=1.,
                                   core_num="NOT DECLARED",
                                   multp=10,
                                   csv_engine="c",
@@ -725,6 +785,7 @@ def binary_screening_csv_parallel(csv_file="_",
                                         N=N,
                                         kernel=kernel,
                                         bw=bw,
+                                        bw_multiplier=bw_multiplier,
                                         **kwarg)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
@@ -753,6 +814,7 @@ def continuous_screening_csv_parallel(csv_file="_",
                                       b_N=300,
                                       kernel="epa",
                                       bw="silverman",
+                                      bw_multiplier=1.,
                                       norm=2,
                                       core_num="NOT DECLARED",
                                       multp=10,
@@ -812,6 +874,7 @@ def continuous_screening_csv_parallel(csv_file="_",
                                             b_N=b_N,
                                             kernel=kernel,
                                             bw=bw,
+                                            bw_multiplier=bw_multiplier,
                                             norm=norm,
                                             **kwarg)
 
@@ -1084,6 +1147,7 @@ def clump_continuous_csv_parallel(
         b_N=300,
         kernel="epa",
         bw="silverman",
+        bw_multiplier=1.,
         norm=2,
         clumping_threshold=Pearson_to_MI_Gaussian(.6),
         num_vars_exam=_np.infty,
@@ -1121,6 +1185,10 @@ def clump_continuous_csv_parallel(
             _MI = continuous_screening_csv_parallel(
                 csv_file=csv_file,
                 _usecols=keep_cols[current_var_ind:],
+                kernel=kernel,
+                bw=bw,
+                bw_multiplier=bw_multiplier,
+                norm=norm,
                 core_num=core_num,
                 multp=multp,
                 csv_engine=csv_engine,
@@ -1143,6 +1211,7 @@ def binary_screening_dataframe(dataframe="_",
                                N=500,
                                kernel="epa",
                                bw="silverman",
+                               bw_multiplier=1.,
                                csv_engine="c",
                                verbose=1,
                                **kwarg):
@@ -1168,6 +1237,7 @@ def binary_screening_dataframe(dataframe="_",
                                     N=N,
                                     kernel=kernel,
                                     bw=bw,
+                                    bw_multiplier=bw_multiplier,
                                     **kwarg)
 
     _iter = _np.arange(len(_usecols) - 1)
@@ -1184,6 +1254,7 @@ def continuous_screening_dataframe(dataframe="_",
                                    b_N=300,
                                    kernel="epa",
                                    bw="silverman",
+                                   bw_multiplier=1.,
                                    norm=2,
                                    csv_engine="c",
                                    verbose=1,
@@ -1211,6 +1282,7 @@ def continuous_screening_dataframe(dataframe="_",
                                         b_N=b_N,
                                         kernel=kernel,
                                         bw=bw,
+                                        bw_multiplier=bw_multiplier,
                                         norm=norm,
                                         **kwarg)
 
@@ -1227,6 +1299,7 @@ def binary_screening_dataframe_parallel(dataframe="_",
                                         N=500,
                                         kernel="epa",
                                         bw="silverman",
+                                        bw_multiplier=1.,
                                         core_num="NOT DECLARED",
                                         multp=10,
                                         csv_engine="c",
@@ -1277,6 +1350,7 @@ def binary_screening_dataframe_parallel(dataframe="_",
                                         N=N,
                                         kernel=kernel,
                                         bw=bw,
+                                        bw_multiplier=bw_multiplier,
                                         **kwarg)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
@@ -1303,6 +1377,7 @@ def continuous_screening_dataframe_parallel(dataframe="_",
                                             b_N=300,
                                             kernel="epa",
                                             bw="silverman",
+                                            bw_multiplier=1.,
                                             norm=2,
                                             core_num="NOT DECLARED",
                                             multp=10,
@@ -1355,6 +1430,7 @@ def continuous_screening_dataframe_parallel(dataframe="_",
                                             b_N=b_N,
                                             kernel=kernel,
                                             bw=bw,
+                                            bw_multiplier=bw_multiplier,
                                             norm=norm,
                                             **kwarg)
 
@@ -1599,6 +1675,7 @@ def clump_continuous_dataframe_parallel(
         b_N=300,
         kernel="epa",
         bw="silverman",
+        bw_multiplier=1.,
         norm=2,
         clumping_threshold=Pearson_to_MI_Gaussian(.6),
         num_vars_exam=_np.infty,
@@ -1631,6 +1708,10 @@ def clump_continuous_dataframe_parallel(
             _MI = continuous_screening_dataframe_parallel(
                 dataframe=dataframe,
                 _usecols=keep_cols[current_var_ind:],
+                kernel=kernel,
+                bw=bw,
+                bw_multiplier=bw_multiplier,
+                norm=norm,
                 core_num=core_num,
                 multp=multp,
                 csv_engine=csv_engine,
@@ -1648,61 +1729,13 @@ def clump_continuous_dataframe_parallel(
     return current_var_ind, keep_cols
 
 
-def continuous_skMI_array_parallel(X,
-                                   y,
-                                   drop_na=True,
-                                   n_neighbors=3,
-                                   core_num="NOT DECLARED",
-                                   multp=10,
-                                   verbose=1,
-                                   **kwarg):
-    """
-    (Multiprocessing version) Calculate the mutual information using sklearn implementation between outcome and covariates.
-    The outcome should be binary and the covariates be continuous. 
-    If drop_na is set to be True, the NaN values will be dropped in a bivariate manner. 
-    """
-    # check some basic things
-    if core_num == "NOT DECLARED":
-        core_num = _mp.cpu_count()
-    else:
-        assert core_num <= _mp.cpu_count(
-        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
-    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
-
-    def _continuous_skMI_array_slice(_slice):
-
-        def _map_foo(j):
-            _a, _b = y.copy(), X[:, j].copy()
-            if drop_na == True:
-                _keep = _np.logical_not(
-                    _np.logical_or(_np.isnan(_a), _np.isnan(_b)))
-                _a, _b = _a[_keep], _b[_keep]
-            return _mutual_info_regression(y=_a.reshape(-1, 1),
-                                           X=_b.reshape(-1, 1),
-                                           n_neighbors=n_neighbors,
-                                           discrete_features=False,
-                                           **kwarg)[0]
-
-        _MI_slice = _np.array(list(map(_map_foo, _slice)))
-        return _MI_slice
-
-    # multiprocessing starts here
-    ind = _np.arange(X.shape[1])
-    _iter = _np.array_split(ind, core_num * multp)
-    if verbose >= 1:
-        _iter = _tqdm(_iter)
-    with _mp.Pool(core_num) as pl:
-        MI_array = pl.map(_continuous_skMI_array_slice, _iter)
-    MI_array = _np.hstack(MI_array)
-    return MI_array
-
-
 def binary_screening_array(X,
                            y,
                            drop_na=True,
                            N=500,
                            kernel="epa",
                            bw="silverman",
+                           bw_multiplier=1.,
                            verbose=1,
                            **kwarg):
     """
@@ -1722,6 +1755,7 @@ def binary_screening_array(X,
                                     N=N,
                                     kernel=kernel,
                                     bw=bw,
+                                    bw_multiplier=bw_multiplier,
                                     **kwarg)
 
     _iter = _np.arange(X.shape[1])
@@ -1738,6 +1772,7 @@ def continuous_screening_array(X,
                                b_N=300,
                                kernel="epa",
                                bw="silverman",
+                               bw_multiplier=1.,
                                norm=2,
                                verbose=1,
                                **kwarg):
@@ -1759,6 +1794,7 @@ def continuous_screening_array(X,
                                         b_N=b_N,
                                         kernel=kernel,
                                         bw=bw,
+                                        bw_multiplier=bw_multiplier,
                                         norm=norm,
                                         **kwarg)
 
@@ -1775,6 +1811,7 @@ def binary_screening_array_parallel(X,
                                     N=500,
                                     kernel="epa",
                                     bw="silverman",
+                                    bw_multiplier=1.,
                                     core_num="NOT DECLARED",
                                     multp=10,
                                     verbose=1,
@@ -1805,6 +1842,7 @@ def binary_screening_array_parallel(X,
                                         N=N,
                                         kernel=kernel,
                                         bw=bw,
+                                        bw_multiplier=bw_multiplier,
                                         **kwarg)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
@@ -1830,6 +1868,7 @@ def continuous_screening_array_parallel(X,
                                         b_N=300,
                                         kernel="epa",
                                         bw="silverman",
+                                        bw_multiplier=1.,
                                         norm=2,
                                         core_num="NOT DECLARED",
                                         multp=10,
@@ -1862,6 +1901,7 @@ def continuous_screening_array_parallel(X,
                                             b_N=b_N,
                                             kernel=kernel,
                                             bw=bw,
+                                            bw_multiplier=bw_multiplier,
                                             norm=norm,
                                             **kwarg)
 
