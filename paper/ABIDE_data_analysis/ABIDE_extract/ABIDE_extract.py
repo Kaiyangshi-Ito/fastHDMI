@@ -22,5 +22,5 @@ extract_ind = (abide["DX_GROUP"] == 1)  # extract only the cases
 
 # write to another csv
 abide[extract_ind].to_csv(
-    r"/home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX_CasesOnly.csv"
+    r"/home/kyang/projects/def-cgreenwo/kyang/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX_CasesOnly.csv"
 )

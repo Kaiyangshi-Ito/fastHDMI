@@ -41,7 +41,7 @@ lscpu
 echo "running ABIDE_poly3_diagnosis_skMI_MLPClassifier.py"
 
 cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv $SLURM_TMPDIR/
-cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX_CasesOnly.csv $SLURM_TMPDIR/
+cp /home/kyang/projects/def-cgreenwo/kyang/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX_CasesOnly.csv $SLURM_TMPDIR/
 cp ../ABIDE_columns.npy $SLURM_TMPDIR/
 cp ../ABIDE_diagnosis_skMI_output.npy $SLURM_TMPDIR/
 

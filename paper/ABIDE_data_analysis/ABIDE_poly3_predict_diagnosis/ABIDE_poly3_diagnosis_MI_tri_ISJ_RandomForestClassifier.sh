@@ -41,7 +41,7 @@ lscpu
 echo "running ABIDE_poly3_diagnosis_MI_tri_ISJ_RandomForestClassifier.py"
 
 cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv $SLURM_TMPDIR/
-cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX_CasesOnly.csv $SLURM_TMPDIR/
+cp /home/kyang/projects/def-cgreenwo/kyang/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX_CasesOnly.csv $SLURM_TMPDIR/
 cp ../ABIDE_columns.npy $SLURM_TMPDIR/
 cp ../ABIDE_diagnosis_MI_tri_ISJ_output.npy $SLURM_TMPDIR/
 
