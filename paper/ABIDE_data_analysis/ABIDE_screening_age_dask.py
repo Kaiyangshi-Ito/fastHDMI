@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from dask import dataframe as dd
+# from dask import dataframe as dd
 import matplotlib.pyplot as plt
 from scipy.stats import kendalltau, rankdata, norm
 import fastHDMI as mi
@@ -18,11 +18,11 @@ import os
 
 csv_file = os.environ["SLURM_TMPDIR"] + \
     r"/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX_CasesOnly.csv"
-# abide = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
-abide = dd.read_csv(csv_file, sample=1250000)
+abide = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
+# abide = dd.read_csv(csv_file, sample=1250000)
 
-# _abide_name = abide.columns.tolist()[1:]
-_abide_name = list(abide.columns)[1:]
+_abide_name = abide.columns.tolist()[1:]
+# _abide_name = list(abide.columns)[1:]
 
 # print(_abide_name)
 
