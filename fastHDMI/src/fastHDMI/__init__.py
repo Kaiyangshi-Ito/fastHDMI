@@ -34,7 +34,6 @@ if supports_avx2():
 else:
     from fastHDMI.cython_fun_notusingavx2 import joint_to_mi_cython
 
-
 _warnings.filterwarnings('ignore')
 
 

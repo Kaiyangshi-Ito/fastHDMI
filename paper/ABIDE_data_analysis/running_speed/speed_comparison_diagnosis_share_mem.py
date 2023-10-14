@@ -43,21 +43,21 @@ def _get_computing_time(prop_input_vars):
     imports_and_vars.update(locals())
     num_loops = timeit.Timer(stmt=s, globals=imports_and_vars).autorange()[0]
     FFTKDE_MI_times = timeit.Timer(stmt=s, globals=imports_and_vars).repeat(
-        repeat=7, number=num_loops)
+        repeat=5, number=num_loops)
 
     s = '''mi.binary_skMI_screening_csv_parallel(csv_file,_usecols=abide_name.copy()[0:int(len(abide_name)*prop_input_vars)],csv_engine="c",sample=1250000,multp=10,core_num=16,random_state=0,share_memory=True,verbose=0)'''
     imports_and_vars = globals()
     imports_and_vars.update(locals())
     num_loops = timeit.Timer(stmt=s, globals=imports_and_vars).autorange()[0]
     sklearn_MI_times = timeit.Timer(stmt=s, globals=imports_and_vars).repeat(
-        repeat=7, number=num_loops)
+        repeat=5, number=num_loops)
 
     s = '''pearson_output = mi.Pearson_screening_csv_parallel( csv_file, _usecols=abide_name.copy()[0:int(len(abide_name)*prop_input_vars)], csv_engine="c", sample=1250000, multp=10, core_num=16, share_memory=True,verbose=0)'''
     imports_and_vars = globals()
     imports_and_vars.update(locals())
     num_loops = timeit.Timer(stmt=s, globals=imports_and_vars).autorange()[0]
     Pearson_times = timeit.Timer(stmt=s, globals=imports_and_vars).repeat(
-        repeat=7, number=num_loops)
+        repeat=5, number=num_loops)
 
     return np.vstack((FFTKDE_MI_times, sklearn_MI_times, Pearson_times))
 

@@ -16,7 +16,7 @@ from tqdm import tqdm
 import os
 
 csv_file = os.environ["SLURM_TMPDIR"] + \
-    r"/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv"
+    r"/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX_CasesOnly.csv"
 original_df = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
 
 columns = np.load(os.environ["SLURM_TMPDIR"] + r"/ABIDE_columns.npy")
