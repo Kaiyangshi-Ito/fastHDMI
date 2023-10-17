@@ -41,5 +41,6 @@ lscpu
 echo "running ABIDE_extract.py"
 
 cp /home/kyang/projects/def-cgreenwo/abide_data/abide_fs60_vout_fwhm0_lh_SubjectIDFormatted_N1050_nonzero_withSEX.csv $SLURM_TMPDIR/
+cp /home/kyang/ABIDE_data_analysis/ABIDE_extract/files_from_Amadou/df_outlier_asd.csv $SLURM_TMPDIR/
 
 python3 ABIDE_extract.py
