@@ -1,190 +1,0 @@
-
-Lmod is automatically replacing "intel/2020.1.217" with "gcc/9.3.0".
-
--------------------------------------------------------------------------------
-The following dependent module(s) are not currently loaded: python/3.10.2 (required by: ipykernel/2023b, scipy-stack/2023b)
--------------------------------------------------------------------------------
-
-Due to MODULEPATH changes, the following have been reloaded:
-  1) gentoo/2020     2) libfabric/1.10.1     3) openmpi/4.0.3     4) ucx/1.8.0
-
-created virtual environment CPython3.8.10.final.0-64 in 822ms
-  creator CPython3Posix(dest=/local/kyang.12027581.0/env, clear=False, no_vcs_ignore=False, global=False)
-  seeder FromAppData(download=False, pip=bundle, setuptools=bundle, wheel=bundle, via=copy, app_data_dir=/home/kyang/.local/share/virtualenv)
-    added seed packages: pip==23.0+computecanada, setuptools==68.1.2+computecanada, wheel==0.41.2+computecanada
-  activators BashActivator,CShellActivator,FishActivator,NushellActivator,PowerShellActivator,PythonActivator
-Looking in links: /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2020/avx2, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/avx2, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2020/generic, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/generic, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic
-Requirement already satisfied: pip in /local/kyang.12027581.0/env/lib/python3.8/site-packages (23.0+computecanada)
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/Cython-0.29.33+computecanada-cp38-cp38-linux_x86_64.whl
-Installing collected packages: Cython
-Successfully installed Cython-0.29.33+computecanada
-Looking in links: /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2020/avx2, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/avx2, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2020/generic, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/generic, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/bed_reader-0.2.5+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/generic/numpy-1.24.2+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/sklearn-0.0+computecanada-py2.py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/avx2/matplotlib-3.7.0+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/generic/scipy-1.10.1+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/generic/numba-0.56.3+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/multiprocess-0.70.14+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/generic/scikit_learn-1.2.1+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/generic/cupy-12.0.0+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/rpy2-3.1.0+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/avx2/pandas-1.5.3+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/dask-2023.5.1+computecanada-py3-none-any.whl
-Requirement already satisfied: Cython in /local/kyang.12027581.0/env/lib/python3.8/site-packages (0.29.33+computecanada)
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/pooch-1.7.0+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/avx2/kiwisolver-1.4.4+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/generic/contourpy-1.0.7+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/python_dateutil-2.8.2+computecanada-py2.py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/fonttools-4.42.1+computecanada-cp38-cp38-linux_x86_64.whl
-Requirement already satisfied: pyparsing>=2.3.1 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from matplotlib) (3.1.1)
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/cycler-0.12.1+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/avx2/Pillow-9.5.0+computecanada-cp38-cp38-linux_x86_64.whl
-Requirement already satisfied: importlib-resources>=3.2.0 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from matplotlib) (6.0.1)
-Requirement already satisfied: packaging>=20.0 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from matplotlib) (23.1)
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/avx2/llvmlite-0.39.1+computecanada-cp38-cp38-linux_x86_64.whl
-Requirement already satisfied: setuptools in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from numba) (68.1.2+computecanada)
-Requirement already satisfied: importlib-metadata in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from numba) (6.8.0)
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/generic/numpy-1.23.0+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/dill-0.3.7+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/threadpoolctl-3.2.0+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/generic/scikit_learn-1.1.2+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/joblib-1.3.2+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/fastrlock-0.8.1+computecanada-cp38-cp38-linux_x86_64.whl
-Requirement already satisfied: cffi>=1.0.0 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from rpy2) (1.15.1)
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/pytest-7.4.1+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/simplegeneric-0.8.1+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/tzlocal-5.0.1+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/Jinja2-3.1.2+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/pytz-2023.3.post1+computecanada-py2.py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/fsspec-2023.9.2+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/click-8.1.7+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/cloudpickle-2.2.1+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/toolz-0.12.0+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/partd-1.4.0+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/avx2/PyYAML-6.0+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/dask-2023.2.1+computecanada-py3-none-any.whl
-Requirement already satisfied: pycparser in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from cffi>=1.0.0->rpy2) (2.21)
-Requirement already satisfied: zipp>=3.1.0 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from importlib-resources>=3.2.0->matplotlib) (3.16.2)
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/locket-1.0.0+computecanada-py2.py3-none-any.whl
-Requirement already satisfied: platformdirs>=2.5.0 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from pooch>=1.1.1->bed-reader) (3.10.0)
-Requirement already satisfied: requests>=2.19.0 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from pooch>=1.1.1->bed-reader) (2.31.0)
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/six-1.16.0+computecanada-py2.py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/MarkupSafe-2.1.2+computecanada-cp38-cp38-linux_x86_64.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/pluggy-1.3.0+computecanada-py3-none-any.whl
-Requirement already satisfied: exceptiongroup>=1.0.0rc8 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from pytest->rpy2) (1.1.3)
-Requirement already satisfied: tomli>=1.0.0 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from pytest->rpy2) (2.0.1)
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/iniconfig-2.0.0+computecanada-py3-none-any.whl
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/backports.zoneinfo-0.2.1+computecanada-cp38-cp38-linux_x86_64.whl
-Requirement already satisfied: charset-normalizer<4,>=2 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from requests>=2.19.0->pooch>=1.1.1->bed-reader) (3.2.0)
-Requirement already satisfied: certifi>=2017.4.17 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from requests>=2.19.0->pooch>=1.1.1->bed-reader) (2023.7.22)
-Requirement already satisfied: idna<4,>=2.5 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from requests>=2.19.0->pooch>=1.1.1->bed-reader) (3.4)
-Requirement already satisfied: urllib3<3,>=1.21.1 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from requests>=2.19.0->pooch>=1.1.1->bed-reader) (2.0.4)
-Installing collected packages: simplegeneric, pytz, fastrlock, toolz, threadpoolctl, six, pyyaml, pluggy, pillow, numpy, MarkupSafe, locket, llvmlite, kiwisolver, joblib, iniconfig, fsspec, fonttools, dill, cycler, cloudpickle, click, backports.zoneinfo, tzlocal, scipy, python-dateutil, pytest, pooch, partd, numba, multiprocess, jinja2, cupy, contourpy, scikit-learn, rpy2, pandas, matplotlib, dask, sklearn, bed-reader
-Successfully installed MarkupSafe-2.1.2+computecanada backports.zoneinfo-0.2.1+computecanada bed-reader-0.2.5+computecanada click-8.1.7+computecanada cloudpickle-2.2.1+computecanada contourpy-1.0.7+computecanada cupy-12.0.0+computecanada cycler-0.12.1+computecanada dask-2023.2.1+computecanada dill-0.3.7+computecanada fastrlock-0.8.1+computecanada fonttools-4.42.1+computecanada fsspec-2023.9.2+computecanada iniconfig-2.0.0+computecanada jinja2-3.1.2+computecanada joblib-1.3.2+computecanada kiwisolver-1.4.4+computecanada llvmlite-0.39.1+computecanada locket-1.0.0+computecanada matplotlib-3.7.0+computecanada multiprocess-0.70.14+computecanada numba-0.56.3+computecanada numpy-1.23.0+computecanada pandas-1.5.3+computecanada partd-1.4.0+computecanada pillow-9.5.0+computecanada pluggy-1.3.0+computecanada pooch-1.7.0+computecanada pytest-7.4.1+computecanada python-dateutil-2.8.2+computecanada pytz-2023.3.post1+computecanada pyyaml-6.0+computecanada rpy2-3.1.0+computecanada scikit-learn-1.1.2+computecanada scipy-1.10.1+computecanada simplegeneric-0.8.1+computecanada six-1.16.0+computecanada sklearn-0.0+computecanada threadpoolctl-3.2.0+computecanada toolz-0.12.0+computecanada tzlocal-5.0.1+computecanada
-Looking in links: /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2020/avx2, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/avx2, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2020/generic, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/generic, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic
-Processing /home/kyang/KDEpy-1.1.5+computecanada-cp38-cp38-linux_x86_64.whl
-Requirement already satisfied: numpy<2.0,>=1.14.2 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from KDEpy==1.1.5+computecanada) (1.23.0+computecanada)
-Requirement already satisfied: matplotlib>=2.2.2 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from KDEpy==1.1.5+computecanada) (3.7.0+computecanada)
-Requirement already satisfied: scipy<2.0,>=1.0.1 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from KDEpy==1.1.5+computecanada) (1.10.1+computecanada)
-Requirement already satisfied: packaging>=20.0 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy==1.1.5+computecanada) (23.1)
-Requirement already satisfied: cycler>=0.10 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy==1.1.5+computecanada) (0.12.1+computecanada)
-Requirement already satisfied: fonttools>=4.22.0 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy==1.1.5+computecanada) (4.42.1+computecanada)
-Requirement already satisfied: pillow>=6.2.0 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy==1.1.5+computecanada) (9.5.0+computecanada)
-Requirement already satisfied: python-dateutil>=2.7 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy==1.1.5+computecanada) (2.8.2+computecanada)
-Requirement already satisfied: kiwisolver>=1.0.1 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy==1.1.5+computecanada) (1.4.4+computecanada)
-Requirement already satisfied: contourpy>=1.0.1 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy==1.1.5+computecanada) (1.0.7+computecanada)
-Requirement already satisfied: pyparsing>=2.3.1 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy==1.1.5+computecanada) (3.1.1)
-Requirement already satisfied: importlib-resources>=3.2.0 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy==1.1.5+computecanada) (6.0.1)
-Requirement already satisfied: zipp>=3.1.0 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from importlib-resources>=3.2.0->matplotlib>=2.2.2->KDEpy==1.1.5+computecanada) (3.16.2)
-Requirement already satisfied: six>=1.5 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from python-dateutil>=2.7->matplotlib>=2.2.2->KDEpy==1.1.5+computecanada) (1.16.0+computecanada)
-Installing collected packages: KDEpy
-Successfully installed KDEpy-1.1.5+computecanada
-Looking in links: /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2020/avx2, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/avx2, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2020/generic, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/generic, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic
-Processing /home/kyang/nonconvexAG-1.0.6+computecanada-py3-none-any.whl
-Requirement already satisfied: numpy>=1.16.6 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from nonconvexAG==1.0.6+computecanada) (1.23.0+computecanada)
-Requirement already satisfied: numba>=0.54.1 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from nonconvexAG==1.0.6+computecanada) (0.56.3+computecanada)
-Requirement already satisfied: multiprocess>=0.70.6 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from nonconvexAG==1.0.6+computecanada) (0.70.14+computecanada)
-Requirement already satisfied: dill>=0.3.6 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from multiprocess>=0.70.6->nonconvexAG==1.0.6+computecanada) (0.3.7+computecanada)
-Requirement already satisfied: setuptools in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from numba>=0.54.1->nonconvexAG==1.0.6+computecanada) (68.1.2+computecanada)
-Requirement already satisfied: importlib-metadata in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from numba>=0.54.1->nonconvexAG==1.0.6+computecanada) (6.8.0)
-Requirement already satisfied: llvmlite<0.40,>=0.39.0dev0 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from numba>=0.54.1->nonconvexAG==1.0.6+computecanada) (0.39.1+computecanada)
-Requirement already satisfied: zipp>=0.5 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from importlib-metadata->numba>=0.54.1->nonconvexAG==1.0.6+computecanada) (3.16.2)
-Installing collected packages: nonconvexAG
-Successfully installed nonconvexAG-1.0.6+computecanada
-Looking in links: /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2020/avx2, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/avx2, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2020/generic, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/generic, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic
-Processing /home/kyang/fastHDMI-1.25.0-cp38-cp38-linux_x86_64.whl
-Requirement already satisfied: scikit-learn>=1.0.2 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from fastHDMI==1.25.0) (1.1.2+computecanada)
-Requirement already satisfied: numba>=0.54.1 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from fastHDMI==1.25.0) (0.56.3+computecanada)
-Requirement already satisfied: dask in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from fastHDMI==1.25.0) (2023.2.1+computecanada)
-Requirement already satisfied: Cython in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from fastHDMI==1.25.0) (0.29.33+computecanada)
-Requirement already satisfied: multiprocess>=0.70.6 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from fastHDMI==1.25.0) (0.70.14+computecanada)
-Requirement already satisfied: KDEpy>=1.1.0 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from fastHDMI==1.25.0) (1.1.5+computecanada)
-Processing /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic/tqdm-4.66.1+computecanada-py3-none-any.whl
-Requirement already satisfied: numpy>=1.14.2 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from fastHDMI==1.25.0) (1.23.0+computecanada)
-Requirement already satisfied: pandas>=1.4.4 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from fastHDMI==1.25.0) (1.5.3+computecanada)
-Requirement already satisfied: matplotlib>=2.2.2 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from KDEpy>=1.1.0->fastHDMI==1.25.0) (3.7.0+computecanada)
-Requirement already satisfied: scipy<2.0,>=1.0.1 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from KDEpy>=1.1.0->fastHDMI==1.25.0) (1.10.1+computecanada)
-Requirement already satisfied: dill>=0.3.6 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from multiprocess>=0.70.6->fastHDMI==1.25.0) (0.3.7+computecanada)
-Requirement already satisfied: importlib-metadata in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from numba>=0.54.1->fastHDMI==1.25.0) (6.8.0)
-Requirement already satisfied: llvmlite<0.40,>=0.39.0dev0 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from numba>=0.54.1->fastHDMI==1.25.0) (0.39.1+computecanada)
-Requirement already satisfied: setuptools in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from numba>=0.54.1->fastHDMI==1.25.0) (68.1.2+computecanada)
-Requirement already satisfied: pytz>=2020.1 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from pandas>=1.4.4->fastHDMI==1.25.0) (2023.3.post1+computecanada)
-Requirement already satisfied: python-dateutil>=2.8.1 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from pandas>=1.4.4->fastHDMI==1.25.0) (2.8.2+computecanada)
-Requirement already satisfied: joblib>=1.0.0 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from scikit-learn>=1.0.2->fastHDMI==1.25.0) (1.3.2+computecanada)
-Requirement already satisfied: threadpoolctl>=2.0.0 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from scikit-learn>=1.0.2->fastHDMI==1.25.0) (3.2.0+computecanada)
-Requirement already satisfied: pyyaml>=5.3.1 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from dask->fastHDMI==1.25.0) (6.0+computecanada)
-Requirement already satisfied: click>=7.0 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from dask->fastHDMI==1.25.0) (8.1.7+computecanada)
-Requirement already satisfied: fsspec>=0.6.0 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from dask->fastHDMI==1.25.0) (2023.9.2+computecanada)
-Requirement already satisfied: toolz>=0.8.2 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from dask->fastHDMI==1.25.0) (0.12.0+computecanada)
-Requirement already satisfied: cloudpickle>=1.1.1 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from dask->fastHDMI==1.25.0) (2.2.1+computecanada)
-Requirement already satisfied: packaging>=20.0 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from dask->fastHDMI==1.25.0) (23.1)
-Requirement already satisfied: partd>=1.2.0 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from dask->fastHDMI==1.25.0) (1.4.0+computecanada)
-Requirement already satisfied: fonttools>=4.22.0 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy>=1.1.0->fastHDMI==1.25.0) (4.42.1+computecanada)
-Requirement already satisfied: importlib-resources>=3.2.0 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy>=1.1.0->fastHDMI==1.25.0) (6.0.1)
-Requirement already satisfied: cycler>=0.10 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy>=1.1.0->fastHDMI==1.25.0) (0.12.1+computecanada)
-Requirement already satisfied: pillow>=6.2.0 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy>=1.1.0->fastHDMI==1.25.0) (9.5.0+computecanada)
-Requirement already satisfied: kiwisolver>=1.0.1 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy>=1.1.0->fastHDMI==1.25.0) (1.4.4+computecanada)
-Requirement already satisfied: contourpy>=1.0.1 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy>=1.1.0->fastHDMI==1.25.0) (1.0.7+computecanada)
-Requirement already satisfied: pyparsing>=2.3.1 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from matplotlib>=2.2.2->KDEpy>=1.1.0->fastHDMI==1.25.0) (3.1.1)
-Requirement already satisfied: locket in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from partd>=1.2.0->dask->fastHDMI==1.25.0) (1.0.0+computecanada)
-Requirement already satisfied: six>=1.5 in /local/kyang.12027581.0/env/lib/python3.8/site-packages (from python-dateutil>=2.8.1->pandas>=1.4.4->fastHDMI==1.25.0) (1.16.0+computecanada)
-Requirement already satisfied: zipp>=0.5 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python-build-bundle/2023b/lib/python3.8/site-packages (from importlib-metadata->numba>=0.54.1->fastHDMI==1.25.0) (3.16.2)
-Installing collected packages: tqdm, fastHDMI
-Successfully installed fastHDMI-1.25.0 tqdm-4.66.1+computecanada
-NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
-
-Architecture:        x86_64
-CPU op-mode(s):      32-bit, 64-bit
-Byte Order:          Little Endian
-Address sizes:       46 bits physical, 48 bits virtual
-CPU(s):              44
-On-line CPU(s) list: 0-43
-Thread(s) per core:  1
-Core(s) per socket:  22
-Socket(s):           2
-NUMA node(s):        2
-Vendor ID:           GenuineIntel
-CPU family:          6
-Model:               85
-Model name:          Intel(R) Xeon(R) Gold 6238 CPU @ 2.10GHz
-Stepping:            7
-CPU MHz:             2582.318
-CPU max MHz:         3700.0000
-CPU min MHz:         1000.0000
-BogoMIPS:            4200.00
-Virtualization:      VT-x
-L1d cache:           32K
-L1i cache:           32K
-L2 cache:            1024K
-L3 cache:            30976K
-NUMA node0 CPU(s):   0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42
-NUMA node1 CPU(s):   1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43
-Flags:               fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch epb cat_l3 cdp_l3 invpcid_single intel_ppin ssbd mba rsb_ctxsw ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm cqm mpx rdt_a avx512f avx512dq rdseed adx smap clflushopt clwb intel_pt avx512cd avx512bw avx512vl xsaveopt xsavec xgetbv1 cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local dtherm ida arat pln pts pku ospke avx512_vnni md_clear spec_ctrl intel_stibp flush_l1d arch_capabilities
-running ABIDE_screening_age_dask.py
-The outcome is age.
-Now running using dask CSV engine with share_memory=False.
-Our developed FFT-based MI calculation:
-  0%|          | 0/160 [00:00<?, ?it/s]  1%|          | 1/160 [00:00<02:16,  1.17it/s]  2%|▏         | 3/160 [00:16<15:55,  6.08s/it]  4%|▍         | 6/160 [00:34<15:17,  5.95s/it]  6%|▌         | 9/160 [00:51<14:49,  5.89s/it]  8%|▊         | 12/160 [01:09<14:29,  5.88s/it]  9%|▉         | 15/160 [01:28<14:35,  6.04s/it] 11%|█▏        | 18/160 [01:45<14:00,  5.92s/it] 13%|█▎        | 21/160 [02:02<13:30,  5.83s/it] 15%|█▌        | 24/160 [02:19<13:10,  5.81s/it] 17%|█▋        | 27/160 [02:36<12:46,  5.76s/it] 19%|█▉        | 30/160 [02:53<12:23,  5.72s/it] 21%|██        | 33/160 [03:10<12:05,  5.71s/it] 22%|██▎       | 36/160 [03:27<11:51,  5.74s/it] 24%|██▍       | 39/160 [03:44<11:29,  5.70s/it] 26%|██▋       | 42/160 [04:02<11:23,  5.80s/it] 28%|██▊       | 45/160 [04:20<11:11,  5.84s/it] 30%|███       | 48/160 [04:38<11:00,  5.90s/it] 32%|███▏      | 51/160 [07:09<35:00, 19.27s/it] 34%|███▍      | 54/160 [07:41<29:29, 16.70s/it] 36%|███▌      | 57/160 [08:12<25:23, 14.79s/it] 38%|███▊      | 60/160 [08:46<22:46, 13.66s/it] 39%|███▉      | 63/160 [09:13<19:50, 12.27s/it] 41%|████▏     | 66/160 [09:48<18:55, 12.08s/it] 43%|████▎     | 69/160 [10:09<16:07, 10.63s/it] 45%|████▌     | 72/160 [10:43<15:49, 10.79s/it] 47%|████▋     | 75/160 [11:01<13:13,  9.33s/it] 49%|████▉     | 78/160 [11:19<11:27,  8.38s/it] 51%|█████     | 81/160 [12:10<14:26, 10.97s/it] 52%|█████▎    | 84/160 [12:41<13:40, 10.80s/it] 54%|█████▍    | 87/160 [13:07<12:21, 10.16s/it] 56%|█████▋    | 90/160 [13:26<10:25,  8.94s/it] 58%|█████▊    | 93/160 [13:43<08:56,  8.01s/it] 60%|██████    | 96/160 [14:01<07:52,  7.38s/it] 62%|██████▏   | 99/160 [14:19<07:04,  6.95s/it] 64%|██████▍   | 102/160 [14:36<06:25,  6.65s/it] 66%|██████▌   | 105/160 [14:54<05:52,  6.41s/it] 68%|██████▊   | 108/160 [15:12<05:25,  6.26s/it] 69%|██████▉   | 111/160 [16:43<11:00, 13.47s/it] 71%|███████▏  | 114/160 [17:04<08:49, 11.52s/it] 73%|███████▎  | 117/160 [17:42<08:31, 11.89s/it] 75%|███████▌  | 120/160 [18:13<07:36, 11.42s/it] 77%|███████▋  | 123/160 [18:31<06:01,  9.78s/it] 79%|███████▉  | 126/160 [18:48<04:52,  8.59s/it] 81%|████████  | 129/160 [19:51<06:21, 12.31s/it] 82%|████████▎ | 132/160 [20:25<05:36, 12.02s/it] 84%|████████▍ | 135/160 [20:53<04:41, 11.25s/it] 86%|████████▋ | 138/160 [21:12<03:33,  9.72s/it] 88%|████████▊ | 141/160 [22:07<03:53, 12.30s/it] 90%|█████████ | 144/160 [22:43<03:15, 12.24s/it] 92%|█████████▏| 147/160 [23:16<02:33, 11.84s/it] 94%|█████████▍| 150/160 [23:48<01:54, 11.45s/it] 96%|█████████▌| 153/160 [24:19<01:18, 11.19s/it] 98%|█████████▊| 156/160 [24:47<00:42, 10.60s/it] 99%|█████████▉| 159/160 [25:22<00:10, 10.95s/it]100%|██████████| 160/160 [25:22<00:00,  9.52s/it]
-slurmstepd: error: *** JOB 12027581 ON gra1304 CANCELLED AT 2023-10-15T11:47:42 DUE TO TIME LIMIT ***
-slurmstepd: error: Detected 75 oom_kill events in StepId=12027581.batch. Some of the step tasks have been OOM Killed.

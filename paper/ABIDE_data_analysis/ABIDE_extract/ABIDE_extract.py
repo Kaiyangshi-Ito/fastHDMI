@@ -15,7 +15,9 @@ import os
 
 case_outlier_csv = os.environ["SLURM_TMPDIR"] + \
     r"/df_outlier_asd.csv"
-case_outlier_df = pd.read_csv(case_outlier_csv, encoding="unicode_escape", engine="c")
+case_outlier_df = pd.read_csv(case_outlier_csv,
+                              encoding="unicode_escape",
+                              engine="c")
 case_outlier_subid_ind = (case_outlier_df["outlier_ind"] == 1)
 case_outlier_subid = case_outlier_df["subId"][case_outlier_subid_ind]
 
@@ -26,7 +28,7 @@ abide = pd.read_csv(csv_file, encoding="unicode_escape", engine="c")
 # create an index to preserve
 extract_ind = (abide["DX_GROUP"] == 1)  # extract only the cases
 
-# reserve only the cases 
+# reserve only the cases
 _abide = abide[extract_ind]
 
 # drop the outliers
