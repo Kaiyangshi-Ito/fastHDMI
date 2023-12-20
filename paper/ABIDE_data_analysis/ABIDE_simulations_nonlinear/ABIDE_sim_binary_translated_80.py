@@ -69,9 +69,8 @@ def sim_based_on_abide_binary(pair):
         signal
     )  # make sure it's centered at 0 to avoid generated data all be in one class
     signal /= np.std(signal)  # avoid the case if the data is too centered
-    signal += np.arctanh(
-        (1. / 3)**.5
-    )  # this is to make the data centered at the point with highest curvature to archive most nonlinearity
+    # this is to make the data centered at the point with highest curvature to archive most nonlinearity
+    signal += np.arctanh((1. / 3)**.5)
 
     outcome = np.random.binomial(1, np.tanh(signal / 2) / 2 + .5)  # logistic
     # outcome = np.random.binomial(1,
@@ -104,6 +103,15 @@ def sim_based_on_abide_binary(pair):
             kernel="epa",
             bw="silverman")
 
+    print("Our developed binning MI calculation:")
+
+    binning_mi_output = mi.binning_binary_screening_csv_parallel(
+        dataframe=abide,
+        _usecols=["outcome"] + abide_name,
+        multp=10,
+        core_num=32,
+        share_memory=False)
+
     print("sklearn MI calculation:")
 
     skmi_output = mi.binary_skMI_screening_dataframe_parallel(
@@ -125,15 +133,18 @@ def sim_based_on_abide_binary(pair):
 
     mi_pseudo_prob = np.abs(mi_output) / np.max(np.abs(mi_output))
     mi_auroc = roc_auc_score(true_attr_label, mi_pseudo_prob)
+    binning_mi_pseudo_prob = np.abs(binning_mi_output) / np.max(
+        np.abs(binning_mi_output))
+    binning_mi_auroc = roc_auc_score(true_attr_label, binning_mi_pseudo_prob)
     skmi_pseudo_prob = np.abs(skmi_output) / np.max(np.abs(skmi_output))
     skmi_auroc = roc_auc_score(true_attr_label, skmi_pseudo_prob)
     pearson_pseudo_prob = np.abs(pearson_output) / np.max(
         np.abs(pearson_output))
     pearson_auroc = roc_auc_score(true_attr_label, pearson_pseudo_prob)
 
-    del mi_output, skmi_output, pearson_output, abide, abide_name, true_names, true_beta, sim_data, signal, outcome, mi_pseudo_prob, skmi_pseudo_prob, pearson_pseudo_prob
+    del mi_output, binning_mi_output, skmi_output, pearson_output, abide, abide_name, true_names, true_beta, sim_data, signal, outcome, mi_pseudo_prob, skmi_pseudo_prob, pearson_pseudo_prob
 
-    return np.array([mi_auroc, skmi_auroc, pearson_auroc])
+    return np.array([mi_auroc, skmi_auroc, pearson_auroc, binning_mi_auroc])
 
 
 num_true_vars_list = [80]
@@ -142,5 +153,5 @@ seed_list = range(100)
 itrs = itertools.product(num_true_vars_list, seed_list)
 
 output_array = np.array(list(map(sim_based_on_abide_binary, tqdm(itrs))))
-output_array = output_array.reshape(1, 100, 3).squeeze()
+output_array = output_array.reshape(1, 100, 4).squeeze()
 np.save(r"./ABIDE_binary_translated_80", output_array)

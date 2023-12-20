@@ -30,9 +30,9 @@ def supports_avx2():
 
 
 if supports_avx2():
-    from fastHDMI.cython_fun import joint_to_mi_cython
+    from fastHDMI.cython_fun import joint_to_mi_cython, hist_obj_cython, num_of_bins_cython, binning_MI_cython, binning_MI_discrete_cython
 else:
-    from fastHDMI.cython_fun_notusingavx2 import joint_to_mi_cython
+    from fastHDMI.cython_fun_notusingavx2 import joint_to_mi_cython, hist_obj_cython, num_of_bins_cython, binning_MI_cython, binning_MI_discrete_cython
 
 _warnings.filterwarnings('ignore')
 
@@ -47,69 +47,126 @@ def _open_bed():
     pass
 
 
-# @_njit(cache=True)
+def _hist_obj(x, D):
+    """
+    For a given 1-D array x and given number of bins D, calculate the value of the objective function based on the method given in "How many bins should be put in a regular histogram" by Birge and Rozenholc.
+    """
+    N_j, _ = _np.histogram(
+        x, bins=D)  # to get the number of data points in each bin
+    return _np.sum(
+        N_j * _np.log(N_j)) + len(x) * _np.log(D) - (D - 1 + _np.log(D)**2.5)
+
+
+def _num_of_bins(x):
+    """
+    For a given 1-D array x, calculate the number of bins based on the method given in "How many bins should be put in a regular histogram" by Birge and Rozenholc.
+    """
+    D_list = _np.arange(
+        2, 100)  # search for the optimal number of bins from 2 to 100
+    D_obj_list = _np.array([hist_obj_cython(x, D) for D in D_list])
+    return D_list[_np.nanargmax(D_obj_list)]
+
+
+def _binning_MI(a, b):
+    """
+    For two 1-D arrays continuous a, b; calculate their mutual information using binning.
+    """
+    joint, _, _ = _np.histogram2d(a,
+                                  b,
+                                  bins=(_num_of_bins(a), _num_of_bins(b)))
+    joint /= _np.sum(joint)
+    # Convert joint to a contiguous array for performance
+    joint = _np.ascontiguousarray(joint)
+    return joint_to_mi_cython(joint)
+
+
+def _binning_MI_discrete(a, b):
+    """
+    For two 1-D arrays discrete a and continuous b; calculate their mutual information using binning.
+    """
+    joint, _, _ = _np.histogram2d(a,
+                                  b,
+                                  bins=(len(_np.unique(a)), _num_of_bins(b)))
+    joint /= _np.sum(joint)
+    # Convert joint to a contiguous array for performance
+    joint = _np.ascontiguousarray(joint)
+    return joint_to_mi_cython(joint)
+
+
+@_njit(cache=True)
 def _nan_inf_to_0(x):
     """
-    To convert NaN to 0 in nopython mode.
+    Convert NaN and infinity values in a NumPy array to zero.
     """
     return _np.where(_np.isfinite(x), x, 0.)
 
 
-# @_njit(cache=True)
+@_njit(cache=True)
+def _compute_log_marginals(joint, forward_euler_a, forward_euler_b):
+    """
+    Compute log marginals from a joint distribution.
+    """
+    log_marginal_x = _np.log(_np.sum(joint, axis=1)) + _np.log(forward_euler_b)
+    log_marginal_y = _np.log(_np.sum(joint, axis=0)) + _np.log(forward_euler_a)
+    return _nan_inf_to_0(log_marginal_x), _nan_inf_to_0(log_marginal_y)
+
+
+@_njit(cache=True)
 def _joint_to_mi(joint, forward_euler_a=1., forward_euler_b=1.):
-    # assume that joint likelihood is of shape (len(a), len(b))
-    # forward_euler step being 1. means discrete r.v.
-    # to scale the cdf to 1.
+    """
+    Calculate mutual information from a joint distribution.
+    """
     joint /= _np.sum(joint) * forward_euler_a * forward_euler_b
-    log_a_marginal = _np.log(_np.sum(joint, 1)) + _np.log(forward_euler_b)
-    log_a_marginal = _nan_inf_to_0(log_a_marginal)
-    log_b_marginal = _np.log(_np.sum(joint, 0)) + _np.log(forward_euler_a)
-    log_b_marginal = _nan_inf_to_0(log_b_marginal)
-    log_joint = _np.log(joint)
-    log_joint = _nan_inf_to_0(log_joint)
+    log_marginal_a, log_marginal_b = _compute_log_marginals(
+        joint, forward_euler_a, forward_euler_b)
+    log_joint = _nan_inf_to_0(_np.log(joint))
     mi_temp = _np.sum(
         joint *
-        (log_joint - log_a_marginal.reshape(-1, 1) -
-         log_b_marginal.reshape(1, -1))) * forward_euler_a * forward_euler_b
+        (log_joint - log_marginal_a.reshape(-1, 1) -
+         log_marginal_b.reshape(1, -1))) * forward_euler_a * forward_euler_b
+    return max(mi_temp, 0.0)
 
-    # this is to ensure that estimated MI is positive, to solve an numerical issue
-    mi_temp = _np.max(_np.array([mi_temp, 0.]))
 
-    return mi_temp
+def _select_bandwidth(input_var, bw_multiplier, bw="silverman"):
+    """
+    Select bandwidth for univariate data.
+    """
+    bandwidth_functions = {
+        "silverman": _silvermans_rule,
+        "scott": _scotts_rule,
+        "ISJ": _improved_sheather_jones
+    }
+
+    if isinstance(bw, str):
+        _bw = bandwidth_functions[bw](input_var.reshape(-1, 1))
+    elif isinstance(bw, float):
+        _bw = bw
+    else:
+        raise ValueError("Invalid bandwidth selection method.")
+
+    return _bw * bw_multiplier
 
 
 def _univariate_bw(input_var, bw_multiplier, bw="silverman"):
-    # a function that outputs bandwidth from UNIVARIATE data
-    # input_var will be reshaped into (-1, 1) due to the requirement of the bw calculation functions
-    if bw == "silverman":
-        _bw = _silvermans_rule(input_var.reshape(-1, 1))
-    elif bw == "scott":
-        _bw = _scotts_rule(input_var.reshape(-1, 1))
-    elif bw == "ISJ":
-        _bw = _improved_sheather_jones(input_var.reshape(-1, 1))
-    elif type(bw) is float:  # if it's passed as a value
-        _bw = bw
-    _bw *= bw_multiplier
-    return _bw
+    """
+    Output bandwidth from univariate data.
+    """
+    return _select_bandwidth(input_var, bw_multiplier, bw)
 
 
 def _bivariate_bw(_data, bw_multiplier, bw="silverman"):
-    # a function that outputs bandwidth from BIVARIATE data
-    # input_var should be of shape (-1, 2)
-    if bw == "silverman":
-        bw1, bw2 = _silvermans_rule(_data[:,
-                                          [0]]), _silvermans_rule(_data[:,
-                                                                        [1]])
-    elif bw == "scott":
-        bw1, bw2 = _scotts_rule(_data[:, [0]]), _scotts_rule(_data[:, [1]])
-    elif bw == "ISJ":
-        bw1, bw2 = _improved_sheather_jones(
-            _data[:, [0]]), _improved_sheather_jones(_data[:, [1]])
-    elif type(bw) is _np.ndarray or list:  # if it's passed as a value
-        bw1, bw2 = bw
-    bw1 *= bw_multiplier
-    bw2 *= bw_multiplier
-    return bw1, bw2
+    """
+    Output bandwidth from bivariate data.
+    """
+    if isinstance(bw, str):
+        bw1 = _select_bandwidth(_data[:, [0]], bw_multiplier, bw)
+        bw2 = _select_bandwidth(_data[:, [1]], bw_multiplier, bw)
+    elif isinstance(bw, (_np.ndarray, list)) and len(bw) == 2:
+        bw1, bw2 = bw[0], bw[1]
+    else:
+        raise ValueError("Invalid bandwidth selection for bivariate data.")
+
+    return bw1 * bw_multiplier, bw2 * bw_multiplier
 
 
 def MI_continuous_012(a,
@@ -120,91 +177,66 @@ def MI_continuous_012(a,
                       bw="silverman",
                       **kwarg):
     """
-    calculate mutual information between continuous outcome and a SNP variable of 0,1,2, or, in fact, a binary variable
-    assume no missing data
+    Calculate mutual information between a continuous outcome and a SNP variable of 0, 1, 2, or a binary variable.
+    Assumes no missing data.
     """
-    # first estimate the pmf
+    # Calculate the probabilities for each SNP value
     p0 = _np.count_nonzero(b == 0) / len(b)
     p1 = _np.count_nonzero(b == 1) / len(b)
     p2 = 1. - p0 - p1
+
+    # Standardize 'a'
     _a = _scaler().fit_transform(a.reshape(-1, 1)).flatten()
-    # this step is just to get the boundary width for the joint density grid
-    # the three conditional density estimates need to be evaluated on the joint density grid
-    _bw = _univariate_bw(_a, bw=bw, bw_multiplier=bw_multiplier)
+
+    # Get the boundary width for the joint density grid
+    _bw = _univariate_bw(_a, bw_multiplier, bw)
     a_temp, _ = _FFTKDE(kernel=kernel, bw=_bw,
                         **kwarg).fit(data=_a).evaluate(N)
-    # estimate cond density
-    _b0 = (b == 0)
-    if _np.count_nonzero(_b0) > 2:
-        # here proceed to kde only if there are more than 5 data points
-        _bw = _univariate_bw(_a[_b0], bw=bw, bw_multiplier=bw_multiplier)
-        y_cond_p0 = _FFTKDE(kernel=kernel, bw=_bw, **kwarg).fit(data=_a[_b0])
-    else:
-        y_cond_p0 = _np.zeros_like
-    _b1 = (b == 1)
-    if _np.count_nonzero(_b1) > 2:
-        _bw = _univariate_bw(_a[_b1], bw=bw, bw_multiplier=bw_multiplier)
-        y_cond_p1 = _FFTKDE(kernel=kernel, bw=_bw, **kwarg).fit(data=_a[_b1])
-    else:
-        y_cond_p1 = _np.zeros_like
-    _b2 = (b == 2)
-    if _np.count_nonzero(_b2) > 2:
-        _bw = _univariate_bw(_a[_b2], bw=bw, bw_multiplier=bw_multiplier)
-        y_cond_p2 = _FFTKDE(kernel=kernel, bw=_bw, **kwarg).fit(data=_a[_b2])
-    else:
-        y_cond_p2 = _np.zeros_like
-    joint = _np.zeros((N, 3))
-    joint[:, 0] = y_cond_p0(a_temp) * p0
-    joint[:, 1] = y_cond_p1(a_temp) * p1
-    joint[:, 2] = y_cond_p2(a_temp) * p2
-    forward_euler_step = a_temp[1] - a_temp[0]
-    mask = joint < 0.
-    joint[mask] = 0.
 
+    # Initialize joint distribution array
+    joint = _np.zeros((N, 3))
+
+    # Calculate conditional densities for each SNP value
+    for i, (p,
+            condition) in enumerate(zip([p0, p1, p2],
+                                        [b == 0, b == 1, b == 2])):
+        if _np.count_nonzero(condition) > 2:
+            _bw = _univariate_bw(_a[condition], bw_multiplier, bw)
+            kde = _FFTKDE(kernel=kernel, bw=_bw,
+                          **kwarg).fit(data=_a[condition])
+            joint[:, i] = kde.evaluate(a_temp)[0] * p
+        # No else block needed; joint[:, i] is already initialized with zeros
+
+    # Calculate the forward Euler step
+    forward_euler_step = a_temp[1] - a_temp[0]
+
+    # Ensure all values in joint are non-negative
+    joint = _np.clip(joint, 0, None)
+
+    # Convert joint to a contiguous array for performance
     joint = _np.ascontiguousarray(joint)
 
-    mi_temp = joint_to_mi_cython(joint=joint,
-                                 forward_euler_a=forward_euler_step)
+    return joint_to_mi_cython(joint=joint, forward_euler_a=forward_euler_step)
 
     return mi_temp
 
 
-# @_njit(cache=True)
 def MI_binary_012(a, b):
     """
-    calculate mutual information between binary outcome and a SNP variable of 0,1,2, or, in fact, a binary variable
-    assume no missing data
+    Calculate mutual information between a binary outcome and a SNP variable (0, 1, 2).
+    Assumes no missing data.
     """
     return MI_012_012(a, b)
 
 
-# @_njit(cache=True)
 def MI_012_012(a, b):
     """
-    calculate mutual information between two SNPs
-    assume no missing data
-    could be very useful for a MI-based clumping
+    Calculate mutual information between two SNP variables (each variable can be 0, 1, 2).
+    Assumes no missing data. Useful for MI-based clumping.
     """
-    # estimate the cond pmf
-    joint = _np.zeros((3, 3))
-    _b0 = (b == 0)
-    joint[0, 0] = _np.count_nonzero(_np.logical_and(a == 0, _b0)) / len(a)
-    joint[1, 0] = _np.count_nonzero(_np.logical_and(a == 1, _b0)) / len(a)
-    joint[2, 0] = _np.count_nonzero(_np.logical_and(a == 2, _b0)) / len(a)
-    _b1 = (b == 1)
-    joint[0, 1] = _np.count_nonzero(_np.logical_and(a == 0, _b1)) / len(a)
-    joint[1, 1] = _np.count_nonzero(_np.logical_and(a == 1, _b1)) / len(a)
-    joint[2, 1] = _np.count_nonzero(_np.logical_and(a == 2, _b1)) / len(a)
-    _b2 = (b == 2)
-    joint[0, 2] = _np.count_nonzero(_np.logical_and(a == 0, _b2)) / len(a)
-    joint[1, 2] = _np.count_nonzero(_np.logical_and(a == 1, _b2)) / len(a)
-    joint[2, 2] = _np.count_nonzero(_np.logical_and(a == 2, _b2)) / len(a)
-
-    joint = _np.ascontiguousarray(joint)
-
-    mi_temp = joint_to_mi_cython(joint=joint)
-
-    return mi_temp
+    joint = _np.array([[(_np.logical_and(a == i, b == j)).sum() / len(a)
+                        for j in range(3)] for i in range(3)])
+    return joint_to_mi_cython(joint=_np.ascontiguousarray(joint))
 
 
 def MI_continuous_continuous(a,
@@ -217,33 +249,22 @@ def MI_continuous_continuous(a,
                              norm=2,
                              **kwarg):
     """
-    Calculate mutual information on bivariate continuous r.v..
+    Calculate mutual information between two continuous random variables.
     """
-    _temp = _np.argsort(a)
-    data = _np.hstack((a[_temp].reshape(-1, 1), b[_temp].reshape(-1, 1)))
+    sorted_indices = _np.argsort(a)
+    data = _np.vstack((a[sorted_indices], b[sorted_indices])).T
     _data = _scaler().fit_transform(data)
 
-    bw1, bw2 = _bivariate_bw(_data=_data, bw=bw, bw_multiplier=bw_multiplier)
-
-    data_scaled = _data / _np.array([bw1, bw2])
-
+    bw1, bw2 = _bivariate_bw(_data, bw_multiplier, bw)
     grid, joint = _FFTKDE(kernel=kernel, norm=norm,
                           **kwarg).fit(_data).evaluate((a_N, b_N))
-
     joint = joint.reshape(b_N, -1).T
-    # this gives joint as a (a_N * b_N, 2) array, following example: https://kdepy.readthedocs.io/en/latest/examples.html#the-effect-of-norms-in-2d
-    a_forward_euler_step = grid[b_N, 0] - grid[0, 0]
-    b_forward_euler_step = grid[1, 1] - grid[0, 1]
-    mask = joint < 0.
-    joint[mask] = 0.
+    joint[joint < 0] = 0
 
-    joint = _np.ascontiguousarray(joint)
-
-    mi_temp = joint_to_mi_cython(joint=joint,
-                                 forward_euler_a=a_forward_euler_step,
-                                 forward_euler_b=b_forward_euler_step)
-
-    return mi_temp
+    a_step, b_step = grid[b_N, 0] - grid[0, 0], grid[1, 1] - grid[0, 1]
+    return joint_to_mi_cython(joint=_np.ascontiguousarray(joint),
+                              forward_euler_a=a_step,
+                              forward_euler_b=b_step)
 
 
 def MI_binary_continuous(a,
@@ -253,6 +274,9 @@ def MI_binary_continuous(a,
                          kernel="epa",
                          bw="silverman",
                          **kwarg):
+    """
+    Calculate mutual information between a binary and a continuous variable.
+    """
     return MI_continuous_012(a=b,
                              b=a,
                              N=N,
@@ -265,17 +289,33 @@ def MI_binary_continuous(a,
 @_njit(cache=True)
 def Pearson_to_MI_Gaussian(corr):
     """
-    Assuming the input variables are bivariate Gaussian, convert their Pearson correlatin to mutual information.
+    Convert Pearson correlation coefficient to mutual information for bivariate Gaussian variables.
+
+    Parameters:
+    corr (float): Pearson correlation coefficient.
+
+    Returns:
+    float: Mutual information.
     """
-    return -.5 * (_np.log(1 + corr) + _np.log(1 - corr))
+    if corr == -1 or corr == 1:
+        return _np.inf
+    return -0.5 * (_np.log1p(-corr**2))
 
 
 @_njit(cache=True)
 def MI_to_Linfoot(mi):
     """
-    Convert calcualted mutual information estimator to Linfoot's measure of association.
+    Convert mutual information to Linfoot's measure of association.
+
+    Parameters:
+    mi (float): Mutual information.
+
+    Returns:
+    float: Linfoot's measure of association.
     """
-    return (1. - _np.exp(-2. * mi))**.5
+    if mi < 0:
+        raise ValueError("Mutual information cannot be negative.")
+    return (1. - _np.exp(-2. * mi))**0.5
 
 
 # outcome_iid should be a  list of strings for identifiers
@@ -876,6 +916,161 @@ def continuous_screening_csv_parallel(csv_file="_",
                                             bw_multiplier=bw_multiplier,
                                             norm=norm,
                                             **kwarg)
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(
+        1, len(_usecols)
+    )  # starting from 1 because the first left column should be the outcome
+
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_df = pl.map(_continuous_screening_csv_slice, _iter)
+    MI_df = _np.hstack(MI_df)
+
+    del _df
+
+    return MI_df
+
+
+def binning_binary_screening_csv_parallel(csv_file="_",
+                                          _usecols=[],
+                                          core_num="NOT DECLARED",
+                                          multp=10,
+                                          csv_engine="c",
+                                          parquet_file="_",
+                                          sample=256000,
+                                          verbose=1,
+                                          share_memory=True,
+                                          **kwarg):
+    """
+    (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    The outcome should be binary and the covariates be continuous. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    share_memory is to indicate whether to share the dataframe in memory to 
+    multiple processes -- if set to False, each process will copy the entire dataframe respectively. However, 
+    to read very large dataframe using dask, this option should usually be turned off.
+    """
+    # check some basic things
+    assert csv_file != "_" or parquet_file != "_", "CSV or parquet filepath should be declared"
+
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    # read csv
+    _df, _usecols = _read_csv(csv_file=csv_file,
+                              _usecols=_usecols,
+                              csv_engine=csv_engine,
+                              parquet_file=parquet_file,
+                              sample=sample,
+                              verbose=verbose)
+
+    # share_memory for multiprocess
+    if share_memory == True:
+        # the origingal dataframe is df, store the columns/dtypes pairs
+        df_dtypes_dict = dict(list(zip(_df.columns, _df.dtypes)))
+        # declare a shared Array with data from df
+        mparr = _mp.Array(_ctypes.c_double, _df.values.reshape(-1))
+        # create a new df based on the shared array
+        _df = _pd.DataFrame(_np.frombuffer(mparr.get_obj()).reshape(_df.shape),
+                            columns=_df.columns).astype(df_dtypes_dict)
+
+    def _binary_screening_csv_slice(_slice):
+
+        def _map_foo(j):
+            __ = [
+                _usecols[0], _usecols[j]
+            ]  # here using _usecol[j] because only input variables indices were splitted
+            _a, _b = _read_two_columns(_df=_df, __=__, csv_engine=csv_engine)
+            _a = _a.astype(
+                float
+            )  # recall our binning_MI_discrete_cython doesn't accept int data type
+            return binning_MI_discrete_cython(a=_a, b=_b)
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+
+    ind = _np.arange(
+        1, len(_usecols)
+    )  # starting from 1 because the first left column should be the outcome
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_df = pl.map(_binary_screening_csv_slice, _iter)
+    MI_df = _np.hstack(MI_df)
+
+    del _df
+
+    return MI_df
+
+
+def binning_continuous_screening_csv_parallel(csv_file="_",
+                                              _usecols=[],
+                                              core_num="NOT DECLARED",
+                                              multp=10,
+                                              csv_engine="c",
+                                              parquet_file="_",
+                                              sample=256000,
+                                              verbose=1,
+                                              share_memory=True,
+                                              **kwarg):
+    """
+    (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    Both the outcome and the covariates should be continuous. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    share_memory is to indicate whether to share the dataframe in memory to 
+    multiple processes -- if set to False, each process will copy the entire dataframe respectively. However, 
+    to read very large dataframe using dask, this option should usually be turned off.
+    """
+    # check some basic things
+    assert csv_file != "_" or parquet_file != "_", "CSV or parquet filepath should be declared"
+
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    # read csv
+    _df, _usecols = _read_csv(csv_file=csv_file,
+                              _usecols=_usecols,
+                              csv_engine=csv_engine,
+                              parquet_file=parquet_file,
+                              sample=sample,
+                              verbose=verbose)
+
+    # share_memory for multiprocess
+    if share_memory == True:
+        # the origingal dataframe is df, store the columns/dtypes pairs
+        df_dtypes_dict = dict(list(zip(_df.columns, _df.dtypes)))
+        # declare a shared Array with data from df
+        mparr = _mp.Array(_ctypes.c_double, _df.values.reshape(-1))
+        # create a new df based on the shared array
+        _df = _pd.DataFrame(_np.frombuffer(mparr.get_obj()).reshape(_df.shape),
+                            columns=_df.columns).astype(df_dtypes_dict)
+
+    def _continuous_screening_csv_slice(_slice):
+
+        def _map_foo(j):
+            __ = [
+                _usecols[0], _usecols[j]
+            ]  # here using _usecol[j] because only input variables indices were splitted
+            _a, _b = _read_two_columns(_df=_df, __=__, csv_engine=csv_engine)
+            return binning_MI_cython(a=_a, b=_b)
 
         _MI_slice = _np.array(list(map(_map_foo, _slice)))
         return _MI_slice

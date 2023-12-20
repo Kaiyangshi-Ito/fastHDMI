@@ -98,6 +98,15 @@ def sim_based_on_abide_continuous(pair):
             bw="silverman",
             norm=2)
 
+    print("Our developed binning MI calculation:")
+
+    binning_mi_output = mi.binning_continuous_screening_csv_parallel(
+        dataframe=abide,
+        _usecols=["outcome"] + abide_name,
+        multp=10,
+        core_num=32,
+        share_memory=False)
+
     print("sklearn MI calculation:")
 
     skmi_output = mi.continuous_skMI_screening_dataframe_parallel(
@@ -119,15 +128,18 @@ def sim_based_on_abide_continuous(pair):
 
     mi_pseudo_prob = np.abs(mi_output) / np.max(np.abs(mi_output))
     mi_auroc = roc_auc_score(true_attr_label, mi_pseudo_prob)
+    binning_mi_pseudo_prob = np.abs(binning_mi_output) / np.max(
+        np.abs(binning_mi_output))
+    binning_mi_auroc = roc_auc_score(true_attr_label, binning_mi_pseudo_prob)
     skmi_pseudo_prob = np.abs(skmi_output) / np.max(np.abs(skmi_output))
     skmi_auroc = roc_auc_score(true_attr_label, skmi_pseudo_prob)
     pearson_pseudo_prob = np.abs(pearson_output) / np.max(
         np.abs(pearson_output))
     pearson_auroc = roc_auc_score(true_attr_label, pearson_pseudo_prob)
 
-    del mi_output, skmi_output, pearson_output, abide, abide_name, true_names, true_beta, sim_data, X_cov, true_sigma_sim, outcome, mi_pseudo_prob, skmi_pseudo_prob, pearson_pseudo_prob
+    del mi_output, binning_mi_output, skmi_output, pearson_output, abide, abide_name, true_names, true_beta, sim_data, X_cov, true_sigma_sim, outcome, mi_pseudo_prob, skmi_pseudo_prob, pearson_pseudo_prob
 
-    return np.array([mi_auroc, skmi_auroc, pearson_auroc])
+    return np.array([mi_auroc, skmi_auroc, pearson_auroc, binning_mi_auroc])
 
 
 num_true_vars_list = [200]
@@ -136,5 +148,5 @@ seed_list = range(100)
 itrs = itertools.product(num_true_vars_list, seed_list)
 
 output_array = np.array(list(map(sim_based_on_abide_continuous, tqdm(itrs))))
-output_array = output_array.reshape(1, 100, 3).squeeze()
+output_array = output_array.reshape(1, 100, 4).squeeze()
 np.save(r"./ABIDE_continuous_200", output_array)

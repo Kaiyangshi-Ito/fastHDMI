@@ -67,6 +67,19 @@ for _kernel in [
             print("This kernel-bw combination reports an error: ", _kernel,
                   _bw)
 
+print("binning MI calculation:")
+
+binning_output = mi.binning_continuous_screening_csv_parallel(
+    csv_file,
+    _usecols=abide_name.copy(),
+    csv_engine="dask",
+    sample=1250000,
+    multp=10,
+    core_num=16,
+    share_memory=False)
+if "dask" == "high_mem":
+    np.save(r"./ABIDE_age_binning_output", binning_output)
+
 print("sklearn MI calculation:")
 
 skmi_output = mi.continuous_skMI_screening_csv_parallel(
