@@ -1646,6 +1646,140 @@ def continuous_screening_dataframe_parallel(dataframe="_",
     return MI_df
 
 
+def binning_binary_screening_dataframe_parallel(dataframe="_",
+                                                _usecols=[],
+                                                core_num="NOT DECLARED",
+                                                multp=10,
+                                                csv_engine="c",
+                                                verbose=1,
+                                                share_memory=True,
+                                                **kwarg):
+    """
+    (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    The outcome should be binary and the covariates be continuous. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    share_memory is to indicate whether to share the dataframe in memory to 
+    multiple processes -- if set to False, each process will copy the entire dataframe respectively. However, 
+    to read very large dataframe using dask, this option should usually be turned off.
+    """
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    _df = dataframe
+    if _np.array(_usecols).size == 0:
+        _usecols = _np.array(_df.columns.to_list()[1:])
+    else:
+        _usecols = _np.array(_usecols)
+
+    # share_memory for multiprocess
+    if share_memory == True:
+        # the origingal dataframe is df, store the columns/dtypes pairs
+        df_dtypes_dict = dict(list(zip(_df.columns, _df.dtypes)))
+        # declare a shared Array with data from df
+        mparr = _mp.Array(_ctypes.c_double, _df.values.reshape(-1))
+        # create a new df based on the shared array
+        _df = _pd.DataFrame(_np.frombuffer(mparr.get_obj()).reshape(_df.shape),
+                            columns=_df.columns).astype(df_dtypes_dict)
+
+    def _binary_screening_csv_slice(_slice):
+
+        def _map_foo(j):
+            __ = [
+                _usecols[0], _usecols[j]
+            ]  # here using _usecol[j] because only input variables indices were splitted
+            _a, _b = _read_two_columns(_df=_df, __=__, csv_engine=csv_engine)
+            return binning_MI_discrete_cython(a=_a, b=_b)
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+
+    ind = _np.arange(
+        1, len(_usecols)
+    )  # starting from 1 because the first left column should be the outcome
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_df = pl.map(_binary_screening_csv_slice, _iter)
+    MI_df = _np.hstack(MI_df)
+
+    return MI_df
+
+
+def binning_continuous_screening_dataframe_parallel(dataframe="_",
+                                                    _usecols=[],
+                                                    core_num="NOT DECLARED",
+                                                    multp=10,
+                                                    csv_engine="c",
+                                                    verbose=1,
+                                                    share_memory=True,
+                                                    **kwarg):
+    """
+    (Multiprocessing version) Take a (potentionally large) csv file to calculate the mutual information between outcome and covariates.
+    Both the outcome and the covariates should be continuous. 
+    If _usecols is given, the returned mutual information will match _usecols. 
+    By default, the left first covariate should be the outcome -- use _usecols to adjust if not the case.
+    share_memory is to indicate whether to share the dataframe in memory to 
+    multiple processes -- if set to False, each process will copy the entire dataframe respectively. However, 
+    to read very large dataframe using dask, this option should usually be turned off.
+    """
+    if core_num == "NOT DECLARED":
+        core_num = _mp.cpu_count()
+    else:
+        assert core_num <= _mp.cpu_count(
+        ), "Declared number of cores used for multiprocessing should not exceed number of cores on this machine."
+    assert core_num >= 2, "Multiprocessing should not be used on single-core machines."
+
+    _df = dataframe
+    if _np.array(_usecols).size == 0:
+        _usecols = _np.array(_df.columns.to_list()[1:])
+    else:
+        _usecols = _np.array(_usecols)
+
+    # share_memory for multiprocess
+    if share_memory == True:
+        # the origingal dataframe is df, store the columns/dtypes pairs
+        df_dtypes_dict = dict(list(zip(_df.columns, _df.dtypes)))
+        # declare a shared Array with data from df
+        mparr = _mp.Array(_ctypes.c_double, _df.values.reshape(-1))
+        # create a new df based on the shared array
+        _df = _pd.DataFrame(_np.frombuffer(mparr.get_obj()).reshape(_df.shape),
+                            columns=_df.columns).astype(df_dtypes_dict)
+
+    def _continuous_screening_csv_slice(_slice):
+
+        def _map_foo(j):
+            __ = [
+                _usecols[0], _usecols[j]
+            ]  # here using _usecol[j] because only input variables indices were splitted
+            _a, _b = _read_two_columns(_df=_df, __=__, csv_engine=csv_engine)
+            return binning_MI_cython(a=_a, b=_b)
+
+        _MI_slice = _np.array(list(map(_map_foo, _slice)))
+        return _MI_slice
+
+    # multiprocessing starts here
+    ind = _np.arange(
+        1, len(_usecols)
+    )  # starting from 1 because the first left column should be the outcome
+
+    _iter = _np.array_split(ind, core_num * multp)
+    if verbose >= 1:
+        _iter = _tqdm(_iter)
+    with _mp.Pool(core_num) as pl:
+        MI_df = pl.map(_continuous_screening_csv_slice, _iter)
+    MI_df = _np.hstack(MI_df)
+
+    return MI_df
+
+
 def binary_skMI_screening_dataframe_parallel(dataframe="_",
                                              _usecols=[],
                                              n_neighbors=3,
@@ -2257,148 +2391,6 @@ def continuous_Pearson_array_parallel(X,
         MI_array = pl.map(_continuous_Pearson_array_slice, _iter)
     MI_array = _np.hstack(MI_array)
     return MI_array
-
-
-##################################################################
-######## some fudamentals things for the PCA versions ############
-##################################################################
-######################################  some SCAD and MCP things  #######################################
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def soft_thresholding_PCA(x, lambda_, pca_p):
-    '''
-    To calculate soft-thresholding mapping of a given ONE-DIMENSIONAL tensor, BESIDES THE FIRST TERM (so beta_0 will not be penalized).
-    This function is to be used for calculation involving L1 penalty term later.
-    '''
-    return _np.hstack(
-        (x[0:pca_p + 1],
-         _np.where(
-             _np.abs(x[pca_p + 1:]) > lambda_,
-             x[pca_p + 1:] - _np.sign(x[pca_p + 1:]) * lambda_, 0)))
-
-
-soft_thresholding_PCA(_np.arange(-1000, 1000) / 1000, .5, 10)
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def SCAD_PCA(x, lambda_, a, pca_p):
-    '''
-    To calculate SCAD penalty value;
-    #x can be a multi-dimensional tensor;
-    lambda_, a are scalars;
-    Fan and Li suggests to take a as 3.7
-    '''
-    # here I notice the function is de facto a function of absolute value of x, therefore take absolute value first to simplify calculation
-    x = _np.abs(x)
-    temp = _np.where(
-        x <= lambda_, lambda_ * x,
-        _np.where(x < a * lambda_,
-                  (2 * a * lambda_ * x - x**2 - lambda_**2) / (2 * (a - 1)),
-                  lambda_**2 * (a + 1) / 2))
-    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def SCAD_grad_PCA(x, lambda_, a, pca_p):
-    '''
-    To calculate the gradient of SCAD wrt. input x;
-    #x can be a multi-dimensional tensor.
-    '''
-    # here decompose x to sign and its absolute value for easier calculation
-    sgn = _np.sign(x)
-    x = _np.abs(x)
-    temp = _np.where(
-        x <= lambda_, lambda_ * sgn,
-        _np.where(x < a * lambda_, (a * lambda_ * sgn - sgn * x) / (a - 1), 0))
-    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def MCP_PCA(x, lambda_, gamma, pca_p):
-    '''
-    To calculate MCP penalty value;
-    #x can be a multi-dimensional tensor.
-    '''
-    # the function is a function of absolute value of x
-    x = _np.abs(x)
-    temp = _np.where(x <= gamma * lambda_, lambda_ * x - x**2 / (2 * gamma),
-                     .5 * gamma * lambda_**2)
-    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def MCP_grad_PCA(x, lambda_, gamma, pca_p):
-    '''
-    To calculate MCP gradient wrt. input x;
-    #x can be a multi-dimensional tensor.
-    '''
-    temp = _np.where(
-        _np.abs(x) < gamma * lambda_,
-        lambda_ * _np.sign(x) - x / gamma, _np.zeros_like(x))
-    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def SCAD_concave_PCA(x, lambda_, a, pca_p):
-    '''
-    The value of concave part of SCAD penalty;
-    #x can be a multi-dimensional tensor.
-    '''
-    x = _np.abs(x)
-    temp = _np.where(
-        x <= lambda_, 0.,
-        _np.where(x < a * lambda_,
-                  (lambda_ * x - (x**2 + lambda_**2) / 2) / (a - 1),
-                  (a + 1) / 2 * lambda_**2 - lambda_ * x))
-    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def SCAD_concave_grad_PCA(x, lambda_, a, pca_p):
-    '''
-    The gradient of concave part of SCAD penalty wrt. input x;
-    #x can be a multi-dimensional tensor.
-    '''
-    sgn = _np.sign(x)
-    x = _np.abs(x)
-    temp = _np.where(
-        x <= lambda_, 0.,
-        _np.where(x < a * lambda_, (lambda_ * sgn - sgn * x) / (a - 1),
-                  -lambda_ * sgn))
-    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def MCP_concave_PCA(x, lambda_, gamma, pca_p):
-    '''
-    The value of concave part of MCP penalty;
-    #x can be a multi-dimensional tensor.
-    '''
-    # similiar as in MCP
-    x = _np.abs(x)
-    temp = _np.where(x <= gamma * lambda_, -(x**2) / (2 * gamma),
-                     (gamma * lambda_**2) / 2 - lambda_ * x)
-    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
-    return temp
-
-
-@_jit(nopython=True, cache=True, parallel=True, fastmath=True, nogil=True)
-def MCP_concave_grad_PCA(x, lambda_, gamma, pca_p):
-    '''
-    The gradient of concave part of MCP penalty wrt. input x;
-    #x can be a multi-dimensional tensor.
-    '''
-    temp = _np.where(
-        _np.abs(x) < gamma * lambda_, -x / gamma, -lambda_ * _np.sign(x))
-    temp[0:pca_p + 1] = 0.  # this is to NOT penalize intercept beta later
-    return temp
 
 
 ##################################################################

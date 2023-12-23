@@ -100,7 +100,7 @@ def sim_based_on_abide_continuous(pair):
 
     print("Our developed binning MI calculation:")
 
-    binning_mi_output = mi.binning_continuous_screening_csv_parallel(
+    binning_mi_output = mi.binning_continuous_screening_dataframe_parallel(
         dataframe=abide,
         _usecols=["outcome"] + abide_name,
         multp=10,

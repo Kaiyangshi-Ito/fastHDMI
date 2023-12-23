@@ -66,7 +66,7 @@ for _kernel in [
 
 print("binning MI calculation:")
 
-binning_output = mi.binning_binary_screening_csv_parallel(
+binning_output = mi.binning_binary_screening_dataframe_parallel(
     csv_file,
     _usecols=abide_name.copy(),
     csv_engine="c",
