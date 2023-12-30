@@ -45,6 +45,13 @@ def _get_computing_time(prop_input_vars):
     FFTKDE_MI_times = timeit.Timer(stmt=s, globals=imports_and_vars).repeat(
         repeat=5, number=num_loops)
 
+    s = '''mi.binning_binary_screening_csv_parallel(csv_file, _usecols=abide_name.copy()[0:int(len(abide_name)*prop_input_vars)], csv_engine="c", sample=1250000, multp=10, core_num=16, share_memory=False,verbose=0)'''
+    imports_and_vars = globals()
+    imports_and_vars.update(locals())
+    num_loops = timeit.Timer(stmt=s, globals=imports_and_vars).autorange()[0]
+    binning_MI_times = timeit.Timer(stmt=s, globals=imports_and_vars).repeat(
+        repeat=5, number=num_loops)
+
     s = '''mi.binary_skMI_screening_csv_parallel(csv_file,_usecols=abide_name.copy()[0:int(len(abide_name)*prop_input_vars)],csv_engine="c",sample=1250000,multp=10,core_num=16,random_state=0,share_memory=False,verbose=0)'''
     imports_and_vars = globals()
     imports_and_vars.update(locals())
@@ -59,7 +66,8 @@ def _get_computing_time(prop_input_vars):
     Pearson_times = timeit.Timer(stmt=s, globals=imports_and_vars).repeat(
         repeat=5, number=num_loops)
 
-    return np.vstack((FFTKDE_MI_times, sklearn_MI_times, Pearson_times))
+    return np.vstack(
+        (FFTKDE_MI_times, sklearn_MI_times, Pearson_times, binning_MI_times))
 
 
 print(

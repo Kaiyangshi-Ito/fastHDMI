@@ -69,7 +69,7 @@ for _kernel in [
 
 print("binning MI calculation:")
 
-binning_output = mi.binning_continuous_screening_dataframe_parallel(
+binning_output = mi.binning_continuous_screening_csv_parallel(
     csv_file,
     _usecols=abide_name.copy(),
     csv_engine="c",
@@ -78,7 +78,7 @@ binning_output = mi.binning_continuous_screening_dataframe_parallel(
     core_num=16,
     share_memory=False)
 if "high_mem" == "high_mem":
-    np.save(r"./ABIDE_age_binning_output", binning_output)
+    np.save(r"./ABIDE_age_binningMI_output", binning_output)
 
 print("sklearn MI calculation:")
 
