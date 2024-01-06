@@ -31,3 +31,11 @@ do
             sbatch $x
         fi
 done
+
+for x in ./*binningMI*.sh
+do
+        if [ "$x" != "$0" ]
+        then
+            sbatch $x
+        fi
+done
