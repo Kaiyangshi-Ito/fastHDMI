@@ -3,6 +3,7 @@ import pandas as pd
 # from dask import dataframe as dd
 import matplotlib.pyplot as plt
 from scipy.stats import kendalltau, rankdata, norm
+from scipy.linalg import block_diag, toeplitz
 import fastHDMI as mi
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler, SplineTransformer

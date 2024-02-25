@@ -3,6 +3,7 @@ import pandas as pd
 # from dask import dataframe as dd
 import matplotlib.pyplot as plt
 from scipy.stats import kendalltau, rankdata, norm
+from scipy.linalg import block_diag, toeplitz
 import fastHDMI as mi
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler, SplineTransformer
@@ -56,8 +57,10 @@ def sim_based_on_abide_continuous(pair):
     true_attr_label[
         true_attr_index] = 1  # true_attr_label is binary indicate whether the covaraite is "true"
 
-    true_beta = np.random.choice([1., -1.], num_true_vars, replace=True)
-    #     true_beta = np.random.uniform(low=5.0, high=6.0,
+    mean = np.ones(num_true_vars) * 6.
+    true_beta_cov = toeplitz(0.6**np.arange(num_true_vars))
+    true_beta = np.random.multivariate_normal(mean, X_cov, 1).flatten()
+    # true_beta = np.random.choice([1., -1.], num_true_vars, replace=True)    #     true_beta = np.random.uniform(low=5.0, high=6.0,
     #                                   size=num_true_vars) * np.random.choice(
     #                                       [1., -1.], num_true_vars, replace=True)
 
