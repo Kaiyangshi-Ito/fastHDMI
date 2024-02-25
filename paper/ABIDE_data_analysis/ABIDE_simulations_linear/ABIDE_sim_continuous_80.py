@@ -59,7 +59,7 @@ def sim_based_on_abide_continuous(pair):
 
     mean = np.ones(num_true_vars) * 6.
     true_beta_cov = toeplitz(0.6**np.arange(num_true_vars))
-    true_beta = np.random.multivariate_normal(mean, X_cov, 1).flatten()
+    true_beta = np.random.multivariate_normal(mean, true_beta_cov, 1).flatten()
     # true_beta = np.random.choice([1., -1.], num_true_vars, replace=True)    #     true_beta = np.random.uniform(low=5.0, high=6.0,
     #                                   size=num_true_vars) * np.random.choice(
     #                                       [1., -1.], num_true_vars, replace=True)
