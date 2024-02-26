@@ -21,19 +21,35 @@ pip install --no-index --upgrade pip Cython
 # ### get wheels builder
 # git clone https://github.com/ComputeCanada/wheels_builder
 # export PATH=$PATH:${HOME}/wheels_builder
-# ### build KDEpy 1.1.8
-# ${HOME}/wheels_builder/unmanylinuxize.sh --package KDEpy --version 1.1.8 --python 3.8,3.9,3.10 --find_links https://files.pythonhosted.org/packages/
+# ### build KDEpy 1.1.5
+# ${HOME}/wheels_builder/unmanylinuxize.sh --package KDEpy --version 1.1.5 --python 3.8,3.9,3.10 --find_links https://files.pythonhosted.org/packages/
 # ### built nonconvexAG 1.0.6
 # ${HOME}/wheels_builder/unmanylinuxize.sh --package nonconvexAG --version 1.0.6 --python 3.8,3.9,3.10 --find_links https://files.pythonhosted.org/packages/
+# ### built dask 2024.2.1
+# ${HOME}/wheels_builder/unmanylinuxize.sh --package dask --version 2024.2.1 --python 3.8,3.9,3.10 --find_links https://files.pythonhosted.org/packages/
 # ### built fastHDMI 1.25.6
 # pip install fastHDMI==1.25.6 --no-cache-dir
 # pip wheel fastHDMI --no-deps
 
 # # Here basically to build the packages at login node and install them in slurm job submission locally
 pip install --no-index bed-reader numpy sklearn matplotlib scipy numba multiprocess scikit-learn cupy rpy2 pandas dask Cython
-pip install --no-index /home/kyang/KDEpy-1.1.8+computecanada-cp38-cp38-linux_x86_64.whl
+pip install --no-index /home/kyang/KDEpy-1.1.5+computecanada-cp38-cp38-linux_x86_64.whl
 pip install --no-index /home/kyang/nonconvexAG-1.0.6+computecanada-py3-none-any.whl
 pip install --no-index /home/kyang/fastHDMI-1.25.6-cp38-cp38-linux_x86_64.whl
+pip install --no-index /home/kyang/dask-2024.2.1+computecanada-py3-none-any.whl
+
+import fastHDMI as mi
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.preprocessing import StandardScaler, SplineTransformer
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LassoCV, ElasticNetCV, RidgeCV, LarsCV, LassoLarsCV, LogisticRegressionCV, LinearRegression, LogisticRegression
+from sklearn.neural_network import MLPRegressor, MLPClassifier
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.metrics import r2_score, roc_auc_score
+import multiprocess as mp
+from tqdm import tqdm
+import os
+import itertools
 
 nvidia-smi
 lscpu
