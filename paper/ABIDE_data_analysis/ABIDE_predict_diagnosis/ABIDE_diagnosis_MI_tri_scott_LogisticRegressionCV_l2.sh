@@ -6,14 +6,14 @@
 #SBATCH --time=3-12:00:00
 #SBATCH --job-name=diagnosis_MI_tri_scott_LogisticRegressionCV_l2
 
-module load arch/avx2 gcc/12.3 llvm/16.0.6 rust arrow cuda nodejs python/3.10 r/4.0.2 python-build-bundle/2023b
+module load arch/avx2 gcc llvm rust arrow nodejs python/3.10 r/4.0.2 python-build-bundle/2023b
 
 virtualenv --no-download $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
 pip install --no-index --upgrade pip Cython
 
 # ### run this block at the login node to build wheels
-# module load arch/avx2 gcc/12.3 llvm/16.0.6 rust arrow cuda nodejs python/3.10 r/4.0.2 python-build-bundle/2023b
+# module load arch/avx2 gcc llvm rust arrow nodejs python/3.10 r/4.0.2 python-build-bundle/2023b
 # ### upgrading the tools
 # pip install --upgrade pip setuptools wheel
 # ### remove all old wheels
