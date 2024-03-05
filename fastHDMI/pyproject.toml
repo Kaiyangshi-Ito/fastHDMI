@@ -8,18 +8,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fastHDMI"
-version = "1.25.6"
+version = "1.25.16"
 authors = [
   { name="Kai Yang", email="kai.yang2@mail.mcgill.ca" },
 ]
 description = "Use fast FFT-based mutual information screening for large datasets. Works well on MRI brain imaging data. Developed by Kai Yang, [GPG Public key Fingerprint: CC02CF153594774CF956691492B2600D18170329](https://keys.openpgp.org/vks/v1/by-fingerprint/CC02CF153594774CF956691492B2600D18170329)"
 readme = "README.md"
 license = { file="LICENSE" }
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.14.2",
     "numba>=0.54.1",
-    "KDEpy>=1.1.0",
+    "KDEpy>=1.1.9",
     "scikit-learn>=1.0.2",
 #    "bed_reader",
     "multiprocess>=0.70.6",
