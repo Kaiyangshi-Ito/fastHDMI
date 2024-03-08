@@ -1,0 +1,11 @@
+Job ID: 17533961
+Cluster: graham
+User/Group: kyang/kyang
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 32
+CPU Utilized: 24-23:02:14
+CPU Efficiency: 32.68% of 76-08:51:12 core-walltime
+Job Wall-clock time: 2-09:16:36
+Memory Utilized: 51.60 GB
+Memory Efficiency: 64.50% of 80.00 GB
