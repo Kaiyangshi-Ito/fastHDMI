@@ -31,11 +31,9 @@ abide_name_original = _abide_name[1:-3]
 # preserve only the neuro-imaging data
 abide_original = abide_original[abide_name_original]
 
-
 def convert2list(a):
     b = np.asarray(a)
     return b.tolist()
-
 
 def sim_based_on_abide_continuous(pair):
     abide, abide_name = abide_original.copy(), abide_name_original.copy()
@@ -57,7 +55,7 @@ def sim_based_on_abide_continuous(pair):
     true_attr_label[
         true_attr_index] = 1  # true_attr_label is binary indicate whether the covaraite is "true"
 
-    mean = np.ones(num_true_vars) * 6.
+    mean = np.ones(num_true_vars)*6.
     true_beta_cov = toeplitz(0.6**np.arange(num_true_vars))
     true_beta = np.random.multivariate_normal(mean, true_beta_cov, 1).flatten()
     # true_beta = np.random.choice([1., -1.], num_true_vars, replace=True)    #     true_beta = np.random.uniform(low=5.0, high=6.0,
@@ -100,7 +98,7 @@ def sim_based_on_abide_continuous(pair):
             kernel="epa",
             bw="silverman",
             norm=2)
-
+    
     print("Our developed binning MI calculation:")
 
     binning_mi_output = mi.binning_continuous_screening_dataframe_parallel(
@@ -140,7 +138,7 @@ def sim_based_on_abide_continuous(pair):
         np.abs(pearson_output))
     pearson_auroc = roc_auc_score(true_attr_label, pearson_pseudo_prob)
 
-    del mi_output, binning_mi_output, skmi_output, pearson_output, abide, abide_name, true_names, true_beta, sim_data, X_cov, true_sigma_sim, outcome, mi_pseudo_prob, skmi_pseudo_prob, pearson_pseudo_prob
+    del mi_output,binning_mi_output, skmi_output, pearson_output, abide, abide_name, true_names, true_beta, sim_data, X_cov, true_sigma_sim, outcome, mi_pseudo_prob, skmi_pseudo_prob, pearson_pseudo_prob
 
     return np.array([mi_auroc, skmi_auroc, pearson_auroc, binning_mi_auroc])
 

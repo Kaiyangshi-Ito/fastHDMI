@@ -31,11 +31,9 @@ abide_name_original = _abide_name[1:-3]
 # preserve only the neuro-imaging data
 abide_original = abide_original[abide_name_original]
 
-
 def convert2list(a):
     b = np.asarray(a)
     return b.tolist()
-
 
 def sim_based_on_abide_binary(pair):
     abide, abide_name = abide_original.copy(), abide_name_original.copy()
@@ -56,7 +54,7 @@ def sim_based_on_abide_binary(pair):
     true_attr_label[
         true_attr_index] = 1  # true_attr_label is binary indicate whether the covaraite is "true"
 
-    mean = np.ones(num_true_vars) * 6.
+    mean = np.ones(num_true_vars)*6.
     true_beta_cov = toeplitz(0.6**np.arange(num_true_vars))
     true_beta = np.random.multivariate_normal(mean, true_beta_cov, 1).flatten()
     # true_beta = np.random.choice([1., -1.], num_true_vars, replace=True)    #     true_beta = np.random.uniform(low=.5, high=.6,
@@ -70,11 +68,9 @@ def sim_based_on_abide_binary(pair):
         signal
     )  # make sure it's centered at 0 to avoid generated data all be in one class
     signal /= np.std(signal)  # avoid the case if the data is too centered
-    signal += np.arctanh(
-        (1. / 3)**.5
-    )  # this is to make the data centered at the point with highest curvature to archive most nonlinearity
+    signal += np.arctanh((1./3)**.5) # this is to make the data centered at the point with highest curvature to archive most nonlinearity
 
-    outcome = np.random.binomial(1, np.tanh(signal / 2) / 2 + .5)  # logistic
+    outcome = np.random.binomial(1, np.tanh(signal / 2) / 2 + .5) # logistic
     # outcome = np.random.binomial(1,
     #                              np.arcsin(np.sqrt(signal + np.min(signal))) /
     #                              (np.pi / 2.))  # arcsin(sqrt(.))
