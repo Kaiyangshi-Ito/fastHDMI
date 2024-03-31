@@ -78,7 +78,7 @@ def testing_error(num_covariates=20,
     np.random.seed(seed)
     _usecols = np.hstack((
         outcome_name,
-        "SEX",  #"DX_GROUP", # comment out DX_GROUP as we are using cases only
+        "SEX",  # "DX_GROUP", # comment out DX_GROUP as we are using cases only
         columns[np.argsort(-abide_dep)][:num_covariates]))
     df = original_df[_usecols].dropna(inplace=False).sample(
         frac=1, random_state=seed, replace=False).reset_index(drop=True,
