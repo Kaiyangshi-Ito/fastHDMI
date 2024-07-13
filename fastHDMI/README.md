@@ -2,7 +2,7 @@
 ## Kai Yang
 ## <kai.yang2 "at" mail.mcgill.ca>
 ## License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)
-## [GPG Public key Fingerprint: CC02CF153594774CF956691492B2600D18170329](https://keys.openpgp.org/vks/v1/by-fingerprint/CC02CF153594774CF956691492B2600D18170329)
+## [GPG Public key Fingerprint: B9F863A56220DBD56B91C3E835022A1A5941D810](https://keys.openpgp.org/vks/v1/by-fingerprint/B9F863A56220DBD56B91C3E835022A1A5941D810)
 
 This packages uses FFT-based mutual information screening and accelerated gradient method for important variables from (potentially very) high-dimensional large datasets.
 

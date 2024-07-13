@@ -1,9 +1,9 @@
 # fastHDMI -- fast High-Dimensional Mutual Information estimation
 ## Kai Yang
 ## <kai.yang2 "at" mail.mcgill.ca>
-## [GPG Public key Fingerprint: CC02CF153594774CF956691492B2600D18170329](https://keys.openpgp.org/vks/v1/by-fingerprint/CC02CF153594774CF956691492B2600D18170329)
+## [GPG Public key Fingerprint: B9F863A56220DBD56B91C3E835022A1A5941D810](https://keys.openpgp.org/vks/v1/by-fingerprint/B9F863A56220DBD56B91C3E835022A1A5941D810)
 
-**Refer to my paper here... keep in bold fonts**
+**This repository contains codes and results for my package `fastHDMI` and my paper *{\tt fastHDMI}: Fast Mutual Information Estimation for High-Dimensional Data***
 
 The manual for the package `fastHDMI` can be found [here](/fastHDMI/README.md). The package is published on PyPI [here](https://pypi.org/project/fastHDMI/).
 
