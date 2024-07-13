@@ -1,4 +1,5 @@
 # fastHDMI -- fast High-Dimensional Mutual Information estimation
+
 ## Kai Yang
 ## <kai.yang2 "at" mail.mcgill.ca>
 ## License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)
