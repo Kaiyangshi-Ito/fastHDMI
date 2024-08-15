@@ -2,7 +2,7 @@
 
 ## Kai Yang
 ### Contact: <kai.yang2 "at" mail.mcgill.ca>
-### [GPG Public Key Fingerprint: B9F863A56220DBD56B91C3E835022A1A5941D810](https://keys.openpgp.org/vks/v1/by-fingerprint/B9F863A56220DBD56B91C3E835022A1A5941D810): B9F863A56220DBD56B91C3E835022A1A5941D810
+### [GPG Public Key Fingerprint: B9F863A56220DBD56B91C3E835022A1A5941D810](https://keys.openpgp.org/vks/v1/by-fingerprint/B9F863A56220DBD56B91C3E835022A1A5941D810)
 
 Welcome to the `fastHDMI` repository! This repository contains the source code and results for the `fastHDMI` package, as detailed in the accompanying paper: **"`fastHDMI`: Fast Mutual Information Estimation for High-Dimensional Data"**.
 
